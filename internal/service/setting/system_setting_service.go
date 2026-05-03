@@ -37,6 +37,8 @@ func (settingService *SettingService) GetSetting(setting *model.SystemSetting) e
 			setting.ICPNumber = config.Config().Setting.Icpnumber
 			setting.FooterContent = config.Config().Setting.FooterContent
 			setting.FooterLink = config.Config().Setting.FooterLink
+			setting.HomeWelcomeText = model.DefaultHomeWelcomeText
+			setting.HomeSignatureText = model.DefaultHomeSignatureText
 			setting.MetingAPI = config.Config().Setting.MetingAPI
 			setting.CustomCSS = config.Config().Setting.CustomCSS
 			setting.CustomJS = config.Config().Setting.CustomJS
@@ -66,6 +68,7 @@ func (settingService *SettingService) GetSetting(setting *model.SystemSetting) e
 		if err := json.Unmarshal([]byte(systemSetting), setting); err != nil {
 			return err
 		}
+		applyHomeTextDefaults(setting)
 		setting.DefaultLocale = i18nUtil.ResolveLocale(setting.DefaultLocale)
 
 		return nil
@@ -94,18 +97,20 @@ func (settingService *SettingService) BootstrapDefaultLocale(
 		}
 
 		setting := model.SystemSetting{
-			SiteTitle:     config.Config().Setting.SiteTitle,
-			ServerLogo:    config.Config().Setting.ServerLogo,
-			ServerName:    config.Config().Setting.Servername,
-			ServerURL:     httpUtil.TrimURL(config.Config().Setting.Serverurl),
-			AllowRegister: config.Config().Setting.AllowRegister,
-			DefaultLocale: resolved,
-			ICPNumber:     config.Config().Setting.Icpnumber,
-			FooterContent: config.Config().Setting.FooterContent,
-			FooterLink:    httpUtil.TrimURL(config.Config().Setting.FooterLink),
-			MetingAPI:     httpUtil.TrimURL(config.Config().Setting.MetingAPI),
-			CustomCSS:     config.Config().Setting.CustomCSS,
-			CustomJS:      config.Config().Setting.CustomJS,
+			SiteTitle:         config.Config().Setting.SiteTitle,
+			ServerLogo:        config.Config().Setting.ServerLogo,
+			ServerName:        config.Config().Setting.Servername,
+			ServerURL:         httpUtil.TrimURL(config.Config().Setting.Serverurl),
+			AllowRegister:     config.Config().Setting.AllowRegister,
+			DefaultLocale:     resolved,
+			ICPNumber:         config.Config().Setting.Icpnumber,
+			FooterContent:     config.Config().Setting.FooterContent,
+			FooterLink:        httpUtil.TrimURL(config.Config().Setting.FooterLink),
+			HomeWelcomeText:   model.DefaultHomeWelcomeText,
+			HomeSignatureText: model.DefaultHomeSignatureText,
+			MetingAPI:         httpUtil.TrimURL(config.Config().Setting.MetingAPI),
+			CustomCSS:         config.Config().Setting.CustomCSS,
+			CustomJS:          config.Config().Setting.CustomJS,
 		}
 		settingToJSON, err := json.Marshal(setting)
 		if err != nil {
@@ -150,6 +155,10 @@ func (settingService *SettingService) UpdateSetting(
 		setting.ICPNumber = newSetting.ICPNumber
 		setting.FooterContent = newSetting.FooterContent
 		setting.FooterLink = httpUtil.TrimURL(newSetting.FooterLink)
+		setting.HomeWelcomeText = newSetting.HomeWelcomeText
+		setting.HomeSignatureText = newSetting.HomeSignatureText
+		setting.HomeSignatureURL = strings.TrimSpace(newSetting.HomeSignatureURL)
+		applyHomeTextDefaults(&setting)
 		setting.MetingAPI = httpUtil.TrimURL(newSetting.MetingAPI)
 		setting.CustomCSS = newSetting.CustomCSS
 		setting.CustomJS = newSetting.CustomJS
@@ -181,4 +190,13 @@ func (settingService *SettingService) UpdateSetting(
 		}
 	}
 	return nil
+}
+
+func applyHomeTextDefaults(setting *model.SystemSetting) {
+	if strings.TrimSpace(setting.HomeWelcomeText) == "" {
+		setting.HomeWelcomeText = model.DefaultHomeWelcomeText
+	}
+	if strings.TrimSpace(setting.HomeSignatureText) == "" {
+		setting.HomeSignatureText = model.DefaultHomeSignatureText
+	}
 }

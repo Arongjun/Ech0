@@ -4,13 +4,17 @@
 # - 运行镜像：根目录 Dockerfile 最终阶段（alpine + tzdata、data 目录）
 
 # =================== 前端构建阶段 ===================
-FROM node:25-alpine AS frontend-builder
+FROM node:24-alpine AS frontend-builder
 
 WORKDIR /web
 
 COPY web/package.json web/pnpm-lock.yaml ./
 
-RUN corepack enable
+RUN if command -v corepack >/dev/null 2>&1; then \
+      corepack enable; \
+    else \
+      npm install -g pnpm@10.33.2; \
+    fi
 
 RUN pnpm install --frozen-lockfile
 

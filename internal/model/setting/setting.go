@@ -12,22 +12,28 @@ const (
 	EIGHT_HOUR_EXPIRY string = "8_hours"
 	ONE_MONTH_EXPIRY  string = "1_month"
 	NEVER_EXPIRY      string = "never"
+
+	DefaultHomeWelcomeText   string = "欢迎光临"
+	DefaultHomeSignatureText string = "Powered by Ech0"
 )
 
 // SystemSetting 定义系统设置实体
 type SystemSetting struct {
-	SiteTitle     string `json:"site_title"`     // 站点标题
-	ServerLogo    string `json:"server_logo"`    // 服务器Logo
-	ServerName    string `json:"server_name"`    // 服务器名称
-	ServerURL     string `json:"server_url"`     // 服务器地址
-	AllowRegister bool   `json:"allow_register"` // 是否允许注册'
-	DefaultLocale string `json:"default_locale"` // 站点默认语言（如 zh-CN / en-US）
-	ICPNumber     string `json:"ICP_number"`     // 备案号
-	FooterContent string `json:"footer_content"` // 自定义页脚内容
-	FooterLink    string `json:"footer_link"`    // 自定义页脚链接
-	MetingAPI     string `json:"meting_api"`     // Meting API 地址
-	CustomCSS     string `json:"custom_css"`     // 自定义 CSS
-	CustomJS      string `json:"custom_js"`      // 自定义 JS
+	SiteTitle         string `json:"site_title"`          // 站点标题
+	ServerLogo        string `json:"server_logo"`         // 服务器Logo
+	ServerName        string `json:"server_name"`         // 服务器名称
+	ServerURL         string `json:"server_url"`          // 服务器地址
+	AllowRegister     bool   `json:"allow_register"`      // 是否允许注册'
+	DefaultLocale     string `json:"default_locale"`      // 站点默认语言（如 zh-CN / en-US）
+	ICPNumber         string `json:"ICP_number"`          // 备案号
+	FooterContent     string `json:"footer_content"`      // 自定义页脚内容
+	FooterLink        string `json:"footer_link"`         // 自定义页脚链接
+	HomeWelcomeText   string `json:"home_welcome_text"`   // 首页欢迎语
+	HomeSignatureText string `json:"home_signature_text"` // 首页署名文案
+	HomeSignatureURL  string `json:"home_signature_url"`  // 首页署名跳转地址
+	MetingAPI         string `json:"meting_api"`          // Meting API 地址
+	CustomCSS         string `json:"custom_css"`          // 自定义 CSS
+	CustomJS          string `json:"custom_js"`           // 自定义 JS
 }
 
 // S3Setting 定义 S3 存储设置实体

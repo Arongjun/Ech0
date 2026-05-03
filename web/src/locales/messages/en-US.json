@@ -348,8 +348,7 @@
     "themeToggleTitle": "Toggle theme (next: {mode})",
     "themeLight": "Light",
     "themeDark": "Dark",
-    "themeSunny": "Sunny",
-    "githubAction": "GitHub"
+    "themeSunny": "Sunny"
   },
   "homeTop": {
     "searchTitle": "Search",
@@ -524,6 +523,12 @@
     "serverNamePlaceholder": "Enter server name",
     "serverUrl": "Server URL",
     "serverUrlPlaceholder": "Enter server URL with http(s)",
+    "homeWelcomeText": "Home welcome text",
+    "homeWelcomeTextPlaceholder": "Enter home welcome text",
+    "homeSignatureText": "Home signature text",
+    "homeSignatureTextPlaceholder": "Enter home signature text",
+    "homeSignatureUrl": "Home jump URL",
+    "homeSignatureUrlPlaceholder": "Enter a URL, supports https:// or paths starting with /",
     "footerContent": "Footer content",
     "footerContentPlaceholder": "Enter footer content",
     "footerLink": "Footer link",
@@ -910,19 +915,6 @@
   "commonNav": {
     "backHome": "Back to home",
     "back": "back"
-  },
-  "about": {
-    "linkAriaLabel": "About this Ech0 instance",
-    "copyrightHeading": "Copyright",
-    "licenseLine": "Released under the",
-    "authorHeading": "Author",
-    "authorGithub": "GitHub Profile",
-    "sourceHeading": "Source Code",
-    "viewSource": "View source on GitHub",
-    "viewSourceAtCommit": "View source {'@'} {commit} on GitHub",
-    "viewRelease": "Release notes for v{version}",
-    "buildTime": "Built {time}",
-    "poweredBy": "Built with ❤️ · Powered by Ech0"
   },
   "echoPage": {
     "loadingDetail": "Loading Echo details..."

@@ -3,33 +3,61 @@
 <template>
   <section class="home-banner" aria-label="Intro">
     <div class="home-banner__top">
-      <p class="home-banner__line">{{ t('homeBio.tagline') }}</p>
+      <p class="home-banner__line">{{ homeWelcomeText }}</p>
     </div>
     <div class="home-banner__meta">
-      <RouterLink
-        :to="{ name: 'about' }"
+      <a
+        v-if="homeSignatureUrl"
+        :href="homeSignatureUrl"
         class="home-banner__powered"
-        :aria-label="t('about.linkAriaLabel')"
+        :aria-label="homeSignatureText"
       >
-        Powered by Ech0
-      </RouterLink>
-      <RouterLink
-        :to="{ name: 'about' }"
+        {{ homeSignatureText }}
+      </a>
+      <span v-else class="home-banner__powered home-banner__powered--plain">
+        {{ homeSignatureText }}
+      </span>
+      <a
+        v-if="homeSignatureUrl"
+        :href="homeSignatureUrl"
         class="home-banner__about"
-        :aria-label="t('about.linkAriaLabel')"
-        :title="t('about.linkAriaLabel')"
+        :aria-label="homeSignatureText"
+        :title="homeSignatureText"
       >
         <Exclamation class="home-banner__about-icon" />
-      </RouterLink>
+      </a>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { RouterLink } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { useSettingStore } from '@/stores'
 import Exclamation from '@/components/icons/exclamation.vue'
+
 const { t } = useI18n()
+const { SystemSetting } = storeToRefs(useSettingStore())
+
+const homeWelcomeText = computed(
+  () => SystemSetting.value.home_welcome_text?.trim() || t('homeBio.tagline'),
+)
+const homeSignatureText = computed(
+  () => SystemSetting.value.home_signature_text?.trim() || 'Powered by Ech0',
+)
+const homeSignatureUrl = computed(() =>
+  normalizeSignatureUrl(SystemSetting.value.home_signature_url),
+)
+
+const normalizeSignatureUrl = (url?: string) => {
+  const rawUrl = url?.trim()
+  if (!rawUrl) return ''
+  if (/^(https?:)?\/\//i.test(rawUrl) || rawUrl.startsWith('/') || rawUrl.startsWith('#')) {
+    return rawUrl
+  }
+  return `https://${rawUrl}`
+}
 </script>
 
 <style scoped>
@@ -85,12 +113,19 @@ const { t } = useI18n()
   line-height: 1.35;
   color: var(--color-text-secondary);
   text-decoration: none;
+}
+
+a.home-banner__powered {
   cursor: pointer;
   transition: color 0.15s ease;
 }
 
-.home-banner__powered:hover {
+a.home-banner__powered:hover {
   color: var(--color-text-primary);
+}
+
+.home-banner__powered--plain {
+  cursor: default;
 }
 
 .home-banner__about {

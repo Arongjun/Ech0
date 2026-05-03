@@ -348,8 +348,7 @@
     "themeToggleTitle": "切换主题（下一个：{mode}）",
     "themeLight": "浅色",
     "themeDark": "深色",
-    "themeSunny": "晴日",
-    "githubAction": "Github"
+    "themeSunny": "晴日"
   },
   "homeTop": {
     "searchTitle": "搜索",
@@ -524,6 +523,12 @@
     "serverNamePlaceholder": "请输入服务名称",
     "serverUrl": "服务地址",
     "serverUrlPlaceholder": "请输入服务地址,带http(s)",
+    "homeWelcomeText": "首页欢迎语",
+    "homeWelcomeTextPlaceholder": "请输入首页欢迎语",
+    "homeSignatureText": "首页署名文案",
+    "homeSignatureTextPlaceholder": "请输入首页署名文案",
+    "homeSignatureUrl": "首页跳转地址",
+    "homeSignatureUrlPlaceholder": "请输入跳转地址，支持 https:// 或 / 开头路径",
     "footerContent": "页脚内容",
     "footerContentPlaceholder": "请输入页脚文案",
     "footerLink": "页脚链接",
@@ -910,19 +915,6 @@
   "commonNav": {
     "backHome": "返回首页",
     "back": "返回"
-  },
-  "about": {
-    "linkAriaLabel": "关于本 Ech0 实例",
-    "copyrightHeading": "版权",
-    "licenseLine": "本软件以",
-    "authorHeading": "作者",
-    "authorGithub": "GitHub 主页",
-    "sourceHeading": "源代码",
-    "viewSource": "在 GitHub 上查看源代码",
-    "viewSourceAtCommit": "在 GitHub 上查看 commit {'@'} {commit} 的源代码",
-    "viewRelease": "v{version} 发布说明",
-    "buildTime": "构建时间 {time}",
-    "poweredBy": "用❤️打造 · Powered by Ech0"
   },
   "echoPage": {
     "loadingDetail": "正在加载 Echo 详情..."

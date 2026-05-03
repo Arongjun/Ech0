@@ -26,8 +26,7 @@ const (
 	Author = "L1nSn0w"
 
 	// RepoURL is the canonical source repository URL. AGPL-3.0 §13 requires
-	// network users be able to obtain the corresponding source — this URL
-	// (combined with Commit) is what the About page surfaces to satisfy that.
+	// network users be able to obtain the corresponding source.
 	RepoURL = "https://github.com/lin-snow/Ech0"
 
 	// StartYear is the project inception year, used to render copyright ranges.

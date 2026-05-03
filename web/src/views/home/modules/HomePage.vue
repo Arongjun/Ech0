@@ -48,14 +48,9 @@
           <HomeSidebarNav />
           <div class="home-aside__filter-block">
             <TheFilter @open-palette="paletteOpen = true" />
-            <a
-              href="https://github.com/lin-snow/Ech0"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="home-aside__version"
-            >
+            <div class="home-aside__version">
               version: {{ settingStore.hello?.version || '--' }}
-            </a>
+            </div>
           </div>
         </aside>
       </div>
@@ -335,12 +330,6 @@ onBeforeUnmount(() => {
   font-variant-numeric: tabular-nums;
   color: var(--color-text-secondary);
   text-decoration: none;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.home-aside__version:hover {
-  color: var(--color-text-primary);
 }
 
 .home-content-block {

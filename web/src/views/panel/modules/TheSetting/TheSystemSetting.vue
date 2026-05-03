@@ -119,6 +119,81 @@
           class="w-full py-1!"
         />
       </div>
+      <!-- 首页欢迎语 -->
+      <div
+        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
+      >
+        <h2 class="font-semibold min-w-28 md:min-w-32 shrink-0 break-words leading-5">
+          {{ t('systemSetting.homeWelcomeText') }}:
+        </h2>
+        <span
+          v-if="!editMode"
+          class="flex-1 min-w-0 truncate"
+          v-tooltip="SystemSetting.home_welcome_text"
+          >{{
+            !SystemSetting.home_welcome_text?.length
+              ? t('commonUi.none')
+              : SystemSetting.home_welcome_text
+          }}</span
+        >
+        <BaseInput
+          v-else
+          v-model="SystemSetting.home_welcome_text"
+          type="text"
+          :placeholder="t('systemSetting.homeWelcomeTextPlaceholder')"
+          class="w-full py-1!"
+        />
+      </div>
+      <!-- 首页署名文案 -->
+      <div
+        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
+      >
+        <h2 class="font-semibold min-w-28 md:min-w-32 shrink-0 break-words leading-5">
+          {{ t('systemSetting.homeSignatureText') }}:
+        </h2>
+        <span
+          v-if="!editMode"
+          class="flex-1 min-w-0 truncate"
+          v-tooltip="SystemSetting.home_signature_text"
+          >{{
+            !SystemSetting.home_signature_text?.length
+              ? t('commonUi.none')
+              : SystemSetting.home_signature_text
+          }}</span
+        >
+        <BaseInput
+          v-else
+          v-model="SystemSetting.home_signature_text"
+          type="text"
+          :placeholder="t('systemSetting.homeSignatureTextPlaceholder')"
+          class="w-full py-1!"
+        />
+      </div>
+      <!-- 首页署名跳转地址 -->
+      <div
+        class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"
+      >
+        <h2 class="font-semibold min-w-28 md:min-w-32 shrink-0 break-words leading-5">
+          {{ t('systemSetting.homeSignatureUrl') }}:
+        </h2>
+        <span
+          v-if="!editMode"
+          class="flex-1 min-w-0 truncate"
+          v-tooltip="SystemSetting.home_signature_url"
+          >{{
+            !SystemSetting.home_signature_url?.length
+              ? t('commonUi.none')
+              : SystemSetting.home_signature_url
+          }}</span
+        >
+        <BaseInput
+          v-else
+          v-model="SystemSetting.home_signature_url"
+          type="text"
+          :placeholder="t('systemSetting.homeSignatureUrlPlaceholder')"
+          class="w-full py-1!"
+        />
+      </div>
       <!-- 自定义页脚内容 -->
       <div
         class="flex flex-row items-center justify-start text-[var(--color-text-secondary)] gap-2 mb-1"

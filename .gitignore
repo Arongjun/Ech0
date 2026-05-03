@@ -81,3 +81,4 @@ quality-report.md
 .cache/
 .worktrees/
 .pnpm-store/
+.docker-data/

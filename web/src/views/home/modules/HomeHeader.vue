@@ -27,16 +27,6 @@
         >
           <Rss class="w-4 h-4" />
         </a>
-        <a
-          href="https://github.com/lin-snow/Ech0"
-          target="_blank"
-          rel="noopener noreferrer"
-          v-tooltip="t('homeNav.githubAction')"
-          :aria-label="t('homeNav.githubAction')"
-          class="home-header__link-icon"
-        >
-          <Github class="w-4 h-4" />
-        </a>
         <button
           type="button"
           v-tooltip="themeToggleTooltip"
@@ -77,7 +67,6 @@
 import LightIcon from '@/components/icons/light.vue'
 import DarkIcon from '@/components/icons/dark.vue'
 import LeafIcon from '@/components/icons/leaf.vue'
-import Github from '@/components/icons/github.vue'
 import Rss from '@/components/icons/rss.vue'
 import Auth from '@/components/icons/auth.vue'
 import Signoff from '@/components/icons/signoff.vue'

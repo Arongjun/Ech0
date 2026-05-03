@@ -348,8 +348,7 @@
     "themeToggleTitle": "Theme wechseln (nächstes: {mode})",
     "themeLight": "Hell",
     "themeDark": "Dunkel",
-    "themeSunny": "Sonnig",
-    "githubAction": "GitHub"
+    "themeSunny": "Sonnig"
   },
   "homeTop": {
     "searchTitle": "Suche",
@@ -524,6 +523,12 @@
     "serverNamePlaceholder": "Servername eingeben",
     "serverUrl": "Server-URL",
     "serverUrlPlaceholder": "Server-URL mit http(s) eingeben",
+    "homeWelcomeText": "Startseiten-Begrüßung",
+    "homeWelcomeTextPlaceholder": "Startseiten-Begrüßung eingeben",
+    "homeSignatureText": "Startseiten-Signatur",
+    "homeSignatureTextPlaceholder": "Startseiten-Signatur eingeben",
+    "homeSignatureUrl": "Startseiten-Linkziel",
+    "homeSignatureUrlPlaceholder": "URL eingeben, unterstützt https:// oder Pfade mit /",
     "footerContent": "Footer-Text",
     "footerContentPlaceholder": "Footer-Text eingeben",
     "footerLink": "Footer-Link",
@@ -910,19 +915,6 @@
   "commonNav": {
     "backHome": "Zurück zur Startseite",
     "back": "Zurück"
-  },
-  "about": {
-    "linkAriaLabel": "Über diese Ech0-Instanz",
-    "copyrightHeading": "Urheberrecht",
-    "licenseLine": "Veröffentlicht unter der",
-    "authorHeading": "Autor",
-    "authorGithub": "GitHub-Profil",
-    "sourceHeading": "Quellcode",
-    "viewSource": "Quellcode auf GitHub ansehen",
-    "viewSourceAtCommit": "Quellcode {'@'} {commit} auf GitHub ansehen",
-    "viewRelease": "Release-Notes für v{version}",
-    "buildTime": "Gebaut am {time}",
-    "poweredBy": "Mit ❤️ gebaut · Powered by Ech0"
   },
   "echoPage": {
     "loadingDetail": "Echo-Details werden geladen…"

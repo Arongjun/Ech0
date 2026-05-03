@@ -78,8 +78,7 @@ func (commonHandler *CommonHandler) GetRss(ctx *gin.Context) {
 func (commonHandler *CommonHandler) HelloEch0() gin.HandlerFunc {
 	return res.Execute(func(ctx *gin.Context) res.Response {
 		// Embeds versionPkg.Info so version / commit / build_time / license /
-		// author / repo_url are all flattened into the JSON top level — the
-		// frontend About page reads them directly as the single source of truth.
+		// author / repo_url are all flattened into the JSON top level for clients.
 		hello := struct {
 			Hello     string `json:"hello"`
 			Copyright string `json:"copyright"`

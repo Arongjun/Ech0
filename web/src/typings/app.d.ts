@@ -346,6 +346,9 @@ declare namespace App {
         ICP_number: string
         footer_content: string
         footer_link: string
+        home_welcome_text: string
+        home_signature_text: string
+        home_signature_url: string
         meting_api: string
         custom_css: string
         custom_js: string

@@ -105,7 +105,13 @@
     </div>
 
     <div class="timeline-content">
-      <div class="px-4 py-3">
+      <div
+        class="px-4 py-3"
+        @click="handleContentClick"
+        @pointerdown="handleContentPointerDown"
+        @pointermove="handleContentPointerMove"
+        @pointercancel="resetContentPointerState"
+      >
         <template
           v-if="
             props.echo.layout === ImageLayout.GRID ||
@@ -154,7 +160,7 @@ const activeMenuId = ref<string | null>(null)
 </script>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, watch } from 'vue'
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, reactive, watch } from 'vue'
 import { fetchDeleteEcho, fetchGetEchoById } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useUserStore, useEchoStore, useEditorStore } from '@/stores'
@@ -238,6 +244,86 @@ const handleExpandEcho = (echoId: string) => {
     name: 'echo',
     params: { echoId: echoId },
   })
+}
+
+const CONTENT_CLICK_IGNORE_SELECTOR = [
+  'a',
+  'button',
+  'input',
+  'textarea',
+  'select',
+  'label',
+  'summary',
+  'details',
+  '[role="button"]',
+  '.image-gallery-container',
+  '.extension-renderer',
+].join(', ')
+const CONTENT_CLICK_MOVE_THRESHOLD = 8
+
+const contentPointerState = reactive({
+  pointerId: null as number | null,
+  startX: 0,
+  startY: 0,
+  moved: false,
+})
+
+const resolveEventElement = (target: EventTarget | null): Element | null => {
+  if (target instanceof Element) return target
+  return target instanceof Node ? target.parentElement : null
+}
+
+const resetContentPointerState = () => {
+  contentPointerState.pointerId = null
+  contentPointerState.startX = 0
+  contentPointerState.startY = 0
+  contentPointerState.moved = false
+}
+
+const handleContentPointerDown = (event: PointerEvent) => {
+  if (!event.isPrimary) return
+  contentPointerState.pointerId = event.pointerId
+  contentPointerState.startX = event.clientX
+  contentPointerState.startY = event.clientY
+  contentPointerState.moved = false
+}
+
+const handleContentPointerMove = (event: PointerEvent) => {
+  if (contentPointerState.pointerId !== event.pointerId) return
+  const deltaX = Math.abs(event.clientX - contentPointerState.startX)
+  const deltaY = Math.abs(event.clientY - contentPointerState.startY)
+  if (deltaX > CONTENT_CLICK_MOVE_THRESHOLD || deltaY > CONTENT_CLICK_MOVE_THRESHOLD) {
+    contentPointerState.moved = true
+  }
+}
+
+const hasActiveTextSelection = () => {
+  const selection = window.getSelection?.()
+  return Boolean(selection && selection.type === 'Range' && String(selection).trim())
+}
+
+const handleContentClick = (event: MouseEvent) => {
+  const target = resolveEventElement(event.target)
+  if (!target) {
+    resetContentPointerState()
+    return
+  }
+  if (
+    event.defaultPrevented ||
+    event.button !== 0 ||
+    event.metaKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
+    event.altKey ||
+    contentPointerState.moved ||
+    hasActiveTextSelection() ||
+    target.closest(CONTENT_CLICK_IGNORE_SELECTOR)
+  ) {
+    resetContentPointerState()
+    return
+  }
+  handleExpandEcho(props.echo.id)
+  resetContentPointerState()
 }
 
 const isMenuOpen = computed(() => activeMenuId.value === props.echo.id)
