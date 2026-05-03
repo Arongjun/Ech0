@@ -37,7 +37,7 @@ runs:
 
     - name: Restore cached toolchain
       id: restore-musl-cache
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         path: ${{ steps.paths.outputs.toolchain_root }}/${{ steps.paths.outputs.toolchain_dir }}
         key: ${{ runner.os }}-musl-${{ inputs.toolchain-version }}-${{ inputs.archive-sha256 != '' && inputs.archive-sha256 || 'no-sha256' }}
@@ -67,7 +67,7 @@ runs:
 
     - name: Save toolchain cache
       if: steps.restore-musl-cache.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v5
       with:
         path: ${{ steps.paths.outputs.toolchain_root }}/${{ steps.paths.outputs.toolchain_dir }}
         key: ${{ steps.restore-musl-cache.outputs.cache-primary-key }}
