@@ -1,0 +1,943 @@
+/*
+  Arong iOS Glass Pro v2.1 for Ech0
+  Built-in theme for Arong's custom branch.
+
+  Notes:
+  - Loaded from the app bundle. The panel Custom CSS field can stay empty.
+  - No global scrollbar styling.
+  - Desktop home uses an internal scroll container; this hides only that scrollbar.
+  - Selectors are intentionally broad enough to hit both fresh Ech0 builds and cached class paths.
+*/
+
+:root {
+  --ag-ink: #1d1d1f;
+  --ag-ink-soft: #55565b;
+  --ag-ink-faint: #8d8f96;
+  --ag-blue: #0a84ff;
+  --ag-orange: #c74900;
+  --ag-line: rgba(55, 48, 42, 0.105);
+  --ag-line-soft: rgba(255, 255, 255, 0.62);
+  --ag-canvas: #f3f7fb;
+  --ag-canvas-warm: #fbfcfe;
+  --ag-glass: rgba(255, 255, 255, 0.62);
+  --ag-glass-strong: rgba(255, 255, 255, 0.78);
+  --ag-glass-soft: rgba(255, 255, 255, 0.42);
+  --ag-radius-xl: 30px;
+  --ag-radius-lg: 24px;
+  --ag-radius-md: 18px;
+  --ag-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    inset 0 -1px 0 rgba(31, 38, 50, 0.035),
+    0 10px 24px rgba(40, 48, 62, 0.052),
+    0 1px 4px rgba(40, 48, 62, 0.035);
+
+  --color-bg-canvas: transparent;
+  --color-bg-surface: var(--ag-glass-strong);
+  --color-bg-muted: rgba(245, 246, 249, 0.7);
+  --color-text-primary: var(--ag-ink);
+  --color-text-secondary: var(--ag-ink-soft);
+  --color-text-muted: var(--ag-ink-faint);
+  --color-border-subtle: var(--ag-line);
+  --color-border-strong: rgba(55, 48, 42, 0.16);
+  --color-accent: var(--ag-blue);
+  --color-accent-soft: rgba(10, 132, 255, 0.13);
+  --filter-search-shell-bg: rgba(255, 255, 255, 0.62);
+  --filter-search-input-border: transparent;
+  --input-bg-color: rgba(255, 255, 255, 0.62);
+  --input-border-color: var(--ag-line);
+  --input-focus-ring-color: rgba(10, 132, 255, 0.2);
+  --placeholder-color: var(--ag-ink-faint);
+}
+
+:root.dark {
+  --ag-ink: #f5f5f7;
+  --ag-ink-soft: #d4d4d8;
+  --ag-ink-faint: #93949b;
+  --ag-blue: #0a84ff;
+  --ag-orange: #ff9f0a;
+  --ag-line: rgba(255, 255, 255, 0.12);
+  --ag-line-soft: rgba(255, 255, 255, 0.11);
+  --ag-canvas: #111115;
+  --ag-canvas-warm: #171719;
+  --ag-glass: rgba(42, 42, 47, 0.62);
+  --ag-glass-strong: rgba(50, 50, 56, 0.76);
+  --ag-glass-soft: rgba(255, 255, 255, 0.055);
+  --ag-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+    0 12px 28px rgba(0, 0, 0, 0.22),
+    0 1px 5px rgba(0, 0, 0, 0.16);
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+  background: #fbfcfe !important;
+}
+
+html {
+  background:
+    radial-gradient(circle at 18% -10%, rgba(255, 255, 255, 0.96), transparent 24rem),
+    radial-gradient(circle at 86% 0%, rgba(10, 132, 255, 0.14), transparent 30rem),
+    linear-gradient(135deg, #fbfcfe 0%, #f6f9fc 43%, #edf4fb 100%) !important;
+  background-attachment: fixed !important;
+}
+
+body {
+  overflow-x: hidden !important;
+  color: var(--ag-ink) !important;
+  background:
+    radial-gradient(circle at 18% -10%, rgba(255, 255, 255, 0.96), transparent 24rem),
+    radial-gradient(circle at 86% 0%, rgba(10, 132, 255, 0.14), transparent 30rem),
+    radial-gradient(circle at 64% 42%, rgba(255, 255, 255, 0.62), transparent 24rem),
+    linear-gradient(135deg, #fbfcfe 0%, #f6f9fc 43%, #edf4fb 100%) !important;
+  background-attachment: fixed !important;
+  font-family:
+    "SF Pro Display",
+    "SF Pro Text",
+    "PingFang SC",
+    "Microsoft YaHei",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+#app,
+.app-stack,
+.home-page,
+.home-shell,
+.home-layout,
+.home-main,
+.home-main-track {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.home-page {
+  --home-canvas: transparent !important;
+}
+
+:root.sunny body::before {
+  display: none !important;
+  background: none !important;
+  opacity: 0 !important;
+}
+
+:root.dark body {
+  background:
+    radial-gradient(circle at 20% -8%, rgba(255, 255, 255, 0.08), transparent 23rem),
+    radial-gradient(circle at 82% 3%, rgba(10, 132, 255, 0.15), transparent 28rem),
+    linear-gradient(135deg, var(--ag-canvas-warm), var(--ag-canvas) 54%, #0d0d10) !important;
+}
+
+::selection {
+  background: rgba(10, 132, 255, 0.2) !important;
+}
+
+.home-page {
+  position: relative !important;
+  background: transparent !important;
+  color: var(--ag-ink) !important;
+}
+
+.home-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background: transparent !important;
+  opacity: 0;
+}
+
+.home-shell {
+  position: relative !important;
+}
+
+@media (min-width: 820px) {
+  .home-page {
+    overflow: hidden !important;
+  }
+
+  .home-main {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    scrollbar-gutter: auto !important;
+  }
+
+  .home-main::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none !important;
+  }
+}
+
+/* Shared liquid surface. */
+.home-header,
+.home-banner,
+.home-filter__search-shell,
+.home-content-block,
+.timeline-content > div,
+.echo-detail,
+.panel-shell,
+.panel-card,
+.panel-welcome,
+.base-modal,
+.home-page [class*="rounded"][class*="shadow"],
+.panel-shell [class*="rounded"][class*="shadow"] {
+  border: 0.5px solid var(--ag-line) !important;
+  border-top-color: var(--ag-line-soft) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.18)),
+    var(--ag-glass) !important;
+  box-shadow: var(--ag-shadow) !important;
+}
+
+.home-header,
+.home-banner,
+.home-filter__search-shell {
+  backdrop-filter: saturate(180%) blur(22px) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(22px) !important;
+}
+
+.timeline-content > div,
+.home-content-block,
+.echo-detail {
+  backdrop-filter: saturate(145%) blur(10px) !important;
+  -webkit-backdrop-filter: saturate(145%) blur(10px) !important;
+}
+
+.panel-shell,
+.panel-card,
+.panel-welcome {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Header. */
+.home-header {
+  position: relative !important;
+  min-height: 4.55rem !important;
+  margin: 0 0.08rem 1rem !important;
+  padding: 0.58rem 0.76rem !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+}
+
+.home-header::after {
+  content: "";
+  position: absolute;
+  inset: 0.5px;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.74), transparent 9rem),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.24), transparent 45%);
+}
+
+.home-header__brand {
+  gap: 0.78rem !important;
+  min-width: 0 !important;
+}
+
+.home-header__logo-wrap {
+  border-radius: 999px !important;
+}
+
+.home-header__logo,
+img.home-header__logo {
+  width: 3.05rem !important;
+  height: 3.05rem !important;
+  border: 2px solid rgba(255, 255, 255, 0.82) !important;
+  border-radius: 999px !important;
+  background: #fff6ea !important;
+  box-shadow:
+    0 8px 18px rgba(31, 38, 50, 0.1),
+    0 0 0 0.5px var(--ag-line) !important;
+}
+
+.home-header__title {
+  color: var(--ag-ink) !important;
+  font-size: clamp(1.48rem, 3.2vw, 1.86rem) !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.052em !important;
+}
+
+.home-header__links {
+  gap: 0.08rem !important;
+  padding: 0.12rem !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.38) !important;
+}
+
+.home-header__link-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 1.72rem !important;
+  height: 1.72rem !important;
+  padding: 0 !important;
+  border-radius: 999px !important;
+  color: var(--ag-ink-faint) !important;
+}
+
+.home-header__link-icon:hover {
+  color: var(--ag-blue) !important;
+  background: rgba(10, 132, 255, 0.12) !important;
+}
+
+/* Welcome card. */
+.home-banner {
+  position: relative !important;
+  min-height: 6.45rem !important;
+  margin: 0.36rem 0.18rem 0.95rem !important;
+  padding: 1rem 1.1rem !important;
+  border-radius: var(--ag-radius-xl) !important;
+  overflow: hidden !important;
+}
+
+.home-banner::after {
+  content: "";
+  position: absolute;
+  inset: auto 2rem -1.35rem 2rem;
+  height: 2.2rem;
+  pointer-events: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.32);
+  filter: blur(13px);
+  opacity: 0.58;
+}
+
+.home-banner__line {
+  color: var(--ag-ink-soft) !important;
+  font-size: 1rem !important;
+  line-height: 1.55 !important;
+}
+
+.home-banner__powered,
+.home-banner__powered * {
+  color: var(--ag-ink-soft) !important;
+  font-weight: 700 !important;
+}
+
+.home-banner__about {
+  width: 1.6rem !important;
+  height: 1.6rem !important;
+  color: var(--ag-ink-faint) !important;
+}
+
+.home-banner__about-icon {
+  width: 1.1rem !important;
+  height: 1.1rem !important;
+  font-size: 1.1rem !important;
+}
+
+/* Right rail and search. */
+.home-aside--rail {
+  gap: 0.95rem !important;
+}
+
+.home-sidebar-nav__link,
+.home-filter__search-shell {
+  border-radius: 18px !important;
+}
+
+.home-sidebar-nav__link {
+  margin-bottom: 0.2rem !important;
+  color: var(--ag-ink-soft) !important;
+  background: rgba(255, 255, 255, 0.34) !important;
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.42),
+    0 7px 18px rgba(31, 38, 50, 0.045) !important;
+}
+
+.home-sidebar-nav__link:hover,
+.home-sidebar-nav__link--active {
+  color: var(--ag-ink) !important;
+  background: rgba(255, 255, 255, 0.74) !important;
+}
+
+.home-filter__search-shell {
+  position: relative !important;
+  min-height: 3.45rem !important;
+  padding: 0.48rem 4.55rem 0.48rem 2.55rem !important;
+}
+
+.home-filter__search-shell::before {
+  content: "";
+  position: absolute;
+  left: 1.02rem;
+  top: 50%;
+  width: 0.72rem;
+  height: 0.72rem;
+  border: 2px solid var(--ag-ink-faint);
+  border-radius: 999px;
+  transform: translateY(-55%);
+  opacity: 0.78;
+}
+
+.home-filter__search-shell::after {
+  content: "";
+  position: absolute;
+  left: 1.66rem;
+  top: calc(50% + 0.27rem);
+  width: 0.5rem;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--ag-ink-faint);
+  transform: rotate(45deg);
+  opacity: 0.78;
+}
+
+.home-filter__search-shell input {
+  width: 100% !important;
+  height: 2.38rem !important;
+  padding: 0 0.75rem !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.52) !important;
+  box-shadow: inset 0 0 0 0.5px var(--ag-line) !important;
+  color: var(--ag-ink-soft) !important;
+}
+
+.home-filter__kbd-hint {
+  right: 0.62rem !important;
+  min-width: 3rem !important;
+  min-height: 2rem !important;
+  border-radius: 10px !important;
+  color: var(--ag-ink-soft) !important;
+  background: rgba(255, 255, 255, 0.76) !important;
+  border-color: var(--ag-line) !important;
+  border-bottom-color: rgba(55, 48, 42, 0.18) !important;
+  box-shadow: 0 2px 7px rgba(31, 38, 50, 0.055) !important;
+}
+
+.home-aside__version {
+  color: var(--ag-ink-soft) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* Timeline cards. */
+.echo-timeline {
+  overflow: visible !important;
+}
+
+.echo-header-sticky {
+  background: transparent !important;
+  overflow: visible !important;
+}
+
+.timeline-marker > div {
+  background: var(--ag-blue) !important;
+  box-shadow: 0 0 0 5px rgba(10, 132, 255, 0.12) !important;
+}
+
+.timeline-content::before {
+  display: none !important;
+  background: transparent !important;
+}
+
+.timeline-content > div {
+  position: relative !important;
+  margin: 0 0.08rem 0.88rem 0.08rem !important;
+  border-radius: 26px !important;
+  overflow: hidden !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(31, 38, 50, 0.028),
+    0 8px 18px rgba(40, 48, 62, 0.045),
+    0 1px 3px rgba(40, 48, 62, 0.025) !important;
+}
+
+.timeline-content > div:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    inset 0 -1px 0 rgba(31, 38, 50, 0.035),
+    0 12px 24px rgba(40, 48, 62, 0.06),
+    0 1px 5px rgba(40, 48, 62, 0.035) !important;
+}
+
+.echo-header-sticky .text-sm,
+.echo-header-sticky [class*="text-"][class*="accent"] {
+  color: var(--ag-blue) !important;
+  font-weight: 760 !important;
+}
+
+.echo-open-btn,
+.echo-timeline button[class*="rounded"] {
+  background: rgba(255, 255, 255, 0.72) !important;
+  box-shadow:
+    inset 0 0 0 0.5px var(--ag-line),
+    0 4px 12px rgba(31, 38, 50, 0.08) !important;
+}
+
+.echos-toolbar p,
+.echos-toolbar span {
+  color: var(--ag-ink-faint) !important;
+}
+
+/* Echo detail. */
+.echo-detail {
+  max-width: min(42rem, calc(100vw - 2rem)) !important;
+  margin-top: 1.25rem !important;
+  padding: 1rem !important;
+  border-radius: var(--ag-radius-xl) !important;
+}
+
+.echo-detail-head {
+  border-bottom-color: var(--ag-line) !important;
+}
+
+.echo-detail-back {
+  background: rgba(255, 255, 255, 0.64) !important;
+  border-radius: 999px !important;
+  box-shadow:
+    inset 0 0 0 0.5px var(--ag-line),
+    0 4px 12px rgba(31, 38, 50, 0.08) !important;
+}
+
+/* Panel: real iOS glass, but without heavy nested blur. */
+.app-stack,
+.panel-page-wrap,
+.panel-page-wrap > *,
+.panel-main,
+.panel-content {
+  background-color: transparent !important;
+}
+
+.app-stack {
+  min-height: 100dvh !important;
+}
+
+/* Panel page background: remove Ech0's original warm canvas completely. */
+body:has(.panel-page-wrap) {
+  background:
+    radial-gradient(circle at 18% -10%, rgba(255, 255, 255, 0.98), transparent 24rem),
+    radial-gradient(circle at 88% 0%, rgba(10, 132, 255, 0.13), transparent 30rem),
+    radial-gradient(circle at 62% 48%, rgba(255, 255, 255, 0.72), transparent 28rem),
+    linear-gradient(135deg, #fbfcfe 0%, #f7fafe 46%, #eef5fc 100%) !important;
+  background-attachment: fixed !important;
+}
+
+.panel-shell {
+  position: relative !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
+  border-radius: 32px !important;
+  border: 0.5px solid rgba(31, 38, 50, 0.075) !important;
+  border-top-color: rgba(255, 255, 255, 0.88) !important;
+  background:
+    radial-gradient(circle at 16% 0%, rgba(255, 255, 255, 0.96), transparent 18rem),
+    radial-gradient(circle at 92% 4%, rgba(10, 132, 255, 0.09), transparent 20rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.3)),
+    rgba(255, 255, 255, 0.52) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -1px 0 rgba(31, 38, 50, 0.035),
+    0 22px 52px rgba(35, 45, 62, 0.08),
+    0 2px 10px rgba(35, 45, 62, 0.035) !important;
+  backdrop-filter: saturate(175%) blur(20px) !important;
+  -webkit-backdrop-filter: saturate(175%) blur(20px) !important;
+}
+
+.panel-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.56), transparent 42%),
+    linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.22) 100%);
+}
+
+.panel-welcome {
+  position: relative !important;
+  overflow: hidden !important;
+  border-radius: 28px !important;
+  border: 0.5px solid rgba(31, 38, 50, 0.065) !important;
+  border-top-color: rgba(255, 255, 255, 0.86) !important;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.9), transparent 14rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.34)),
+    rgba(255, 255, 255, 0.56) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 12px 26px rgba(35, 45, 62, 0.052) !important;
+}
+
+.panel-card {
+  border-radius: 26px !important;
+  border: 0.5px solid rgba(31, 38, 50, 0.07) !important;
+  border-top-color: rgba(255, 255, 255, 0.82) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.28)),
+    rgba(255, 255, 255, 0.5) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    0 10px 24px rgba(35, 45, 62, 0.052) !important;
+}
+
+.panel-nav {
+  gap: 0.7rem !important;
+}
+
+.panel-nav button,
+.panel-nav a,
+.panel-page-wrap button,
+.panel-page-wrap select {
+  border-radius: 16px !important;
+}
+
+.panel-nav button {
+  min-height: 2.55rem !important;
+  border: 0.5px solid transparent !important;
+  background: transparent !important;
+  color: var(--ag-ink-soft) !important;
+  box-shadow: none !important;
+}
+
+.panel-nav button[class*="bg-"],
+.panel-nav button:hover,
+.panel-nav a:hover {
+  color: var(--ag-ink) !important;
+  border-color: rgba(31, 38, 50, 0.065) !important;
+  border-top-color: rgba(255, 255, 255, 0.82) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.34)),
+    rgba(255, 255, 255, 0.56) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    0 8px 18px rgba(35, 45, 62, 0.06) !important;
+}
+
+.panel-content {
+  min-width: 0 !important;
+}
+
+.panel-widget-wrap {
+  border-color: rgba(31, 38, 50, 0.055) !important;
+}
+
+.panel-page-wrap input,
+.panel-page-wrap textarea,
+.panel-page-wrap select {
+  border-color: rgba(31, 38, 50, 0.08) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.42)),
+    rgba(255, 255, 255, 0.56) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.76) !important;
+}
+
+.panel-page-wrap h1,
+.panel-page-wrap h2,
+.panel-page-wrap h3 {
+  color: var(--ag-ink) !important;
+}
+
+.panel-page-wrap p,
+.panel-page-wrap span,
+.panel-page-wrap label {
+  color: var(--ag-ink-soft) !important;
+}
+
+.panel-page-wrap {
+  padding-bottom: 1.25rem !important;
+}
+
+/* Sub pages: publish / status / tags should feel like one coherent glass system. */
+.home-main-track > .home-content-block,
+.home-main-track > .home-status-widgets {
+  position: relative !important;
+  margin: 0.15rem 0.12rem 1rem !important;
+  padding: 1rem !important;
+  border-radius: var(--ag-radius-xl) !important;
+  overflow: hidden !important;
+  border: 0.5px solid var(--ag-line) !important;
+  border-top-color: rgba(255, 255, 255, 0.72) !important;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.72), transparent 14rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.18)),
+    rgba(255, 255, 255, 0.5) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.84),
+    inset 0 -1px 0 rgba(31, 38, 50, 0.03),
+    0 12px 28px rgba(40, 48, 62, 0.052),
+    0 1px 5px rgba(40, 48, 62, 0.03) !important;
+  backdrop-filter: saturate(165%) blur(18px) !important;
+  -webkit-backdrop-filter: saturate(165%) blur(18px) !important;
+}
+
+.home-main-track > .home-content-block::before,
+.home-main-track > .home-status-widgets::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.45), transparent 44%);
+  opacity: 0.72;
+}
+
+.home-content-block > *,
+.home-status-widgets > * {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.home-content-block--publish {
+  padding: 0.95rem !important;
+}
+
+/* Publish editor: remove the rectangular original shell. */
+.editor-shell,
+.editor-shell__inner,
+.editor-shell__body {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.editor-shell__inner {
+  padding: 0 !important;
+}
+
+.editor-shell__body {
+  margin: 0 0 0.85rem !important;
+  padding: 0 !important;
+  border-radius: 24px !important;
+}
+
+.markdown-editor:not(.is-full) {
+  border: 0.5px solid rgba(31, 38, 50, 0.07) !important;
+  border-top-color: rgba(255, 255, 255, 0.7) !important;
+  border-radius: 24px !important;
+  overflow: hidden !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0.2)),
+    rgba(255, 255, 255, 0.48) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 8px 18px rgba(40, 48, 62, 0.035) !important;
+}
+
+.markdown-editor:not(.is-full) .editor-content {
+  min-height: 13rem !important;
+}
+
+.markdown-editor:not(.is-full) .editor-input {
+  min-height: 13rem !important;
+  padding: 1.15rem 4.2rem 1.15rem 1.15rem !important;
+  font-size: 0.98rem !important;
+  color: var(--ag-ink-soft) !important;
+}
+
+.markdown-editor .mode-toggle-btn {
+  top: 0.82rem !important;
+  right: 0.88rem !important;
+  min-width: 2.25rem !important;
+  height: 2rem !important;
+  border-radius: 12px !important;
+  border-color: var(--ag-line) !important;
+  background: rgba(255, 255, 255, 0.66) !important;
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.48),
+    0 4px 10px rgba(31, 38, 50, 0.05) !important;
+}
+
+.editor-actions {
+  padding: 0 !important;
+}
+
+.editor-actions button,
+.editor-actions [role="button"] {
+  border-radius: 14px !important;
+  border-color: var(--ag-line) !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.48),
+    0 6px 14px rgba(31, 38, 50, 0.055) !important;
+}
+
+.editor-actions__tag-panel,
+.editor-actions__publish-panel,
+.editor-mode-panel,
+.editor-image-panel {
+  border-radius: 22px !important;
+  border-color: var(--ag-line) !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  box-shadow: 0 12px 26px rgba(31, 38, 50, 0.08) !important;
+  backdrop-filter: saturate(160%) blur(16px) !important;
+  -webkit-backdrop-filter: saturate(160%) blur(16px) !important;
+}
+
+/* Tags manager: no flat white block, softer fields. */
+.home-content-block > .py-4 {
+  padding: 0.15rem !important;
+}
+
+.home-content-block h2 {
+  margin-top: 0 !important;
+  color: var(--ag-ink) !important;
+}
+
+.home-content-block form > div {
+  border-style: solid !important;
+  border-color: var(--ag-line) !important;
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.48) !important;
+  min-height: 2.45rem !important;
+}
+
+.home-content-block form button[type="submit"] {
+  border-radius: 16px !important;
+  border-color: var(--ag-line) !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  min-height: 2.45rem !important;
+  box-shadow: 0 5px 12px rgba(31, 38, 50, 0.04) !important;
+}
+
+.home-content-block input {
+  color: var(--ag-ink-soft) !important;
+}
+
+/* Status widgets: make each widget a compact card instead of a pasted white page. */
+.home-status-widgets {
+  gap: 0.85rem !important;
+}
+
+.home-status-widgets > .px-2 {
+  padding: 0 !important;
+}
+
+.home-status-widgets .widget {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 1rem !important;
+  border-radius: 24px !important;
+  border: 0.5px solid rgba(31, 38, 50, 0.07) !important;
+  border-top-color: rgba(255, 255, 255, 0.66) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.18)),
+    rgba(255, 255, 255, 0.42) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 7px 18px rgba(40, 48, 62, 0.04) !important;
+}
+
+.heatmap-title,
+.connect-title,
+.comment-title {
+  font-size: 1.42rem !important;
+  letter-spacing: -0.045em !important;
+  color: var(--ag-ink) !important;
+}
+
+.heatmap-title-accent,
+.connect-title-accent,
+.comment-title-accent {
+  font-size: 1.02rem !important;
+  color: var(--ag-orange) !important;
+}
+
+.connect-icon-chip,
+.comment-icon-chip {
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+}
+
+.comment-teaser-card {
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.44) !important;
+  box-shadow: inset 0 0 0 0.5px var(--ag-line) !important;
+}
+
+/* Mobile polish. */
+@media (max-width: 819.98px) {
+  body {
+    background:
+      radial-gradient(circle at 18% -8%, rgba(255, 255, 255, 0.98), transparent 18rem),
+      radial-gradient(circle at 90% 0%, rgba(10, 132, 255, 0.11), transparent 20rem),
+      linear-gradient(160deg, #fbfcfe 0%, #f7fafe 52%, #eef5fc 100%) !important;
+    background-attachment: fixed !important;
+  }
+
+  body:has(.panel-page-wrap) {
+    background:
+      radial-gradient(circle at 18% -8%, rgba(255, 255, 255, 0.98), transparent 18rem),
+      radial-gradient(circle at 90% 0%, rgba(10, 132, 255, 0.11), transparent 20rem),
+      linear-gradient(160deg, #fbfcfe 0%, #f7fafe 52%, #eef5fc 100%) !important;
+  }
+
+  .panel-shell {
+    margin-bottom: 0 !important;
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .home-shell {
+    padding-inline: 0.72rem !important;
+  }
+
+  .home-header {
+    min-height: 4.25rem !important;
+    padding: 0.5rem 0.62rem !important;
+  }
+
+  .home-header__logo,
+  img.home-header__logo {
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+  }
+
+  .home-header__title {
+    font-size: 1.55rem !important;
+  }
+
+  .home-header__link-icon {
+    width: 1.62rem !important;
+    height: 1.62rem !important;
+  }
+
+  .home-banner {
+    min-height: 6.2rem !important;
+    margin-inline: 0.05rem !important;
+  }
+
+  .home-sidebar-nav__link {
+    background: rgba(255, 255, 255, 0.54) !important;
+  }
+
+  .home-filter__search-shell {
+    padding-left: 2.45rem !important;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .home-header,
+  .home-banner,
+.timeline-content > div,
+.home-sidebar-nav__link,
+.home-filter__search-shell {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease,
+    color 180ms ease !important;
+}
+
+}
+
+/* END Arong iOS Glass Pro v2.1 */

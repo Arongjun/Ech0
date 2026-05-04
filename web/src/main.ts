@@ -3,6 +3,7 @@
 
 import 'virtual:uno.css'
 import '@/themes/index.scss'
+import '@/themes/arong-ios-glass-pro.css'
 import 'floating-vue/dist/style.css'
 
 import { createApp } from 'vue'
