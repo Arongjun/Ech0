@@ -18,6 +18,44 @@ import { setupI18n } from './locales'
 // 自定义组件
 import BaseDialog from '@/components/common/BaseDialog.vue'
 
+const DEFAULT_LOADER_SITE_TITLE = 'Ech0'
+const LOADER_SITE_TITLE_STORAGE_KEY = 'ech0:loader-site-title'
+
+const normalizeLoaderSiteTitle = (...values: unknown[]) => {
+  for (const value of values) {
+    const title = String(value ?? '').trim()
+    if (title) return title
+  }
+  return DEFAULT_LOADER_SITE_TITLE
+}
+
+const setStartupLoaderSiteTitle = (title: string) => {
+  const loaderBrand =
+    document.getElementById('app-loader-brand') ??
+    document.querySelector<HTMLElement>('#app-loader .loader-brand')
+  if (!loaderBrand) return
+
+  loaderBrand.textContent = normalizeLoaderSiteTitle(title)
+}
+
+const getCachedStartupLoaderSiteTitle = () => {
+  try {
+    return window.localStorage.getItem(LOADER_SITE_TITLE_STORAGE_KEY) || ''
+  } catch {
+    return ''
+  }
+}
+
+const cacheStartupLoaderSiteTitle = (title: string) => {
+  try {
+    window.localStorage.setItem(LOADER_SITE_TITLE_STORAGE_KEY, normalizeLoaderSiteTitle(title))
+  } catch {
+    // Ignore storage failures in private mode or locked-down browsers.
+  }
+}
+
+setStartupLoaderSiteTitle(getCachedStartupLoaderSiteTitle())
+
 const app = createApp(App)
 const pinia = createPinia()
 
@@ -30,6 +68,12 @@ await initStores().catch((e) => {
 
 const settingStore = useSettingStore()
 const initStore = useInitStore()
+const startupLoaderSiteTitle = normalizeLoaderSiteTitle(
+  settingStore.SystemSetting.server_name,
+  settingStore.SystemSetting.site_title,
+)
+setStartupLoaderSiteTitle(startupLoaderSiteTitle)
+cacheStartupLoaderSiteTitle(startupLoaderSiteTitle)
 // 站点未完成初始化时跳过站点默认语言，让 navigator 检测生效，避免部署者第一次打开就被锁成 zh-CN。
 const siteDefaultLocale = initStore.initialized
   ? settingStore.SystemSetting.default_locale

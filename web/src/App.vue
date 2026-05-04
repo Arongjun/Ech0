@@ -76,6 +76,7 @@ let sunnyVideoLoading = false
 
 const DEFAULT_FAVICON = '/favicon.ico'
 const CUSTOM_STYLE_ID = 'ech0-custom-style'
+const EARLY_CUSTOM_STYLE_ID = 'ech0-early-custom-style'
 const CUSTOM_SCRIPT_ID = 'ech0-custom-script'
 useSeoHead(SystemSetting)
 
@@ -116,11 +117,13 @@ const upsertCustomStyle = (css: string) => {
 
   if (!normalized) {
     existing?.remove()
+    document.getElementById(EARLY_CUSTOM_STYLE_ID)?.remove()
     return
   }
 
   if (existing) {
     existing.textContent = normalized
+    document.getElementById(EARLY_CUSTOM_STYLE_ID)?.remove()
     return
   }
 
@@ -128,6 +131,7 @@ const upsertCustomStyle = (css: string) => {
   styleTag.id = CUSTOM_STYLE_ID
   styleTag.textContent = normalized
   head.appendChild(styleTag)
+  document.getElementById(EARLY_CUSTOM_STYLE_ID)?.remove()
 }
 
 const upsertCustomScript = (script: string) => {
