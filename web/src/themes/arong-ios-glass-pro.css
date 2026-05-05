@@ -1223,4 +1223,466 @@ body::after {
   }
 }
 
-/* END Arong iOS Glass Pro v2.2 */
+/* v2.3 Native Sheet: visible high-texture refinement, less generic bubble glass. */
+:root {
+  --ag-ink: #17181c;
+  --ag-ink-soft: #50545d;
+  --ag-ink-faint: #8a9099;
+  --ag-blue: #1677f2;
+  --ag-orange: #b94a08;
+  --ag-line: rgba(24, 29, 38, 0.105);
+  --ag-line-soft: rgba(255, 255, 255, 0.8);
+  --ag-paper: rgba(255, 255, 255, 0.58);
+  --ag-paper-strong: rgba(255, 255, 255, 0.72);
+  --ag-paper-muted: rgba(245, 248, 251, 0.58);
+  --ag-radius-xl: 20px;
+  --ag-radius-lg: 16px;
+  --ag-radius-md: 12px;
+  --ag-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    inset 0 -1px 0 rgba(20, 25, 34, 0.025),
+    0 5px 14px rgba(30, 39, 54, 0.038),
+    0 1px 2px rgba(30, 39, 54, 0.032);
+}
+
+html,
+body {
+  background:
+    radial-gradient(circle at 12% -8%, rgba(255, 255, 255, 0.98), transparent 20rem),
+    radial-gradient(circle at 87% 2%, rgba(42, 137, 255, 0.16), transparent 31rem),
+    linear-gradient(105deg, #fbfaf7 0%, #f8fbfd 42%, #eef6fd 100%) !important;
+}
+
+body::after {
+  opacity: 0.22 !important;
+  background-image:
+    linear-gradient(rgba(18, 24, 32, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(18, 24, 32, 0.016) 1px, transparent 1px) !important;
+  background-size: 28px 28px !important;
+}
+
+.home-header {
+  min-height: 4.15rem !important;
+  margin: 0 0 1rem !important;
+  padding: 0.55rem 0.64rem !important;
+  border-radius: 22px !important;
+  border-color: rgba(24, 29, 38, 0.08) !important;
+  border-top-color: rgba(255, 255, 255, 0.9) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.42)),
+    rgba(255, 255, 255, 0.5) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 8px 18px rgba(30, 39, 54, 0.048),
+    0 1px 2px rgba(30, 39, 54, 0.028) !important;
+}
+
+.home-header::after {
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.48), transparent 48%),
+    linear-gradient(180deg, transparent, rgba(21, 29, 40, 0.018)) !important;
+  opacity: 0.72 !important;
+}
+
+.home-header__logo,
+img.home-header__logo {
+  width: 2.82rem !important;
+  height: 2.82rem !important;
+  box-shadow:
+    0 5px 12px rgba(30, 39, 54, 0.08),
+    0 0 0 0.5px rgba(24, 29, 38, 0.12) !important;
+}
+
+.home-header__title {
+  letter-spacing: -0.044em !important;
+}
+
+.home-header__links {
+  gap: 0.04rem !important;
+  padding: 0 !important;
+  border-radius: 14px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.home-header__link-icon {
+  width: 1.6rem !important;
+  height: 1.6rem !important;
+  border-radius: 10px !important;
+}
+
+.home-header__link-icon:hover {
+  color: var(--ag-blue) !important;
+  background: rgba(22, 119, 242, 0.09) !important;
+}
+
+.home-banner {
+  min-height: 5.9rem !important;
+  margin: 0.25rem 0 1rem !important;
+  padding: 0.95rem 1rem !important;
+  border-radius: 20px !important;
+  border-color: rgba(24, 29, 38, 0.08) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.34)),
+    rgba(255, 255, 255, 0.48) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    0 5px 13px rgba(30, 39, 54, 0.036) !important;
+}
+
+.home-banner::after {
+  display: none !important;
+}
+
+.home-sidebar-nav__nav {
+  gap: 0.08rem !important;
+}
+
+.home-sidebar-nav__link {
+  position: relative !important;
+  min-height: 2.28rem !important;
+  padding-inline: 0.78rem !important;
+  border-radius: 10px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.home-sidebar-nav__link::before {
+  content: "";
+  position: absolute;
+  left: 0.32rem;
+  top: 50%;
+  width: 2px;
+  height: 1.05rem;
+  border-radius: 999px;
+  background: transparent;
+  transform: translateY(-50%);
+}
+
+.home-sidebar-nav__link:hover {
+  background: rgba(255, 255, 255, 0.26) !important;
+}
+
+.home-sidebar-nav__link--active,
+.home-sidebar-nav__link.home-sidebar-nav__link--active {
+  padding-left: 0.95rem !important;
+  border-radius: 12px !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.5)),
+    rgba(255, 255, 255, 0.58) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 3px 8px rgba(30, 39, 54, 0.03) !important;
+}
+
+.home-sidebar-nav__link--active::before,
+.home-sidebar-nav__link.home-sidebar-nav__link--active::before {
+  background: var(--ag-blue);
+}
+
+.home-filter__search-shell {
+  min-height: 3rem !important;
+  padding: 0.42rem 4.35rem 0.42rem 2.4rem !important;
+  border-radius: 15px !important;
+  border-color: rgba(24, 29, 38, 0.08) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.42)),
+    rgba(255, 255, 255, 0.52) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 4px 10px rgba(30, 39, 54, 0.032) !important;
+}
+
+.home-filter__search-shell input {
+  height: 2.05rem !important;
+  border-radius: 10px !important;
+  background: rgba(255, 255, 255, 0.36) !important;
+}
+
+.home-filter__kbd-hint {
+  right: 0.52rem !important;
+  min-height: 1.7rem !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.82) !important;
+}
+
+.timeline-content > div {
+  border-radius: 16px !important;
+  border-color: rgba(24, 29, 38, 0.078) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.38)),
+    rgba(255, 255, 255, 0.5) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 4px 11px rgba(30, 39, 54, 0.032) !important;
+}
+
+.timeline-marker > div {
+  width: 0.56rem !important;
+  height: 0.56rem !important;
+  box-shadow: 0 0 0 4px rgba(22, 119, 242, 0.1) !important;
+}
+
+.home-main-track > .home-content-block,
+.home-main-track > .home-status-widgets,
+.echo-detail {
+  border-radius: 20px !important;
+  border-color: rgba(24, 29, 38, 0.082) !important;
+  border-top-color: rgba(255, 255, 255, 0.86) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.34)),
+    rgba(255, 255, 255, 0.48) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.84),
+    0 6px 16px rgba(30, 39, 54, 0.038) !important;
+}
+
+.home-main-track > .home-content-block::before,
+.home-main-track > .home-status-widgets::before {
+  opacity: 0.18 !important;
+}
+
+.markdown-editor:not(.is-full),
+.editor-mode-panel,
+.editor-image-panel {
+  border-radius: 14px !important;
+}
+
+.editor-actions button,
+.editor-actions [role="button"] {
+  border-radius: 10px !important;
+}
+
+.editor-actions__tag-panel,
+.editor-actions__publish-panel,
+.editor-actions__info-pop {
+  border-radius: 14px !important;
+}
+
+.panel-shell {
+  border-radius: 24px !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.34)),
+    rgba(255, 255, 255, 0.46) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    0 14px 34px rgba(30, 39, 54, 0.052),
+    0 1px 3px rgba(30, 39, 54, 0.028) !important;
+}
+
+.panel-card,
+.panel-welcome,
+.home-status-widgets .widget {
+  border-radius: 16px !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.38)),
+    rgba(255, 255, 255, 0.5) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 4px 12px rgba(30, 39, 54, 0.032) !important;
+}
+
+.panel-nav button,
+.panel-nav a,
+.panel-page-wrap button,
+.panel-page-wrap select {
+  border-radius: 10px !important;
+}
+
+.panel-nav button[class*="bg-"],
+.panel-nav button:hover,
+.panel-nav a:hover {
+  border-radius: 12px !important;
+}
+
+@media (max-width: 819.98px) {
+  .home-header {
+    border-radius: 20px !important;
+  }
+
+  .home-banner,
+  .home-main-track > .home-content-block,
+  .home-main-track > .home-status-widgets,
+  .timeline-content > div {
+    border-radius: 16px !important;
+  }
+}
+
+/* v2.4 Dark Material: high-contrast dark mode instead of washed white glass. */
+:root.dark {
+  --ag-ink: #f7f8fb;
+  --ag-ink-soft: #d7dce5;
+  --ag-ink-faint: #9aa4b4;
+  --ag-blue: #4da3ff;
+  --ag-orange: #ffb366;
+  --ag-line: rgba(255, 255, 255, 0.13);
+  --ag-line-soft: rgba(255, 255, 255, 0.18);
+  --ag-paper: rgba(27, 32, 42, 0.82);
+  --ag-paper-strong: rgba(35, 41, 53, 0.88);
+  --ag-paper-muted: rgba(21, 26, 36, 0.72);
+  --color-text-primary: var(--ag-ink);
+  --color-text-secondary: var(--ag-ink-soft);
+  --color-text-muted: var(--ag-ink-faint);
+  --color-bg-surface: var(--ag-paper-strong);
+  --color-bg-muted: rgba(255, 255, 255, 0.08);
+  --input-bg-color: rgba(12, 16, 23, 0.56);
+  --input-border-color: rgba(255, 255, 255, 0.12);
+  --placeholder-color: rgba(215, 220, 229, 0.56);
+}
+
+:root.dark,
+:root.dark body,
+:root.dark #app {
+  color: var(--ag-ink) !important;
+  background:
+    radial-gradient(circle at 14% -10%, rgba(71, 116, 170, 0.18), transparent 24rem),
+    radial-gradient(circle at 86% 0%, rgba(20, 91, 166, 0.2), transparent 30rem),
+    linear-gradient(115deg, #0b0d12 0%, #101722 47%, #07111d 100%) !important;
+}
+
+:root.dark body::after {
+  opacity: 0.18 !important;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px) !important;
+}
+
+:root.dark .home-header,
+:root.dark .home-banner,
+:root.dark .home-filter__search-shell,
+:root.dark .home-main-track > .home-content-block,
+:root.dark .home-main-track > .home-status-widgets,
+:root.dark .timeline-content > div,
+:root.dark .echo-detail,
+:root.dark .panel-shell,
+:root.dark .panel-card,
+:root.dark .panel-welcome,
+:root.dark .base-modal {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  border-top-color: rgba(255, 255, 255, 0.18) !important;
+  background:
+    linear-gradient(180deg, rgba(43, 50, 64, 0.86), rgba(20, 25, 35, 0.78)),
+    rgba(19, 24, 34, 0.84) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.36),
+    0 10px 24px rgba(0, 0, 0, 0.28),
+    0 1px 2px rgba(0, 0, 0, 0.28) !important;
+  backdrop-filter: saturate(150%) blur(18px) !important;
+  -webkit-backdrop-filter: saturate(150%) blur(18px) !important;
+}
+
+:root.dark .home-header::after,
+:root.dark .home-main-track > .home-content-block::before,
+:root.dark .home-main-track > .home-status-widgets::before {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 46%),
+    linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.16)) !important;
+  opacity: 0.8 !important;
+}
+
+:root.dark .home-header__title,
+:root.dark .home-banner__line,
+:root.dark .home-banner__powered,
+:root.dark .home-banner__powered *,
+:root.dark .timeline-content > div,
+:root.dark .timeline-content > div p,
+:root.dark .timeline-content > div span,
+:root.dark .timeline-content > div div,
+:root.dark .panel-page-wrap h1,
+:root.dark .panel-page-wrap h2,
+:root.dark .panel-page-wrap h3 {
+  color: var(--ag-ink) !important;
+}
+
+:root.dark .home-banner__about,
+:root.dark .home-header__link-icon,
+:root.dark .home-sidebar-nav__link,
+:root.dark .home-filter__search-shell,
+:root.dark .home-aside__version,
+:root.dark .panel-page-wrap p,
+:root.dark .panel-page-wrap span,
+:root.dark .panel-page-wrap label {
+  color: var(--ag-ink-soft) !important;
+}
+
+:root.dark .home-sidebar-nav__link:hover {
+  color: var(--ag-ink) !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+}
+
+:root.dark .home-sidebar-nav__link--active,
+:root.dark .home-sidebar-nav__link.home-sidebar-nav__link--active {
+  color: var(--ag-ink) !important;
+  background:
+    linear-gradient(180deg, rgba(58, 68, 86, 0.86), rgba(32, 39, 52, 0.82)),
+    rgba(32, 39, 52, 0.82) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.16) !important;
+}
+
+:root.dark .home-filter__search-shell input,
+:root.dark .panel-page-wrap input,
+:root.dark .panel-page-wrap textarea,
+:root.dark .panel-page-wrap select {
+  color: var(--ag-ink) !important;
+  background: rgba(7, 10, 16, 0.42) !important;
+  border-color: rgba(255, 255, 255, 0.11) !important;
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.08) !important;
+}
+
+:root.dark .home-filter__search-shell input::placeholder,
+:root.dark .panel-page-wrap input::placeholder,
+:root.dark .panel-page-wrap textarea::placeholder {
+  color: rgba(215, 220, 229, 0.56) !important;
+}
+
+:root.dark .home-filter__kbd-hint,
+:root.dark .editor-actions button,
+:root.dark .editor-actions [role="button"],
+:root.dark .echo-open-btn,
+:root.dark .echo-timeline button[class*="rounded"] {
+  color: var(--ag-ink-soft) !important;
+  border-color: rgba(255, 255, 255, 0.11) !important;
+  background:
+    linear-gradient(180deg, rgba(57, 65, 80, 0.88), rgba(30, 36, 48, 0.84)),
+    rgba(30, 36, 48, 0.84) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.18) !important;
+}
+
+:root.dark .editor-actions__tag-panel,
+:root.dark .editor-actions__publish-panel,
+:root.dark .editor-actions__info-pop,
+:root.dark .editor-mode-panel,
+:root.dark .editor-image-panel,
+:root.dark .markdown-editor:not(.is-full),
+:root.dark .home-status-widgets .widget {
+  color: var(--ag-ink) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background:
+    linear-gradient(180deg, rgba(42, 50, 64, 0.9), rgba(20, 25, 35, 0.84)),
+    rgba(20, 25, 35, 0.86) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.11),
+    0 10px 22px rgba(0, 0, 0, 0.26) !important;
+}
+
+:root.dark .markdown-editor:not(.is-full) .editor-input {
+  color: var(--ag-ink) !important;
+}
+
+:root.dark .timeline-marker > div {
+  background: var(--ag-blue) !important;
+  box-shadow: 0 0 0 4px rgba(77, 163, 255, 0.18) !important;
+}
+
+:root.dark .echo-header-sticky .text-sm,
+:root.dark .echo-header-sticky [class*="text-"][class*="accent"] {
+  color: var(--ag-blue) !important;
+}
+
+/* END Arong iOS Glass Pro v2.4 */
