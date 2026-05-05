@@ -701,6 +701,11 @@ body:has(.panel-page-wrap) {
   z-index: 5 !important;
 }
 
+.home-main-track > .home-content-block.home-content-block--publish {
+  overflow: visible !important;
+  z-index: 8 !important;
+}
+
 /* Publish editor: remove the rectangular original shell. */
 .editor-shell,
 .editor-shell__inner,
@@ -770,6 +775,15 @@ body:has(.panel-page-wrap) {
   z-index: 30 !important;
 }
 
+.home-content-block--publish .editor-actions__info-pop,
+.home-content-block--publish .editor-actions__publish-panel {
+  top: auto !important;
+  right: 0 !important;
+  bottom: calc(100% + 0.55rem) !important;
+  z-index: 1000 !important;
+  transform-origin: right bottom !important;
+}
+
 .editor-actions button,
 .editor-actions [role="button"] {
   border-radius: 14px !important;
@@ -782,6 +796,7 @@ body:has(.panel-page-wrap) {
 
 .editor-actions__tag-panel,
 .editor-actions__publish-panel,
+.editor-actions__info-pop,
 .editor-mode-panel,
 .editor-image-panel {
   z-index: 999 !important;
