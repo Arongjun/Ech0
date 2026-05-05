@@ -967,4 +967,260 @@ body:has(.panel-page-wrap) {
 
 }
 
-/* END Arong iOS Glass Pro v2.1 */
+/* v2.2 Native Glass refinement: less AI-round, more real iOS material. */
+:root {
+  --ag-line: rgba(38, 42, 48, 0.092);
+  --ag-line-soft: rgba(255, 255, 255, 0.72);
+  --ag-glass: rgba(255, 255, 255, 0.5);
+  --ag-glass-strong: rgba(255, 255, 255, 0.66);
+  --ag-glass-soft: rgba(255, 255, 255, 0.34);
+  --ag-radius-xl: 24px;
+  --ag-radius-lg: 20px;
+  --ag-radius-md: 14px;
+  --ag-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    inset 0 -1px 0 rgba(31, 38, 50, 0.026),
+    0 7px 18px rgba(35, 45, 62, 0.04),
+    0 1px 2px rgba(35, 45, 62, 0.028);
+}
+
+html,
+body {
+  background:
+    radial-gradient(circle at 17% -8%, rgba(255, 255, 255, 0.98), transparent 22rem),
+    radial-gradient(circle at 88% 0%, rgba(10, 132, 255, 0.11), transparent 29rem),
+    radial-gradient(circle at 68% 42%, rgba(255, 255, 255, 0.54), transparent 24rem),
+    linear-gradient(135deg, #fbfcfe 0%, #f7fafc 48%, #eef5fb 100%) !important;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.28;
+  background-image:
+    linear-gradient(rgba(20, 24, 32, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 24, 32, 0.014) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 72%, transparent 100%);
+}
+
+.home-header {
+  min-height: 4.35rem !important;
+  margin: 0 0.05rem 0.95rem !important;
+  padding: 0.58rem 0.72rem !important;
+  border-radius: 28px !important;
+  background:
+    radial-gradient(circle at 13% 18%, rgba(255, 255, 255, 0.78), transparent 9rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0.32)),
+    rgba(255, 255, 255, 0.48) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.84),
+    inset 0 -1px 0 rgba(31, 38, 50, 0.028),
+    0 8px 20px rgba(35, 45, 62, 0.052),
+    0 1px 2px rgba(35, 45, 62, 0.028) !important;
+}
+
+.home-header::after {
+  opacity: 0.56 !important;
+}
+
+.home-header__links {
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: none !important;
+}
+
+.home-header__link-icon {
+  border-radius: 12px !important;
+}
+
+.home-header__link-icon:hover {
+  background: rgba(10, 132, 255, 0.1) !important;
+}
+
+.home-banner {
+  min-height: 6.1rem !important;
+  border-radius: 24px !important;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.72), transparent 11rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.54), rgba(255, 255, 255, 0.24)),
+    rgba(255, 255, 255, 0.44) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    0 7px 16px rgba(35, 45, 62, 0.038) !important;
+}
+
+.home-banner::after {
+  opacity: 0.22 !important;
+  filter: blur(10px) !important;
+}
+
+.home-sidebar-nav__link {
+  min-height: 2.4rem !important;
+  margin-bottom: 0.08rem !important;
+  border-radius: 12px !important;
+  border: 0.5px solid transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.home-sidebar-nav__link:hover {
+  border-color: rgba(35, 45, 62, 0.055) !important;
+  background: rgba(255, 255, 255, 0.32) !important;
+  box-shadow: none !important;
+}
+
+.home-sidebar-nav__link--active,
+.home-sidebar-nav__link.home-sidebar-nav__link--active {
+  border-radius: 16px !important;
+  border-color: rgba(35, 45, 62, 0.07) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.38)),
+    rgba(255, 255, 255, 0.52) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.76),
+    0 4px 10px rgba(35, 45, 62, 0.035) !important;
+}
+
+.home-filter__search-shell {
+  min-height: 3.25rem !important;
+  border-radius: 18px !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.28)),
+    rgba(255, 255, 255, 0.44) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 5px 13px rgba(35, 45, 62, 0.036) !important;
+}
+
+.home-filter__search-shell input {
+  height: 2.18rem !important;
+  border-radius: 13px !important;
+  background: rgba(255, 255, 255, 0.45) !important;
+  box-shadow: inset 0 0 0 0.5px rgba(35, 45, 62, 0.07) !important;
+}
+
+.home-filter__kbd-hint {
+  min-height: 1.85rem !important;
+  border-radius: 9px !important;
+  box-shadow: 0 1px 4px rgba(31, 38, 50, 0.04) !important;
+}
+
+.timeline-content > div {
+  border-radius: 20px !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.54), rgba(255, 255, 255, 0.25)),
+    rgba(255, 255, 255, 0.42) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.76),
+    0 6px 14px rgba(35, 45, 62, 0.036) !important;
+}
+
+.timeline-content > div:hover {
+  transform: none !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 8px 18px rgba(35, 45, 62, 0.044) !important;
+}
+
+.home-main-track > .home-content-block,
+.home-main-track > .home-status-widgets {
+  border-radius: 24px !important;
+  background:
+    radial-gradient(circle at 16% 0%, rgba(255, 255, 255, 0.7), transparent 12rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.54), rgba(255, 255, 255, 0.24)),
+    rgba(255, 255, 255, 0.44) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    0 8px 20px rgba(35, 45, 62, 0.04) !important;
+}
+
+.home-main-track > .home-content-block::before,
+.home-main-track > .home-status-widgets::before {
+  opacity: 0.34 !important;
+}
+
+.home-main-track > .home-content-block.home-content-block--publish {
+  overflow: visible !important;
+}
+
+.markdown-editor:not(.is-full) {
+  border-radius: 18px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.76),
+    0 5px 12px rgba(35, 45, 62, 0.032) !important;
+}
+
+.editor-actions button,
+.editor-actions [role="button"] {
+  border-radius: 12px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.66),
+    0 4px 10px rgba(31, 38, 50, 0.04) !important;
+}
+
+.editor-actions__tag-panel,
+.editor-actions__publish-panel,
+.editor-actions__info-pop,
+.editor-mode-panel,
+.editor-image-panel {
+  border-radius: 18px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 10px 22px rgba(31, 38, 50, 0.07) !important;
+}
+
+.home-status-widgets .widget,
+.panel-card,
+.panel-welcome {
+  border-radius: 20px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.74),
+    0 6px 16px rgba(35, 45, 62, 0.036) !important;
+}
+
+.panel-shell {
+  border-radius: 28px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.84),
+    inset 0 -1px 0 rgba(31, 38, 50, 0.028),
+    0 18px 42px rgba(35, 45, 62, 0.062),
+    0 2px 7px rgba(35, 45, 62, 0.028) !important;
+}
+
+.panel-nav button,
+.panel-nav a,
+.panel-page-wrap button,
+.panel-page-wrap select {
+  border-radius: 13px !important;
+}
+
+.panel-nav button[class*="bg-"],
+.panel-nav button:hover,
+.panel-nav a:hover {
+  border-radius: 16px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.74),
+    0 5px 12px rgba(35, 45, 62, 0.04) !important;
+}
+
+@media (max-width: 819.98px) {
+  .home-header {
+    border-radius: 26px !important;
+  }
+
+  .home-banner,
+  .home-main-track > .home-content-block,
+  .home-main-track > .home-status-widgets {
+    border-radius: 22px !important;
+  }
+
+  .home-sidebar-nav__link {
+    border-radius: 11px !important;
+  }
+}
+
+/* END Arong iOS Glass Pro v2.2 */
