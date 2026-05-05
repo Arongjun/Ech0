@@ -697,6 +697,8 @@ body:has(.panel-page-wrap) {
 
 .home-content-block--publish {
   padding: 0.95rem !important;
+  overflow: visible !important;
+  z-index: 5 !important;
 }
 
 /* Publish editor: remove the rectangular original shell. */
@@ -716,6 +718,7 @@ body:has(.panel-page-wrap) {
   margin: 0 0 0.85rem !important;
   padding: 0 !important;
   border-radius: 24px !important;
+  overflow: visible !important;
 }
 
 .markdown-editor:not(.is-full) {
@@ -757,6 +760,14 @@ body:has(.panel-page-wrap) {
 
 .editor-actions {
   padding: 0 !important;
+  overflow: visible !important;
+  z-index: 20 !important;
+}
+
+.editor-actions__right,
+.editor-actions__publish {
+  overflow: visible !important;
+  z-index: 30 !important;
 }
 
 .editor-actions button,
@@ -773,6 +784,7 @@ body:has(.panel-page-wrap) {
 .editor-actions__publish-panel,
 .editor-mode-panel,
 .editor-image-panel {
+  z-index: 999 !important;
   border-radius: 22px !important;
   border-color: var(--ag-line) !important;
   background: rgba(255, 255, 255, 0.62) !important;
