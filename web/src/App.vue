@@ -43,11 +43,6 @@ router.afterEach((to, from) => {
     return
   }
 
-  if ((fromName === 'home' && toName === 'echo') || (fromName === 'echo' && toName === 'home')) {
-    transitionName.value = 'detail-fade'
-    return
-  }
-
   // 定义路由层级（用于判断前进/后退）
   const routeDepth: Record<string, number> = {
     home: 0,
@@ -273,25 +268,6 @@ onMounted(() => {
 .fade-leave-to {
   opacity: 0;
   transform: translateY(-8px);
-}
-
-.detail-fade-enter-active {
-  transition:
-    opacity 0.14s ease,
-    transform 0.14s ease;
-}
-
-.detail-fade-leave-active {
-  transition: opacity 0.08s ease;
-}
-
-.detail-fade-enter-from {
-  opacity: 0;
-  transform: translateY(4px);
-}
-
-.detail-fade-leave-to {
-  opacity: 0;
 }
 
 /* 滑动动画 - 用于前进后退 */
