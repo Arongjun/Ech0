@@ -1348,13 +1348,13 @@ img.home-header__logo {
   box-shadow: none !important;
 }
 
-.home-sidebar-nav__link::before {
+.home-aside--rail .home-sidebar-nav__link::before {
   content: "";
   position: absolute;
-  left: 0.32rem;
+  left: 0.42rem;
   top: 50%;
-  width: 2px;
-  height: 1.05rem;
+  width: 0.32rem;
+  height: 0.32rem;
   border-radius: 999px;
   background: transparent;
   transform: translateY(-50%);
@@ -1366,7 +1366,6 @@ img.home-header__logo {
 
 .home-sidebar-nav__link--active,
 .home-sidebar-nav__link.home-sidebar-nav__link--active {
-  padding-left: 0.95rem !important;
   border-radius: 12px !important;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.5)),
@@ -1376,8 +1375,8 @@ img.home-header__logo {
     0 3px 8px rgba(30, 39, 54, 0.03) !important;
 }
 
-.home-sidebar-nav__link--active::before,
-.home-sidebar-nav__link.home-sidebar-nav__link--active::before {
+.home-aside--rail .home-sidebar-nav__link--active::before,
+.home-aside--rail .home-sidebar-nav__link.home-sidebar-nav__link--active::before {
   background: var(--ag-blue);
 }
 
