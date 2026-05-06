@@ -107,9 +107,9 @@
     <div class="timeline-content">
       <div
         class="px-4 py-3"
+        @click="handleContentClick"
         @pointerdown="handleContentPointerDown"
         @pointermove="handleContentPointerMove"
-        @pointerup="handleContentPointerUp"
         @pointercancel="resetContentPointerState"
       >
         <template
@@ -246,11 +246,6 @@ const handleExpandEcho = (echoId: string) => {
   })
 }
 
-const warmEchoDetail = (echoId: string) => {
-  echoStore.prefetchEcho(echoId)
-  import('@/views/echo/EchoView.vue').catch(() => {})
-}
-
 const CONTENT_CLICK_IGNORE_SELECTOR = [
   'a',
   'button',
@@ -291,7 +286,6 @@ const handleContentPointerDown = (event: PointerEvent) => {
   contentPointerState.startX = event.clientX
   contentPointerState.startY = event.clientY
   contentPointerState.moved = false
-  warmEchoDetail(props.echo.id)
 }
 
 const handleContentPointerMove = (event: PointerEvent) => {
@@ -308,12 +302,7 @@ const hasActiveTextSelection = () => {
   return Boolean(selection && selection.type === 'Range' && String(selection).trim())
 }
 
-const handleContentPointerUp = (event: PointerEvent) => {
-  if (contentPointerState.pointerId !== event.pointerId) {
-    resetContentPointerState()
-    return
-  }
-
+const handleContentClick = (event: MouseEvent) => {
   const target = resolveEventElement(event.target)
   if (!target) {
     resetContentPointerState()
