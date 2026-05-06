@@ -316,15 +316,21 @@ img.home-header__logo {
 }
 
 .home-banner__line {
-  color: var(--ag-ink-soft) !important;
-  font-size: 1rem !important;
-  line-height: 1.55 !important;
+  color: color-mix(in srgb, var(--ag-ink) 70%, transparent) !important;
+  font-family: "LXGW WenKai Screen", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif !important;
+  font-size: 1.04rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.005em !important;
+  line-height: 1.5 !important;
 }
 
 .home-banner__powered,
 .home-banner__powered * {
-  color: var(--ag-ink-soft) !important;
-  font-weight: 700 !important;
+  color: color-mix(in srgb, var(--ag-ink) 74%, transparent) !important;
+  font-family: "LXGW WenKai Screen", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif !important;
+  font-size: 0.84rem !important;
+  font-weight: 560 !important;
+  letter-spacing: 0.005em !important;
 }
 
 .home-banner__about {
