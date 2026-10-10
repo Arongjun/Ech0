@@ -1,7 +1,7 @@
 version: "3"
 services:
   ech0:
-    image: ghcr.io/arongjun/arong:latest
+    image: ghcr.io/arongjun/ech0:arong
     container_name: ech0
     ports:
       - "6277:6277"

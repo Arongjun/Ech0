@@ -4,9 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: "镜像标签（留空自动生成 test-<run>-<sha7>）"
+        description: "镜像标签（默认 arong）"
         required: false
         type: string
+        default: "arong"
       push_test_latest:
         description: "额外推送 test-latest 标签"
         required: true
@@ -129,11 +130,11 @@ jobs:
         run: |
           set -euo pipefail
           OWNER_LC="$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
-          IMAGE="ghcr.io/${OWNER_LC}/arong"
+          IMAGE="ghcr.io/${OWNER_LC}/ech0"
           if [ -n "${{ inputs.image_tag }}" ]; then
             TAG="${{ inputs.image_tag }}"
           else
-            TAG="test-${GITHUB_RUN_NUMBER}-${GITHUB_SHA::7}"
+            TAG="arong"
           fi
 
           {
@@ -141,6 +142,7 @@ jobs:
             echo "tag=${TAG}"
             echo "tags<<EOF"
             echo "${IMAGE}:${TAG}"
+            echo "${IMAGE}:arong"
             if [ "${{ inputs.push_test_latest }}" = "true" ]; then
               echo "${IMAGE}:test-latest"
             fi
