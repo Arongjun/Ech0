@@ -95,6 +95,12 @@ func (a *qqOAuthAdapter) ResolveIdentity(
 	if err != nil {
 		return nil, err
 	}
+	if tokenResp.OpenID != "" {
+		return &oauthIdentity{
+			ExternalID: tokenResp.OpenID,
+			AuthType:   string(authModel.AuthTypeOAuth2),
+		}, nil
+	}
 	openIDResp, err := fetchQQUserInfo(tokenResp.AccessToken)
 	if err != nil {
 		return nil, err

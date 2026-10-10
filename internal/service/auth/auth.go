@@ -1169,9 +1169,20 @@ func fetchQQUserInfo(accessToken string) (*authModel.QQOpenIDResponse, error) {
 		return nil, errors.New("QQ openid 请求失败: " + string(body))
 	}
 
+	raw := strings.TrimSpace(string(body))
+	if strings.HasPrefix(raw, "callback(") {
+		raw = strings.TrimPrefix(raw, "callback(")
+		raw = strings.TrimSuffix(raw, ");")
+		raw = strings.TrimSuffix(raw, ")")
+		raw = strings.TrimSpace(raw)
+	}
+
 	var openIDResp authModel.QQOpenIDResponse
-	if err := json.Unmarshal(body, &openIDResp); err != nil {
-		return nil, err
+	if err := json.Unmarshal([]byte(raw), &openIDResp); err != nil {
+		return nil, errors.New("无法解析 QQ openid 响应: " + string(body))
+	}
+	if openIDResp.OpenID == "" {
+		return nil, errors.New("QQ openid 为空: " + string(body))
 	}
 
 	return &openIDResp, nil

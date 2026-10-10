@@ -238,6 +238,17 @@ func TestFetchQQUserInfo(t *testing.T) {
 		assert.Equal(t, "qq-openid-xyz", resp.OpenID)
 	})
 
+	t.Run("success parses openid with jsonp callback wrapper", func(t *testing.T) {
+		swapOIDCClient(t, &http.Client{Transport: rtFunc(func(r *http.Request) (*http.Response, error) {
+			assert.Equal(t, "graph.qq.com", r.URL.Host)
+			return cannedResponse(http.StatusOK, `callback( {"client_id":"appid","openid":"qq-openid-jsonp"} );`), nil
+		})})
+
+		resp, err := fetchQQUserInfo("qq-tok")
+		require.NoError(t, err)
+		assert.Equal(t, "qq-openid-jsonp", resp.OpenID)
+	})
+
 	t.Run("non-200 errors", func(t *testing.T) {
 		swapOIDCClient(t, &http.Client{Transport: rtFunc(func(_ *http.Request) (*http.Response, error) {
 			return cannedResponse(http.StatusInternalServerError, "boom"), nil
