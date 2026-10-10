@@ -97,7 +97,7 @@
         </BaseButton>
         <BaseButton
           :loading="reindex.isRunning"
-          :disabled="reindex.isRunning || editMode"
+          :disabled="reindex.isRunning"
           @click="handleReindex"
         >
           {{ t('embeddingSetting.reindexAction') }}
@@ -168,10 +168,6 @@ const MODEL_DIM_PRESETS: Record<string, number> = {
   'jina-embeddings-v3': 1024,
   'nomic-embed-text': 768,
   'mxbai-embed-large': 1024,
-  'nvidia/nemotron-3-embed-1b': 2048,
-  'nvidia/nemotron-3-embed-1b:free': 2048,
-  'baai/bge-m3': 1024,
-  'baai/bge-large-zh-v1.5': 1024,
 }
 const modelOptions = Object.keys(MODEL_DIM_PRESETS)
 
@@ -192,13 +188,10 @@ const originalDim = ref<number>(0)
 watch(
   () => setting.value.model,
   (next) => {
-    if (!props.editMode || !next) return
-    const trimmed = next.trim().toLowerCase()
-    for (const [key, val] of Object.entries(MODEL_DIM_PRESETS)) {
-      if (key.toLowerCase() === trimmed) {
-        setting.value.dim = val
-        return
-      }
+    if (!props.editMode) return
+    const preset = MODEL_DIM_PRESETS[next]
+    if (preset) {
+      setting.value.dim = preset
     }
   },
 )
