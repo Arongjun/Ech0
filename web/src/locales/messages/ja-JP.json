@@ -1192,7 +1192,8 @@
     "greeting": "何について話しましょうか？",
     "placeholder": "何でも聞いてください…",
     "kbdEnter": "開始",
-    "kbdClose": "閉じる"
+    "kbdClose": "閉じる",
+    "enterHistory": "チャット履歴を見る"
   },
   "jobProgress": {
     "statusIdle": "アイドル",

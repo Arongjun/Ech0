@@ -1192,7 +1192,8 @@
     "greeting": "想聊点什么？",
     "placeholder": "问点什么…",
     "kbdEnter": "进入对话",
-    "kbdClose": "关闭"
+    "kbdClose": "关闭",
+    "enterHistory": "进入历史对话"
   },
   "jobProgress": {
     "statusIdle": "空闲",

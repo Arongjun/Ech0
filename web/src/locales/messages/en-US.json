@@ -1192,7 +1192,8 @@
     "greeting": "What's on your mind?",
     "placeholder": "Ask anything…",
     "kbdEnter": "Start chat",
-    "kbdClose": "Close"
+    "kbdClose": "Close",
+    "enterHistory": "View Chat History"
   },
   "jobProgress": {
     "statusIdle": "Idle",

@@ -1192,7 +1192,8 @@
     "greeting": "Worüber möchtest du reden?",
     "placeholder": "Frag etwas…",
     "kbdEnter": "Starten",
-    "kbdClose": "Schließen"
+    "kbdClose": "Schließen",
+    "enterHistory": "Chat-Verlauf ansehen"
   },
   "jobProgress": {
     "statusIdle": "Bereit",

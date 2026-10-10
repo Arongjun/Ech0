@@ -37,6 +37,34 @@
             </button>
           </div>
 
+          <div class="chat-launcher__actions">
+            <button
+              type="button"
+              class="chat-launcher__history-btn"
+              @click="goToHistory"
+            >
+              <svg
+                class="chat-launcher__history-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                width="1em"
+                height="1em"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+                <path d="M12 7v5l4 2" />
+              </svg>
+              <span>{{ t('chatLauncher.enterHistory') }}</span>
+              <span class="chat-launcher__history-arrow" aria-hidden="true">→</span>
+            </button>
+          </div>
+
           <p class="chat-launcher__hint" aria-hidden="true">
             <kbd>↵</kbd>{{ t('chatLauncher.kbdEnter') }}
             <span class="chat-launcher__hint-sep">·</span>
@@ -83,6 +111,11 @@ const submit = () => {
   const q = draft.value.trim()
   close()
   router.push({ name: 'chat', query: q.length > 0 ? { q } : undefined })
+}
+
+const goToHistory = () => {
+  close()
+  router.push({ name: 'chat' })
 }
 
 const onKeydown = (e: KeyboardEvent) => {
@@ -235,6 +268,70 @@ watch(
   line-height: 1;
   font-weight: 700;
   font-variant-emoji: text;
+}
+
+.chat-launcher__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-launcher__history-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.48rem 1.15rem;
+  border-radius: 9999px;
+  background: var(--ag-glass-soft, rgba(255, 255, 255, 0.65));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--ag-line, rgba(55, 48, 42, 0.12));
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.chat-launcher__history-btn:hover {
+  color: var(--ag-blue, #0a84ff);
+  background: #ffffff;
+  border-color: rgba(10, 132, 255, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(10, 132, 255, 0.15);
+}
+
+:root.dark .chat-launcher__history-btn {
+  background: rgba(30, 41, 59, 0.7);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--color-text-primary);
+}
+
+:root.dark .chat-launcher__history-btn:hover {
+  background: rgba(51, 65, 85, 0.85);
+  border-color: rgba(10, 132, 255, 0.45);
+}
+
+.chat-launcher__history-btn:active {
+  transform: translateY(0);
+}
+
+.chat-launcher__history-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  color: var(--ag-blue, #0a84ff);
+}
+
+.chat-launcher__history-arrow {
+  font-size: 0.85rem;
+  opacity: 0.6;
+  transition: transform 0.18s ease;
+}
+
+.chat-launcher__history-btn:hover .chat-launcher__history-arrow {
+  opacity: 1;
+  transform: translateX(2px);
 }
 
 .chat-launcher__hint {
