@@ -111,8 +111,13 @@ watch(
   position: fixed;
   inset: 0;
   z-index: 9000;
-  background: color-mix(in srgb, var(--color-bg-canvas) 86%, transparent);
-  backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+}
+
+:root.dark .chat-launcher {
+  background: rgba(0, 0, 0, 0.48);
 }
 
 .chat-launcher__stage {
@@ -137,26 +142,31 @@ watch(
 
 .chat-launcher__pill {
   display: flex;
-
   align-items: flex-end;
   gap: 0.65rem;
   width: min(40rem, 100%);
-  padding: 0.7rem 1.15rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 1.6rem;
-  box-shadow:
-    0 1px 2px rgb(0 0 0 / 6%),
-    0 14px 36px -16px rgb(0 0 0 / 26%);
+  padding: 0.75rem 1.25rem;
+  background: var(--ag-glass-strong, var(--color-bg-surface));
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--ag-line);
+  border-radius: var(--ag-radius-lg, 24px);
+  box-shadow: var(--ag-shadow);
   transition:
     border-color 0.18s ease,
     box-shadow 0.18s ease;
 }
 
+.chat-launcher__pill:focus-within {
+  border-color: var(--ag-blue, var(--color-accent));
+  box-shadow:
+    var(--ag-shadow),
+    0 0 0 3px rgba(10, 132, 255, 0.2);
+}
+
 .chat-launcher__pill-icon {
   width: 1.2rem;
   height: 1.2rem;
-
   margin-bottom: 0.4rem;
   color: var(--color-text-muted);
   flex: none;
@@ -178,7 +188,7 @@ watch(
   background: transparent;
   border: 0;
   outline: none;
-  caret-color: var(--color-accent, #e07020);
+  caret-color: var(--ag-blue, var(--color-accent));
   overflow-y: auto;
 }
 
@@ -206,8 +216,9 @@ watch(
 }
 
 .chat-launcher__send--active {
-  background: var(--color-accent, #e07020);
+  background: var(--ag-blue, var(--color-accent));
   color: #fff;
+  box-shadow: 0 4px 12px rgba(10, 132, 255, 0.35);
 }
 
 .chat-launcher__send:hover {

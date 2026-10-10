@@ -1690,4 +1690,196 @@ img.home-header__logo {
   color: var(--ag-blue) !important;
 }
 
-/* END Arong iOS Glass Pro v2.4 */
+/* ==========================================================================
+   Arong iOS Glass Pro - v5.8.0 Feature Enhancements & Polish
+   ========================================================================== */
+
+/* 1. Zen View & Zen Echo Cards */
+.zen-view {
+  background: transparent !important;
+}
+
+.zen-echo-card {
+  border-radius: var(--ag-radius-lg, 24px) !important;
+  background: var(--ag-glass-strong) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid var(--ag-line) !important;
+  box-shadow: var(--ag-shadow) !important;
+  transition: transform 0.22s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.22s ease !important;
+}
+
+.zen-echo-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 14px 28px rgba(40, 48, 62, 0.08),
+    0 2px 6px rgba(40, 48, 62, 0.04) !important;
+}
+
+.zen-echo-card:active {
+  transform: scale(0.985) !important;
+}
+
+:root.dark .zen-echo-card {
+  background: var(--ag-glass-strong) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: var(--ag-shadow) !important;
+}
+
+:root.dark .zen-echo-card:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 16px 32px rgba(0, 0, 0, 0.32),
+    0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+.zen-open-btn {
+  background: rgba(255, 255, 255, 0.6) !important;
+  border: 1px solid var(--ag-line) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+}
+
+.zen-open-btn:hover {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: var(--ag-blue) !important;
+  transform: scale(1.08) !important;
+}
+
+:root.dark .zen-open-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+:root.dark .zen-open-btn:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  color: #fff !important;
+}
+
+/* 2. AI Chat & Copilot Experience */
+.hairline-chat {
+  background: transparent !important;
+}
+
+.hairline-chat .turn--user .bubble {
+  background: linear-gradient(135deg, #0a84ff 0%, #0071e3 100%) !important;
+  color: #ffffff !important;
+  border-radius: 18px 18px 4px 18px !important;
+  box-shadow: 0 4px 14px rgba(10, 132, 255, 0.28) !important;
+  font-weight: 450 !important;
+}
+
+.hairline-chat .trace,
+.chat-activity-bar {
+  border-radius: 16px !important;
+  background: var(--ag-glass-soft) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid var(--ag-line) !important;
+}
+
+.composer {
+  background: var(--ag-glass-strong) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid var(--ag-line) !important;
+  border-radius: var(--ag-radius-lg, 24px) !important;
+  box-shadow: var(--ag-shadow) !important;
+}
+
+.composer:focus-within {
+  border-color: var(--ag-blue) !important;
+  box-shadow:
+    var(--ag-shadow),
+    0 0 0 3px rgba(10, 132, 255, 0.18) !important;
+}
+
+.composer__action--send {
+  color: var(--ag-blue) !important;
+}
+
+.understory__suggestion {
+  border-radius: 9999px !important;
+  padding: 0.35rem 0.85rem !important;
+  background: var(--ag-glass-soft) !important;
+  border: 1px solid var(--ag-line) !important;
+  font-size: 0.85rem !important;
+  transition: all 0.18s ease !important;
+}
+
+.understory__suggestion:hover {
+  background: var(--ag-glass-strong) !important;
+  border-color: var(--ag-blue) !important;
+  color: var(--ag-blue) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* 3. Native Audio & Video Players */
+.audio-player {
+  background: var(--ag-glass-strong) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid var(--ag-line) !important;
+  border-radius: var(--ag-radius-md, 18px) !important;
+  box-shadow: var(--ag-shadow) !important;
+  padding: 0.85rem 1rem !important;
+}
+
+.audio-player__toggle {
+  background: var(--ag-blue) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 4px 10px rgba(10, 132, 255, 0.32) !important;
+  transition: transform 0.15s ease, filter 0.15s ease !important;
+}
+
+.audio-player__toggle:hover {
+  transform: scale(1.05) !important;
+  filter: brightness(1.08) !important;
+}
+
+.audio-player__toggle:active {
+  transform: scale(0.95) !important;
+}
+
+.audio-player__tag {
+  background: rgba(10, 132, 255, 0.12) !important;
+  color: var(--ag-blue) !important;
+  border-radius: 9999px !important;
+  font-weight: 600 !important;
+}
+
+.video-player {
+  border-radius: var(--ag-radius-lg, 24px) !important;
+  overflow: hidden !important;
+  border: 1px solid var(--ag-line) !important;
+  box-shadow: var(--ag-shadow) !important;
+}
+
+/* 4. Touch & Elastic Press Feedback */
+.timeline-content > div,
+.home-banner__about,
+.home-header__link-icon,
+.editor-btn {
+  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s ease, background-color 0.15s ease !important;
+}
+
+.timeline-content > div:active {
+  transform: scale(0.992) !important;
+}
+
+.home-header__link-icon:active,
+.zen-view__pill-toggle:active {
+  transform: scale(0.92) !important;
+}
+
+/* 5. Mobile Layout & Safe Area */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .home-bottom-nav,
+  .the-editor-bottom,
+  .zen-view {
+    padding-bottom: max(1.5rem, calc(1rem + env(safe-area-inset-bottom))) !important;
+  }
+}
+
+/* END Arong iOS Glass Pro v2.5 */

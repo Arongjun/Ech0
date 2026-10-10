@@ -227,7 +227,10 @@ onBeforeUnmount(() => {
   padding: 0.875rem 1.25rem;
   margin: 0 -1.25rem 0.75rem;
 
-  background-color: var(--color-bg-canvas);
+  background: var(--ag-glass-strong, color-mix(in srgb, var(--color-bg-canvas) 85%, transparent));
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--ag-line);
   isolation: isolate;
 }
 
@@ -235,11 +238,14 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+  padding: 0.25rem 0.6rem 0.25rem 0.25rem;
   background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--ag-line);
   border-radius: 9999px;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
+  box-shadow: var(--ag-shadow);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .zen-view__pill-logo {
@@ -287,23 +293,31 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 2.25rem;
+  height: 2.25rem;
   padding: 0;
   margin-left: auto;
-  border: 0;
-  background: transparent;
+  border: 1px solid var(--ag-line);
+  background: var(--color-bg-surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   color: var(--color-text-secondary);
-  border-radius: 0.5rem;
+  border-radius: 9999px;
+  box-shadow: var(--ag-shadow);
   cursor: pointer;
   transition:
     color 0.18s ease,
-    background 0.18s ease;
+    background 0.18s ease,
+    transform 0.18s ease;
 }
 
 .zen-view__exit:hover {
   color: var(--color-text-primary);
-  background: var(--color-border-subtle);
+  transform: scale(1.05);
+}
+
+.zen-view__exit:active {
+  transform: scale(0.96);
 }
 
 .zen-view__exit:focus-visible {
