@@ -233,6 +233,9 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   gap: 0.75rem;
   padding-bottom: 0.25rem;
+  position: relative;
+  z-index: 40;
+  overflow: visible;
 }
 
 .home-header__brand {

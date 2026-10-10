@@ -93,6 +93,7 @@ async function select(target: AppLocale) {
 .locale-toggle {
   position: relative;
   display: inline-flex;
+  z-index: 60;
 }
 
 .locale-toggle__trigger {
@@ -116,7 +117,7 @@ async function select(target: AppLocale) {
   position: absolute;
   top: calc(100% + 0.375rem);
   right: 0;
-  z-index: 50;
+  z-index: 100;
   min-width: 8.5rem;
   padding: 0.25rem;
   background: var(--color-bg-surface);
