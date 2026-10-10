@@ -5,6 +5,8 @@ package router
 
 import (
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lin-snow/ech0/internal/config"
@@ -48,6 +50,13 @@ func setupStaticFiles(r *gin.Engine) {
 		root = "data/files"
 	}
 	r.Group("api/files", middleware.StaticFileSecurity()).StaticFS("/", http.Dir(root))
+
+	imagesRoot := filepath.Join(root, "images")
+	if _, err := os.Stat(imagesRoot); err == nil {
+		r.Group("images", middleware.StaticFileSecurity()).StaticFS("/", http.Dir(imagesRoot))
+	} else if _, err := os.Stat("data/images"); err == nil {
+		r.Group("images", middleware.StaticFileSecurity()).StaticFS("/", http.Dir("data/images"))
+	}
 }
 
 func revokerOf(mwDeps *middleware.Deps) authService.TokenRevoker {
