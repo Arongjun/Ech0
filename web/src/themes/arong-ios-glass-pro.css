@@ -1761,21 +1761,123 @@ img.home-header__logo {
   background: transparent !important;
 }
 
+.hairline-chat .ghost-ctrl {
+  background: var(--ag-glass-strong) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border: 1px solid var(--ag-line) !important;
+  border-radius: 9999px !important;
+  box-shadow: var(--ag-shadow) !important;
+  color: var(--color-text-secondary) !important;
+  opacity: 0.9 !important;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1) !important;
+}
+
+.hairline-chat .ghost-ctrl:hover {
+  opacity: 1 !important;
+  color: var(--ag-blue) !important;
+  transform: scale(1.08) !important;
+  box-shadow: 0 4px 12px rgba(10, 132, 255, 0.16) !important;
+}
+
+.hairline-chat .ghost-ctrl:active {
+  transform: scale(0.92) !important;
+}
+
 .hairline-chat .turn--user .bubble {
   background: linear-gradient(135deg, #0a84ff 0%, #0071e3 100%) !important;
   color: #ffffff !important;
-  border-radius: 18px 18px 4px 18px !important;
-  box-shadow: 0 4px 14px rgba(10, 132, 255, 0.28) !important;
+  border-radius: 20px 20px 4px 20px !important;
+  box-shadow: 0 4px 16px rgba(10, 132, 255, 0.28) !important;
   font-weight: 450 !important;
+  letter-spacing: -0.01em !important;
 }
 
 .hairline-chat .trace,
 .chat-activity-bar {
-  border-radius: 16px !important;
+  border-radius: var(--ag-radius-md, 18px) !important;
   background: var(--ag-glass-soft) !important;
   backdrop-filter: blur(16px) !important;
   -webkit-backdrop-filter: blur(16px) !important;
   border: 1px solid var(--ag-line) !important;
+  padding: 0.5rem 0.75rem !important;
+}
+
+.activity__row {
+  border-radius: 12px !important;
+  transition: background 0.18s ease, color 0.18s ease !important;
+}
+
+.activity__row:hover:not(.activity__row--static) {
+  background: rgba(10, 132, 255, 0.08) !important;
+  color: var(--ag-blue) !important;
+}
+
+.qnav__item--active .qnav__pill {
+  background: var(--ag-blue) !important;
+  box-shadow: 0 0 8px rgba(10, 132, 255, 0.4) !important;
+}
+
+.ask {
+  border-radius: var(--ag-radius-md, 18px) !important;
+  background: var(--ag-glass-soft) !important;
+  border: 1px solid var(--ag-line) !important;
+  padding: 0.85rem 1rem !important;
+}
+
+.ask__option {
+  border-radius: 12px !important;
+  border: 1px solid var(--ag-line) !important;
+  background: var(--color-bg-surface) !important;
+  transition: all 0.18s ease !important;
+}
+
+.ask__option:hover:not(:disabled) {
+  border-color: var(--ag-blue) !important;
+  color: var(--ag-blue) !important;
+  transform: translateY(-1px) !important;
+}
+
+.ask__option--picked {
+  border-color: var(--ag-blue) !important;
+  background: rgba(10, 132, 255, 0.1) !important;
+  color: var(--ag-blue) !important;
+  font-weight: 600 !important;
+}
+
+.ask__submit {
+  border-radius: 9999px !important;
+  background: var(--ag-blue) !important;
+  color: #fff !important;
+  border: none !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3) !important;
+  transition: transform 0.15s ease, opacity 0.15s ease !important;
+}
+
+.ask__submit:hover:not(:disabled) {
+  transform: scale(1.03) !important;
+  filter: brightness(1.08) !important;
+}
+
+.sources__link {
+  transition: color 0.18s ease !important;
+}
+
+.sources__link:hover {
+  color: var(--ag-blue) !important;
+}
+
+.sources__thumb {
+  border-radius: 10px !important;
+  border: 1px solid var(--ag-line) !important;
+  overflow: hidden !important;
+  transition: transform 0.18s ease, border-color 0.18s ease !important;
+}
+
+.sources__thumb:hover {
+  border-color: var(--ag-blue) !important;
+  transform: translateY(-2px) scale(1.02) !important;
 }
 
 .composer {
@@ -1849,14 +1951,83 @@ img.home-header__logo {
   font-weight: 600 !important;
 }
 
-.video-player {
+.audio-player__range::-webkit-slider-thumb {
+  background: var(--ag-blue) !important;
+  box-shadow: 0 2px 6px rgba(10, 132, 255, 0.4) !important;
+}
+
+.video-media__poster {
   border-radius: var(--ag-radius-lg, 24px) !important;
   overflow: hidden !important;
   border: 1px solid var(--ag-line) !important;
   box-shadow: var(--ag-shadow) !important;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease !important;
 }
 
-/* 4. Touch & Elastic Press Feedback */
+.video-media__tag,
+.video-media__fullscreen {
+  backdrop-filter: blur(16px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+  background: rgba(0, 0, 0, 0.52) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 9999px !important;
+  font-weight: 500 !important;
+}
+
+.video-media__fullscreen:hover {
+  background: rgba(0, 0, 0, 0.72) !important;
+  transform: scale(1.05) !important;
+}
+
+.video-media__fullscreen:active {
+  transform: scale(0.95) !important;
+}
+
+.video-lightbox {
+  background: rgba(0, 0, 0, 0.78) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+}
+
+.video-lightbox__close {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  transition: transform 0.15s ease, background 0.15s ease !important;
+}
+
+.video-lightbox__close:hover {
+  background: rgba(255, 255, 255, 0.28) !important;
+  transform: scale(1.08) !important;
+}
+
+.video-lightbox__close:active {
+  transform: scale(0.92) !important;
+}
+
+.video-lightbox__video {
+  border-radius: var(--ag-radius-lg, 24px) !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* 4. Background Job & Progress Cards */
+.jpc {
+  background: var(--ag-glass-strong) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid var(--ag-line) !important;
+  border-radius: var(--ag-radius-lg, 24px) !important;
+  box-shadow: var(--ag-shadow) !important;
+}
+
+.jpc__metric {
+  background: var(--ag-glass-soft) !important;
+  border: 1px solid var(--ag-line) !important;
+  border-radius: var(--ag-radius-md, 18px) !important;
+}
+
+/* 5. Touch & Elastic Press Feedback */
 .timeline-content > div,
 .home-banner__about,
 .home-header__link-icon,
@@ -1873,7 +2044,7 @@ img.home-header__logo {
   transform: scale(0.92) !important;
 }
 
-/* 5. Mobile Layout & Safe Area */
+/* 6. Mobile Layout & Safe Area */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .home-bottom-nav,
   .the-editor-bottom,

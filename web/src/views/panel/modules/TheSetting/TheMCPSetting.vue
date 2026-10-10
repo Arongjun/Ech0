@@ -307,9 +307,10 @@ onMounted(async () => {
   align-items: center;
   gap: 0.5rem;
   margin-top: 0.7rem;
-  border-radius: 0.5rem;
-  padding: 0.45rem 0.5rem 0.45rem 0.7rem;
+  border-radius: var(--radius-md, 0.75rem);
+  padding: 0.5rem 0.6rem 0.5rem 0.85rem;
   background: var(--color-bg-muted);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .mcp-address code {
@@ -400,46 +401,60 @@ onMounted(async () => {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.1rem 1.15rem;
+  gap: 0.45rem 0.5rem;
   min-width: 0;
-  margin-top: 0.3rem;
+  margin-top: 0.4rem;
 }
 
 .mcp-name {
   flex: none;
   min-width: 0;
   max-width: 100%;
-  padding: 0;
+  padding: 0.2rem 0.65rem;
   overflow: hidden;
   font-family: var(--font-mono, monospace);
-  font-size: 0.78rem;
-  line-height: 1.5rem;
-  color: inherit;
-
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
   white-space: nowrap;
   text-overflow: ellipsis;
-  background: transparent;
+  background: var(--color-bg-muted);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 9999px;
   cursor: pointer;
-  transition: color 0.15s;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
 }
 
 @media (width <= 480px) {
   .mcp-name {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
+    padding: 0.18rem 0.5rem;
   }
 }
 
 .mcp-name:hover,
 .mcp-name:focus-visible {
   color: var(--color-text-primary);
-  text-decoration: underline;
-  text-underline-offset: 0.2rem;
+  background: var(--color-bg-surface);
+  border-color: var(--color-border-strong);
+  transform: translateY(-1px);
 }
 
-.mcp-name-danger,
+.mcp-name-danger {
+  color: var(--color-danger);
+  border-color: color-mix(in srgb, var(--color-danger) 25%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+}
+
 .mcp-name-danger:hover,
 .mcp-name-danger:focus-visible {
   color: var(--color-danger);
+  border-color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 16%, transparent);
 }
 
 .mcp-legend {

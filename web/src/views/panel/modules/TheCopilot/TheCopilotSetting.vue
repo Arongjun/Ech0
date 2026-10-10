@@ -7,18 +7,15 @@
         {{ t('copilotSetting.title') }}
       </h1>
 
-      <div
-        class="flex flex-row items-center justify-between gap-2 mb-4 border-b"
-        :style="{ borderColor: 'var(--color-border-subtle)' }"
-      >
-        <div class="flex flex-row gap-1">
+      <div class="flex flex-row items-center justify-between gap-2 mb-5">
+        <div class="inline-flex gap-1 p-1 bg-[var(--color-bg-muted)] rounded-xl border border-[var(--color-border-subtle)]/60">
           <button
             type="button"
-            class="px-3 py-2 text-sm font-semibold border-b-2 -mb-px transition-colors"
+            class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all"
             :class="
               tab === 'model'
-                ? 'text-[var(--color-text-primary)] border-[var(--color-text-primary)]'
-                : 'text-[var(--color-text-secondary)] border-transparent hover:text-[var(--color-text-primary)]'
+                ? 'text-[var(--color-text-primary)] bg-[var(--color-bg-surface)] shadow-sm'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
             "
             @click="tab = 'model'"
           >
@@ -26,11 +23,11 @@
           </button>
           <button
             type="button"
-            class="px-3 py-2 text-sm font-semibold border-b-2 -mb-px transition-colors"
+            class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all"
             :class="
               tab === 'embedding'
-                ? 'text-[var(--color-text-primary)] border-[var(--color-text-primary)]'
-                : 'text-[var(--color-text-secondary)] border-transparent hover:text-[var(--color-text-primary)]'
+                ? 'text-[var(--color-text-primary)] bg-[var(--color-bg-surface)] shadow-sm'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
             "
             @click="tab = 'embedding'"
           >
