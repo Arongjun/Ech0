@@ -221,7 +221,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/ech0:${{ github.ref_name }}
-            ghcr.io/${{ github.repository_owner }}/ech0:latest
-            docker.io/${{ vars.DOCKERHUB_USERNAME }}/ech0:${{ github.ref_name }}
-            docker.io/${{ vars.DOCKERHUB_USERNAME }}/ech0:latest
+            ghcr.io/${{ github.repository_owner }}/arong:${{ github.ref_name }}
+            ghcr.io/${{ github.repository_owner }}/arong:latest
+            docker.io/${{ vars.DOCKERHUB_USERNAME }}/arong:${{ github.ref_name }}
+            docker.io/${{ vars.DOCKERHUB_USERNAME }}/arong:latest

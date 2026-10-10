@@ -5,7 +5,7 @@ BUILD_TIME      := `date -u +%Y-%m-%dT%H:%M:%SZ`
 GIT_COMMIT      := `git rev-parse --short HEAD 2>/dev/null || echo unknown`
 
 DOCKER_REGISTRY := env_var_or_default("DOCKER_REGISTRY", "sn0wl1n")
-IMAGE_NAME      := env_var_or_default("IMAGE_NAME", "ech0")
+IMAGE_NAME      := env_var_or_default("IMAGE_NAME", "arong")
 IMAGE_TAG       := env_var_or_default("IMAGE_TAG", "latest")
 OS              := env_var_or_default("OS", `go env GOHOSTOS`)
 ARCH            := env_var_or_default("ARCH", `go env GOHOSTARCH`)
