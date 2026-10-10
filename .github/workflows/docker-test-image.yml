@@ -86,6 +86,18 @@ jobs:
         run: |
           set -euo pipefail
           test -f cmd/ech0/main.go
+          if [ "${{ matrix.goarch }}" = "arm64" ]; then
+            SQLITE_INC="${RUNNER_TEMP}/sqlite-include"
+            mkdir -p "${SQLITE_INC}"
+            go mod download github.com/mattn/go-sqlite3
+            MATTN_DIR="$(go list -m -f '{{.Dir}}' github.com/mattn/go-sqlite3)"
+            if [ -z "${MATTN_DIR}" ] || [ ! -f "${MATTN_DIR}/sqlite3-binding.h" ]; then
+              echo "::error::could not locate go-sqlite3 header (MATTN_DIR='${MATTN_DIR}')" >&2
+              exit 1
+            fi
+            cp "${MATTN_DIR}/sqlite3-binding.h" "${SQLITE_INC}/sqlite3.h"
+            export CGO_CFLAGS="-I${SQLITE_INC} -Du_int8_t=uint8_t -Du_int16_t=uint16_t -Du_int64_t=uint64_t -Wno-typedef-redefinition -fno-sanitize=undefined"
+          fi
           STATIC_LDFLAGS="-linkmode external -extldflags '-static'"
           OUTPUT_NAME="ech0-linux-${{ matrix.goarch }}"
           go build -tags netgo -ldflags "$STATIC_LDFLAGS" -o "${OUTPUT_NAME}" ./cmd/ech0/main.go
