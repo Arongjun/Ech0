@@ -13,5 +13,7 @@ import TheChatBox from './TheChatBox.vue'
 <style scoped>
 .chat-page {
   width: 100%;
+  height: 100dvh;
+  overflow: hidden;
 }
 </style>

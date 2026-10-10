@@ -11,7 +11,7 @@
 
       <div class="topbar-title">
         <span class="topbar-title__glow" />
-        <span class="topbar-title__text">Ech0 Copilot</span>
+        <span class="topbar-title__text">{{ siteTitle }}</span>
         <span class="topbar-title__badge">AI</span>
       </div>
 
@@ -39,7 +39,7 @@
           <div class="chat-hero__icon-wrap">
             <Chat class="chat-hero__icon" />
           </div>
-          <h1 class="chat-hero__title">Ech0 Copilot</h1>
+          <h1 class="chat-hero__title">{{ siteTitle }}</h1>
           <p class="chat-hero__subtitle">{{ t('chatPanel.suggestionsTitle') }}</p>
           <div class="chat-hero__suggestions">
             <button
@@ -147,7 +147,7 @@
     </nav>
 
     <!-- Bottom Dock: Suggestions & Floating Capsule Composer -->
-    <div class="chat-bottom-dock">
+    <div ref="dockEl" class="chat-bottom-dock">
       <!-- In-Conversation Quick Suggestion Chips -->
       <Transition name="chips-fade">
         <div v-if="!isEmpty && showSuggestions" class="chat-dock__chips">
@@ -224,11 +224,15 @@ import { chatStream } from '@/service/api'
 import { getChatSession, clearChatSession, answerChatAsk } from '@/service/api/chat'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { theToast } from '@/utils/toast'
+import { useSettingStore } from '@/stores'
 
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const { openConfirm } = useBaseDialog()
+const settingStore = useSettingStore()
+
+const siteTitle = computed<string>(() => settingStore.SystemSetting.site_title?.trim() || 'Ech0')
 
 const input = ref<string>('')
 const loading = ref<boolean>(false)
@@ -237,6 +241,7 @@ const rootEl = ref<HTMLElement | null>(null)
 const scrollArea = ref<HTMLElement | null>(null)
 const transcriptInner = ref<HTMLElement | null>(null)
 const composerEl = ref<HTMLElement | null>(null)
+const dockEl = ref<HTMLElement | null>(null)
 const inputEl = ref<HTMLTextAreaElement | null>(null)
 let abort: (() => void) | null = null
 
@@ -371,12 +376,21 @@ const syncComposerHeight = () => {
   if (root && c) root.style.setProperty('--composer-h', `${c.offsetHeight}px`)
 }
 
+const syncDockHeight = () => {
+  const root = rootEl.value
+  const dock = dockEl.value
+  if (root && dock) {
+    root.style.setProperty('--dock-h', `${dock.offsetHeight}px`)
+  }
+}
+
 const autoGrow = () => {
   const el = inputEl.value
   if (!el) return
   el.style.height = 'auto'
   el.style.height = `${el.scrollHeight}px`
   syncComposerHeight()
+  syncDockHeight()
   onContentResize()
 }
 
@@ -653,16 +667,21 @@ onMounted(async () => {
   if (typeof ResizeObserver === 'function') {
     resizeObserver = new ResizeObserver((entries) => {
       let composerChanged = false
+      let dockChanged = false
       for (const entry of entries) {
         if (entry.target === composerEl.value) composerChanged = true
+        if (entry.target === dockEl.value) dockChanged = true
       }
       if (composerChanged) syncComposerHeight()
+      if (dockChanged || composerChanged) syncDockHeight()
       onContentResize()
     })
     if (transcriptInner.value) resizeObserver.observe(transcriptInner.value)
     if (composerEl.value) resizeObserver.observe(composerEl.value)
+    if (dockEl.value) resizeObserver.observe(dockEl.value)
   }
   syncComposerHeight()
+  syncDockHeight()
 
   try {
     const res = await getChatSession()
@@ -683,6 +702,17 @@ onMounted(async () => {
   }
 })
 
+watch(
+  [showSuggestions, loading, isEmpty],
+  () => {
+    nextTick(() => {
+      syncDockHeight()
+      onContentResize()
+    })
+  },
+  { flush: 'post' },
+)
+
 onBeforeUnmount(() => {
   resizeObserver?.disconnect()
   resizeObserver = null
@@ -696,6 +726,7 @@ onBeforeUnmount(() => {
 .hairline-chat {
   --composer-max: min(8.5rem, 30dvh);
   --composer-h: 3.2rem;
+  --dock-h: 7.5rem;
 
   position: relative;
   width: 100%;
@@ -809,20 +840,24 @@ onBeforeUnmount(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  display: flex;
-  justify-content: center;
   overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
   overflow-anchor: none;
 }
 
 .transcript__inner {
   width: 100%;
   max-width: 44rem;
-  padding: 1.5rem 1.25rem calc(6.5rem + var(--tail-space, 0px));
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem calc(var(--dock-h, 7.5rem) + 1.5rem + var(--tail-space, 0px));
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   min-height: 100%;
+  box-sizing: border-box;
 }
 
 /* Empty State Hero */
@@ -1279,12 +1314,34 @@ onBeforeUnmount(() => {
   .transcript__inner {
     padding-left: 1rem;
     padding-right: 1rem;
-    padding-bottom: calc(7rem + var(--tail-space, 0px));
+    padding-bottom: calc(var(--dock-h, 7.5rem) + 2rem + var(--tail-space, 0px));
   }
 
   .chat-bottom-dock {
     padding-left: 0.85rem;
     padding-right: 0.85rem;
+  }
+
+  .chat-dock__chips {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    width: 100%;
+    max-width: 100%;
+    padding: 0.15rem 0.25rem 0.35rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .chat-dock__chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chat-dock__chip {
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.75rem;
   }
 
   .composer {
