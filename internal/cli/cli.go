@@ -6,14 +6,11 @@ package cli
 import (
 	"fmt"
 	"net"
-	"os"
-	"path/filepath"
 
-	"github.com/charmbracelet/huh"
-	"github.com/lin-snow/ech0/internal/backup"
+	"charm.land/huh/v2"
 	"github.com/lin-snow/ech0/internal/config"
 	"github.com/lin-snow/ech0/internal/di"
-	"github.com/lin-snow/ech0/internal/tui"
+	tuiUtil "github.com/lin-snow/ech0/internal/util/tui"
 	versionPkg "github.com/lin-snow/ech0/internal/version"
 )
 
@@ -30,7 +27,7 @@ func isWebPortInUse() bool {
 func canStartWebServer() bool {
 	if isWebPortInUse() {
 		port := config.Config().Server.Port
-		tui.PrintCLIInfo("⚠️ Start service", "Web port "+port+" is already in use; another instance may be running")
+		tuiUtil.PrintCLIInfo("⚠️ Start service", "Web port "+port+" is already in use; another instance may be running")
 		return false
 	}
 	return true
@@ -46,50 +43,44 @@ func DoServeWithBlock() {
 	}
 	runtimeApp, err := di.BuildApp()
 	if err != nil {
-		tui.PrintCLIInfo("😭 Failed to start service", err.Error())
+		tuiUtil.PrintCLIInfo("😭 Failed to start service", err.Error())
 		return
 	}
 	if err := runtimeApp.Run(); err != nil {
-		tui.PrintCLIInfo("😭 Failed to start service", err.Error())
+		tuiUtil.PrintCLIInfo("😭 Failed to start service", err.Error())
 		return
 	}
-	tui.PrintCLIInfo("🎉 Service stopped", "Ech0 server has stopped")
-}
-
-func DoBackup() {
-	_, backupFileName, err := backup.ExecuteBackup()
-	if err != nil {
-		tui.PrintCLIInfo("😭 Result", "Backup failed: "+err.Error())
-		return
-	}
-
-	pwd, _ := os.Getwd()
-	fullPath := filepath.Join(pwd, "data", "files", "backups", backupFileName)
-	tui.PrintCLIInfo("🎉 Backup succeeded", fullPath)
+	tuiUtil.PrintCLIInfo("🎉 Service stopped", "Ech0 server has stopped")
 }
 
 func DoVersion() {
-	item := struct{ Title, Msg string }{
-		Title: "📦 Version",
-		Msg:   "v" + versionPkg.Version,
+	items := []tuiUtil.CLIInfoItem{
+		{Title: "Version", Msg: "v" + versionPkg.Version},
+		{Title: "Commit", Msg: versionPkg.Commit},
 	}
-	tui.PrintCLIWithBox(item)
-}
+	if versionPkg.BuildTime != "" {
+		items = append(items, tuiUtil.CLIInfoItem{Title: "Build Time", Msg: versionPkg.BuildTime})
+	}
+	items = append(items,
+		tuiUtil.CLIInfoItem{Title: "Author", Msg: versionPkg.Author},
+		tuiUtil.CLIInfoItem{Title: "Website", Msg: "https://ech0.app/"},
+		tuiUtil.CLIInfoItem{Title: "License", Msg: versionPkg.License},
+		tuiUtil.CLIInfoItem{Title: "Source", Msg: versionPkg.RepoURL},
+		tuiUtil.CLIInfoItem{},
+		tuiUtil.CLIInfoItem{Msg: versionPkg.Copyright()},
+	)
 
-func DoEch0Info() {
-	if _, err := fmt.Fprintln(os.Stdout, tui.GetEch0Info()); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to print ech0 info: %v\n", err)
-	}
+	tuiUtil.PrintCLIWithBox(tuiUtil.CLIBoxHeader{Icon: "📦", Title: "Ech0"}, items...)
 }
 
 func DoHello() {
-	tui.ClearScreen()
-	tui.PrintCLIBanner()
+	tuiUtil.ClearScreen()
+	tuiUtil.PrintCLIBanner()
 }
 
 func DoTui() {
-	tui.ClearScreen()
-	tui.PrintCLIBanner()
+	tuiUtil.ClearScreen()
+	tuiUtil.PrintCLIBanner()
 
 	for {
 		fmt.Println()
@@ -104,9 +95,7 @@ func DoTui() {
 		}
 
 		options = append(options,
-			huh.NewOption("🦖 Show info", "info"),
-			huh.NewOption("📦 Run backup", "backup"),
-			huh.NewOption("📌 Show version", "version"),
+			huh.NewOption("📌 About Ech0", "version"),
 			huh.NewOption("❌ Exit", "exit"),
 		)
 
@@ -114,26 +103,21 @@ func DoTui() {
 			Title("Welcome to the Ech0 TUI.").
 			Options(options...).
 			Value(&action).
-			WithTheme(huh.ThemeCatppuccin()).
+			WithTheme(huh.ThemeFunc(huh.ThemeCatppuccin)).
 			Run()
 		if err != nil {
-			tui.PrintCLIInfo("😭 Operation failed", err.Error())
+			tuiUtil.PrintCLIInfo("😭 Operation failed", err.Error())
 			return
 		}
 
 		switch action {
 		case "serve":
-			tui.ClearScreen()
+			tuiUtil.ClearScreen()
 			DoServe()
 		case "servebusy":
-			tui.PrintCLIInfo("ℹ️ Service status", "The web service is running in another process and cannot be stopped from here")
-		case "info":
-			tui.ClearScreen()
-			DoEch0Info()
-		case "backup":
-			DoBackup()
+			tuiUtil.PrintCLIInfo("ℹ️ Service status", "The web service is running in another process and cannot be stopped from here")
 		case "version":
-			tui.ClearScreen()
+			tuiUtil.ClearScreen()
 			DoVersion()
 		case "exit":
 			fmt.Println("👋 Thanks for using the Ech0 TUI. See you next time!")

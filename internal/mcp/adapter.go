@@ -8,10 +8,11 @@ import (
 	"fmt"
 
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
-	agentService "github.com/lin-snow/ech0/internal/service/agent"
 	commentService "github.com/lin-snow/ech0/internal/service/comment"
 	commonService "github.com/lin-snow/ech0/internal/service/common"
 	connectService "github.com/lin-snow/ech0/internal/service/connect"
+	copilotService "github.com/lin-snow/ech0/internal/service/copilot"
+	dashboardService "github.com/lin-snow/ech0/internal/service/dashboard"
 	echoService "github.com/lin-snow/ech0/internal/service/echo"
 	fileService "github.com/lin-snow/ech0/internal/service/file"
 	settingService "github.com/lin-snow/ech0/internal/service/setting"
@@ -19,14 +20,15 @@ import (
 )
 
 type Adapter struct {
-	echoSvc    echoService.Service
-	userSvc    userService.Service
-	commentSvc commentService.Service
-	fileSvc    fileService.Service
-	commonSvc  commonService.Service
-	connectSvc connectService.Service
-	agentSvc   agentService.Service
-	settingSvc settingService.Service
+	echoSvc      echoService.Service
+	userSvc      userService.Service
+	commentSvc   commentService.Service
+	fileSvc      fileService.Service
+	commonSvc    commonService.Service
+	connectSvc   connectService.Service
+	agentSvc     copilotService.SummaryService
+	settingSvc   settingService.Service
+	dashboardSvc dashboardService.Service
 }
 
 func NewAdapter(
@@ -36,18 +38,20 @@ func NewAdapter(
 	fileSvc fileService.Service,
 	commonSvc commonService.Service,
 	connectSvc connectService.Service,
-	agentSvc agentService.Service,
+	agentSvc copilotService.SummaryService,
 	settingSvc settingService.Service,
+	dashboardSvc dashboardService.Service,
 ) *Adapter {
 	return &Adapter{
-		echoSvc:    echoSvc,
-		userSvc:    userSvc,
-		commentSvc: commentSvc,
-		fileSvc:    fileSvc,
-		commonSvc:  commonSvc,
-		connectSvc: connectSvc,
-		agentSvc:   agentSvc,
-		settingSvc: settingSvc,
+		echoSvc:      echoSvc,
+		userSvc:      userSvc,
+		commentSvc:   commentSvc,
+		fileSvc:      fileSvc,
+		commonSvc:    commonSvc,
+		connectSvc:   connectSvc,
+		agentSvc:     agentSvc,
+		settingSvc:   settingSvc,
+		dashboardSvc: dashboardSvc,
 	}
 }
 
@@ -64,9 +68,8 @@ func (a *Adapter) RegisterAll(reg *Registry) {
 	a.registerConnectResources(reg)
 	a.registerAgentTools(reg)
 	a.registerWebhookTools(reg)
+	a.registerDashboardResources(reg)
 }
-
-// --- Argument helpers ---
 
 func stringArg(args map[string]any, key string) string {
 	if v, ok := args[key]; ok {
@@ -166,16 +169,16 @@ func buildExtension(args map[string]any) *echoModel.EchoExtension {
 	}
 }
 
-// --- Result helpers ---
-
 func jsonResult(v any) (*ToolCallResult, error) {
 	data, err := json.Marshal(v)
 	if err != nil {
 		return nil, fmt.Errorf("marshal result: %w", err)
 	}
-	return &ToolCallResult{
-		Content: []ContentItem{{Type: "text", Text: string(data)}},
-	}, nil
+	result := &ToolCallResult{Content: []ContentItem{{Type: "text", Text: string(data)}}}
+	if len(data) > 0 && data[0] == '{' {
+		result.StructuredContent = v
+	}
+	return result, nil
 }
 
 func textResult(msg string) *ToolCallResult {
@@ -190,3 +193,22 @@ func textError(msg string) *ToolCallResult {
 		IsError: true,
 	}
 }
+
+func toolHints(readOnly, destructive, idempotent, openWorld bool) *ToolAnnotations {
+	return &ToolAnnotations{
+		ReadOnlyHint:    &readOnly,
+		DestructiveHint: &destructive,
+		IdempotentHint:  &idempotent,
+		OpenWorldHint:   &openWorld,
+	}
+}
+
+func readOnlyHints() *ToolAnnotations { return toolHints(true, false, true, false) }
+
+func remoteReadHints() *ToolAnnotations { return toolHints(true, false, true, true) }
+
+func createHints() *ToolAnnotations { return toolHints(false, false, false, false) }
+
+func destructiveHints() *ToolAnnotations { return toolHints(false, true, true, false) }
+
+func remoteWriteHints() *ToolAnnotations { return toolHints(false, false, false, true) }

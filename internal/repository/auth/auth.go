@@ -25,12 +25,12 @@ const (
 
 type AuthRepository struct {
 	db    func() *gorm.DB
-	cache cache.ICache[string, any]
+	cache *cache.Cache
 }
 
 func NewAuthRepository(
 	dbProvider func() *gorm.DB,
-	cache cache.ICache[string, any],
+	cache *cache.Cache,
 ) *AuthRepository {
 	return &AuthRepository{
 		db:    dbProvider,
@@ -93,6 +93,24 @@ func (authRepository *AuthRepository) GetUserByUsername(ctx context.Context, use
 		return model.User{}, err
 	}
 	return user, nil
+}
+
+func (authRepository *AuthRepository) GetLocalAuthByUserID(ctx context.Context, userID string) (model.UserLocalAuth, error) {
+	var localAuth model.UserLocalAuth
+	if err := authRepository.getDB(ctx).Where("user_id = ?", userID).First(&localAuth).Error; err != nil {
+		return model.UserLocalAuth{}, err
+	}
+	return localAuth, nil
+}
+
+func (authRepository *AuthRepository) UpdateLocalAuthPassword(ctx context.Context, userID, passwordHash, passwordAlgo string) error {
+	return authRepository.getDB(ctx).
+		Model(&model.UserLocalAuth{}).
+		Where("user_id = ?", userID).
+		Updates(map[string]any{
+			"password_hash": passwordHash,
+			"password_algo": passwordAlgo,
+		}).Error
 }
 
 func (authRepository *AuthRepository) getUserByID(ctx context.Context, id string) (model.User, error) {

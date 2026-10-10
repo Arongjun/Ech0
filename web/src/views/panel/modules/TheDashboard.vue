@@ -170,14 +170,11 @@ onMounted(() => {
 
 <template>
   <div class="dashboard-page">
-    <!-- Meta bar -->
     <section class="dashboard-meta">
       <span class="meta-item meta-item-strong">PANEL DASHBOARD</span>
       <span class="meta-item">DATE {{ todayText }}</span>
-      <span class="meta-item">VERSION {{ settingStore.hello?.version || '--' }}</span>
     </section>
 
-    <!-- Stat cards -->
     <section class="stats-grid">
       <div
         v-for="(item, statIndex) in dashboardStats"
@@ -230,7 +227,6 @@ onMounted(() => {
       </div>
     </section>
 
-    <!-- Panels -->
     <section class="dashboard-panels">
       <div class="panel-widget-wrap">
         <TheActivityLog />

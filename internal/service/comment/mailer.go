@@ -21,7 +21,10 @@ func NewGoMailSender() *GoMailSender {
 func (s *GoMailSender) Send(ctx context.Context, cfg MailerConfig, msg MailMessage) error {
 	host := strings.TrimSpace(cfg.Host)
 	to := strings.TrimSpace(msg.To)
-	from := strings.TrimSpace(cfg.Username)
+	from := strings.TrimSpace(cfg.Sender)
+	if from == "" {
+		from = strings.TrimSpace(cfg.Username)
+	}
 	if host == "" || to == "" || from == "" {
 		return fmt.Errorf("missing mail configuration")
 	}
@@ -81,13 +84,10 @@ func resolveSMTPTransport(configuredPort int) (port int, sslPort bool, tlsPolicy
 
 	switch port {
 	case 465:
-		// Port 465 uses implicit SSL/TLS (SMTPS).
 		return port, true, mail.NoTLS
 	case 25:
-		// Port 25 often runs plain SMTP and may optionally support STARTTLS.
 		return port, false, mail.TLSOpportunistic
 	default:
-		// Default to STARTTLS-required behavior on modern submission ports (e.g. 587).
 		return port, false, mail.TLSMandatory
 	}
 }

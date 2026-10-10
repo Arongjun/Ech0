@@ -2,7 +2,7 @@
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <div v-if="echo.extension" class="extension-renderer">
-    <APlayerCard v-if="echo.extension.type === ExtensionType.MUSIC" :echo="echo" />
+    <MusicPlayerCard v-if="echo.extension.type === ExtensionType.MUSIC" :echo="echo" />
     <VideoCard
       v-else-if="echo.extension.type === ExtensionType.VIDEO"
       :video-id="echo.extension.payload.videoId"
@@ -21,17 +21,22 @@
       v-else-if="echo.extension.type === ExtensionType.LOCATION"
       :location="echo.extension.payload"
     />
+    <TweetCard
+      v-else-if="echo.extension.type === ExtensionType.TWEET && echo.extension.payload?.url"
+      :payload="echo.extension.payload"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
 import { ExtensionType } from '@/enums/enums'
-const APlayerCard = defineAsyncComponent(() => import('./cards/APlayerCard.vue'))
+const MusicPlayerCard = defineAsyncComponent(() => import('./cards/MusicPlayerCard.vue'))
 const VideoCard = defineAsyncComponent(() => import('./cards/VideoCard.vue'))
 const GithubCard = defineAsyncComponent(() => import('./cards/GithubCard.vue'))
 const WebsiteCard = defineAsyncComponent(() => import('./cards/WebsiteCard.vue'))
 const LocationCard = defineAsyncComponent(() => import('./cards/LocationCard.vue'))
+const TweetCard = defineAsyncComponent(() => import('./cards/TweetCard.vue'))
 
 defineProps<{
   echo: {

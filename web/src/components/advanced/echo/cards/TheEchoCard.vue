@@ -16,7 +16,7 @@
           </div>
           <button
             type="button"
-            class="echo-open-btn flex items-center justify-center w-6 h-6 rounded-sm text-[var(--color-text-muted)] opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:text-[var(--color-text-primary)] focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-border-subtle)]"
+            class="echo-open-btn flex items-center justify-center w-6 h-6 rounded-sm text-[var(--color-text-muted)] opacity-0 transition-opacity duration-150 hover:text-[var(--color-text-primary)] focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-border-subtle)]"
             :aria-label="t('echoCard.openDetail')"
             v-tooltip="t('echoCard.openDetail')"
             @click="handleExpandEcho(echo.id)"
@@ -112,30 +112,28 @@
         @pointermove="handleContentPointerMove"
         @pointercancel="resetContentPointerState"
       >
-        <template
-          v-if="
-            props.echo.layout === ImageLayout.GRID ||
-            props.echo.layout === ImageLayout.HORIZONTAL ||
-            props.echo.layout === ImageLayout.STACK
-          "
-        >
+        <template v-if="isContentLeadingEcho(props.echo)">
           <div class="mx-auto w-11/12 pl-1 mb-3">
             <TheMdPreview :content="props.echo.content" />
           </div>
 
-          <TheImageGallery
-            :images="echoImageFiles"
-            :layout="props.echo.layout"
-            :priority="props.index === 0"
-          />
+          <div :class="{ 'mx-auto w-11/12 pl-1': isAvEcho }">
+            <TheMediaPlayer
+              :echo="props.echo"
+              :layout="props.echo.layout"
+              :priority="props.index === 0"
+            />
+          </div>
         </template>
 
         <template v-else>
-          <TheImageGallery
-            :images="echoImageFiles"
-            :layout="props.echo.layout"
-            :priority="props.index === 0"
-          />
+          <div :class="{ 'mx-auto w-11/12 pl-1': isAvEcho }">
+            <TheMediaPlayer
+              :echo="props.echo"
+              :layout="props.echo.layout"
+              :priority="props.index === 0"
+            />
+          </div>
 
           <div class="mx-auto w-11/12 pl-1 mt-3">
             <TheMdPreview :content="props.echo.content" />
@@ -153,14 +151,11 @@
 <script lang="ts">
 import { ref } from 'vue'
 
-// Module-scoped: whichever echo id is currently showing its action menu.
-// Declared in a non-setup <script> so it runs once per module, not per instance.
-// Setting this id auto-closes any other card's menu (only one open at a time).
 const activeMenuId = ref<string | null>(null)
 </script>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, watch } from 'vue'
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, watch } from 'vue'
 import { fetchDeleteEcho, fetchGetEchoById } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { useUserStore, useEchoStore, useEditorStore } from '@/stores'
@@ -171,14 +166,13 @@ import More from '@/components/icons/more.vue'
 import EditEcho from '@/components/icons/editecho.vue'
 import Open from '@/components/icons/open.vue'
 import { useRouter } from 'vue-router'
-import { ImageLayout } from '@/enums/enums'
+import { getEchoFilesBy, isContentLeadingEcho } from '@/utils/echo'
 import { formatDate } from '@/utils/other'
-import { getEchoFilesBy } from '@/utils/echo'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useI18n } from 'vue-i18n'
 
-const TheImageGallery = defineAsyncComponent(
-  () => import('@/components/advanced/gallery/TheImageGallery.vue'),
+const TheMediaPlayer = defineAsyncComponent(
+  () => import('@/components/advanced/media/TheMediaPlayer.vue'),
 )
 const TheExtensionRenderer = defineAsyncComponent(
   () => import('@/components/advanced/extension/TheExtensionRenderer.vue'),
@@ -196,10 +190,11 @@ const props = defineProps<{
   index?: number
 }>()
 
-const userStore = useUserStore()
-const echoImageFiles = computed(() =>
-  getEchoFilesBy(props.echo, { categories: ['image'], dedupeBy: 'id' }),
+const isAvEcho = computed(
+  () => getEchoFilesBy(props.echo, { categories: ['audio', 'video'] }).length > 0,
 )
+
+const userStore = useUserStore()
 
 const echoStore = useEchoStore()
 const editorStore = useEditorStore()
@@ -235,7 +230,7 @@ const handleUpdateEcho = async () => {
   editorStore.isUpdateMode = true
   await router.push({
     name: 'home',
-    query: { tab: 'publish' },
+    query: { ...router.currentRoute.value.query, tab: 'publish' },
   })
 }
 
@@ -352,15 +347,7 @@ const toggleMenu = () => {
   activeMenuId.value = isMenuOpen.value ? null : props.echo.id
 }
 
-watch(isMenuOpen, async (open) => {
-  if (open) {
-    await nextTick()
-    updateMenuPosition()
-  }
-})
-
 const handleDocumentClick = (event: MouseEvent) => {
-  if (!isMenuOpen.value) return
   const target = event.target as Node | null
   if (!target) return
   if (menuPanelRef.value?.contains(target) || menuTriggerRef.value?.contains(target)) return
@@ -371,19 +358,37 @@ const handleEscape = (event: KeyboardEvent) => {
   if (event.key === 'Escape') closeMenu()
 }
 
-onMounted(() => {
+const SCROLL_LISTENER_OPTIONS: AddEventListenerOptions = { passive: true, capture: true }
+
+const bindGlobalListeners = () => {
   document.addEventListener('click', handleDocumentClick)
   document.addEventListener('keydown', handleEscape)
-  window.addEventListener('resize', updateMenuPosition)
-  window.addEventListener('scroll', updateMenuPosition, true)
-})
+  window.addEventListener('resize', updateMenuPosition, { passive: true })
+  window.addEventListener('scroll', updateMenuPosition, SCROLL_LISTENER_OPTIONS)
+}
 
-onBeforeUnmount(() => {
-  if (isMenuOpen.value) activeMenuId.value = null
+const unbindGlobalListeners = () => {
   document.removeEventListener('click', handleDocumentClick)
   document.removeEventListener('keydown', handleEscape)
   window.removeEventListener('resize', updateMenuPosition)
-  window.removeEventListener('scroll', updateMenuPosition, true)
+  window.removeEventListener('scroll', updateMenuPosition, SCROLL_LISTENER_OPTIONS)
+}
+
+watch(isMenuOpen, async (open) => {
+  if (open) {
+    await nextTick()
+    updateMenuPosition()
+    bindGlobalListeners()
+  } else {
+    unbindGlobalListeners()
+  }
+})
+
+onBeforeUnmount(() => {
+  if (isMenuOpen.value) {
+    activeMenuId.value = null
+    unbindGlobalListeners()
+  }
 })
 </script>
 
@@ -403,8 +408,6 @@ onBeforeUnmount(() => {
 
   max-width: 100%;
   overflow: clip visible;
-
-  /* 纵向允许溢出绘制，避免时间线内图片（如照片流 hover 放大）被裁切 */
 }
 
 .timeline-marker {
@@ -435,6 +438,51 @@ onBeforeUnmount(() => {
   width: var(--axis-line-width);
   background-color: var(--color-border-subtle);
   pointer-events: none;
+}
+
+@media (hover: hover) {
+  .echo-timeline:hover .echo-open-btn {
+    opacity: 1;
+    animation: echo-open-nudge-left 1200ms ease-out both;
+  }
+}
+
+.echo-open-btn:focus-visible {
+  animation: echo-open-nudge-left 1200ms ease-out both;
+}
+
+@keyframes echo-open-nudge-left {
+  0% {
+    transform: translateX(0);
+  }
+
+  16% {
+    transform: translateX(-4px);
+  }
+
+  28% {
+    transform: translateX(1px);
+  }
+
+  42% {
+    transform: translateX(-3px);
+  }
+
+  54% {
+    transform: translateX(1px);
+  }
+
+  68% {
+    transform: translateX(-2px);
+  }
+
+  80% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
 }
 
 .menu-row {

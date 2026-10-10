@@ -115,21 +115,26 @@ cleanup_tmp() {
 trap cleanup_tmp EXIT
 
 resolve_latest_tag() {
-  local effective
-  effective=$(curl -sIL -o /dev/null -w '%{url_effective}' \
-    "https://github.com/${REPO}/releases/latest")
-  if [ -n "$effective" ]; then
-    LATEST_TAG=$(basename "$effective")
-  else
-    LATEST_TAG="latest"
+  local api_url="https://api.github.com/repos/${REPO}/releases?per_page=30"
+  local tag
+  tag=$(curl -fsSL --connect-timeout 10 "$api_url" 2>/dev/null \
+    | grep -oE '"tag_name"[[:space:]]*:[[:space:]]*"v[^"]+"' \
+    | head -n1 \
+    | sed -E 's/.*"(v[^"]+)".*/\1/')
+
+  if [ -n "$tag" ]; then
+    LATEST_TAG="$tag"
+    return
   fi
+
+  handle_error 1 "无法解析 Ech0 最新版本，请稍后重试或检查网络"
 }
 
 download_package() {
   detect_arch
   resolve_latest_tag
   local asset="ech0-linux-${ARCH}.tar.gz"
-  local url="https://github.com/${REPO}/releases/latest/download/${asset}"
+  local url="https://github.com/${REPO}/releases/download/${LATEST_TAG}/${asset}"
 
   log_info "最新版本: ${LATEST_TAG}"
   log_info "下载 ${asset}"

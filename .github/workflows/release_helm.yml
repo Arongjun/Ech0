@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -52,7 +52,6 @@ jobs:
             exit 1
           fi
 
-          # Package name is ech0-<version>.tgz — must change each app release or chart-releaser skips (skip_existing).
           sed -i -E 's|^version: .*|version: '"${app_version}"'|' charts/ech0/Chart.yaml
           sed -i -E 's/^appVersion: .*/appVersion: "'"${app_version}"'"/' charts/ech0/Chart.yaml
           echo "Synced chart version and appVersion to ${app_version} from tag ${release_tag}"
@@ -72,7 +71,6 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-      # charts_dir must be the parent of chart folders (each subdir contains Chart.yaml), not the chart path itself.
       - name: Run Chart Releaser
         uses: helm/chart-releaser-action@v1.7.0
         with:
@@ -80,6 +78,35 @@ jobs:
           skip_existing: true
         env:
           CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Reset latest release pointer to app release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG_EVENT: ${{ github.event.release.tag_name }}
+          RELEASE_TAG_INPUT: ${{ github.event.inputs.release_tag }}
+        run: |
+          set -euo pipefail
+
+          release_tag=""
+          if [ "${EVENT_NAME}" = "release" ] && [ -n "${RELEASE_TAG_EVENT:-}" ]; then
+            release_tag="${RELEASE_TAG_EVENT}"
+          elif [ -n "${RELEASE_TAG_INPUT:-}" ]; then
+            release_tag="${RELEASE_TAG_INPUT}"
+          fi
+
+          if [ -z "${release_tag}" ]; then
+            echo "No app release tag resolved; skip latest pointer reset."
+            exit 0
+          fi
+
+          if ! gh release view "${release_tag}" >/dev/null 2>&1; then
+            echo "Release ${release_tag} not found; skip latest pointer reset."
+            exit 0
+          fi
+
+          gh release edit "${release_tag}" --latest
+          echo "Re-marked ${release_tag} as latest."
 
       - name: Generate release page
         env:

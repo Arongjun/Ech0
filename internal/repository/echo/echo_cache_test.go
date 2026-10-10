@@ -8,6 +8,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/lin-snow/ech0/internal/cache"
 )
 
 type testCache struct {
@@ -39,10 +41,11 @@ func (t *testCache) deletedCount() int {
 
 func TestEchoCacheKeyTrackerConcurrentTrackAndClear(t *testing.T) {
 	const n = 200
-	cache := newTestCache()
+	spy := newTestCache()
+	c := cache.New(spy)
 	var wg sync.WaitGroup
 
-	for i := 0; i < n; i++ {
+	for i := range n {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
@@ -52,17 +55,16 @@ func TestEchoCacheKeyTrackerConcurrentTrackAndClear(t *testing.T) {
 	}
 	wg.Wait()
 
-	ClearEchoPageCache(cache)
-	ClearTodayEchosCache(cache)
+	ClearEchoPageCache(c)
+	ClearTodayEchosCache(c)
 
-	if cache.deletedCount() != 2*n {
-		t.Fatalf("expected %d deleted keys, got %d", 2*n, cache.deletedCount())
+	if spy.deletedCount() != 2*n {
+		t.Fatalf("expected %d deleted keys, got %d", 2*n, spy.deletedCount())
 	}
 
-	// 再次清理不应重复删除
-	ClearEchoPageCache(cache)
-	ClearTodayEchosCache(cache)
-	if cache.deletedCount() != 2*n {
-		t.Fatalf("expected stable deleted count %d, got %d", 2*n, cache.deletedCount())
+	ClearEchoPageCache(c)
+	ClearTodayEchosCache(c)
+	if spy.deletedCount() != 2*n {
+		t.Fatalf("expected stable deleted count %d, got %d", 2*n, spy.deletedCount())
 	}
 }

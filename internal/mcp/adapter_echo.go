@@ -31,6 +31,7 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 				"sort_order": map[string]any{"type": "string", "enum": []string{"desc", "asc"}, "description": "Sort direction", "default": "desc"},
 			},
 		},
+		Annotations: readOnlyHints(),
 	}, a.searchPosts, authModel.ScopeEchoRead)
 
 	reg.RegisterTool(ToolDefinition{
@@ -44,6 +45,7 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 				"id": map[string]any{"type": "string", "format": "uuid", "description": "Post UUID"},
 			},
 		},
+		Annotations: readOnlyHints(),
 	}, a.getPost, authModel.ScopeEchoRead)
 
 	reg.RegisterTool(ToolDefinition{
@@ -54,6 +56,7 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 			"type":       "object",
 			"properties": map[string]any{},
 		},
+		Annotations: readOnlyHints(),
 	}, a.listTags, authModel.ScopeEchoRead)
 
 	echoFileSchema := map[string]any{
@@ -100,6 +103,7 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 				"extension":  extensionSchema,
 			},
 		},
+		Annotations: createHints(),
 	}, a.createPost, authModel.ScopeEchoWrite)
 
 	reg.RegisterTool(ToolDefinition{
@@ -120,6 +124,7 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 				"extension":  extensionSchema,
 			},
 		},
+		Annotations: destructiveHints(),
 	}, a.updatePost, authModel.ScopeEchoWrite)
 
 	reg.RegisterTool(ToolDefinition{
@@ -133,6 +138,7 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 				"id": map[string]any{"type": "string", "format": "uuid", "description": "Post UUID"},
 			},
 		},
+		Annotations: destructiveHints(),
 	}, a.deletePost, authModel.ScopeEchoWrite)
 
 	reg.RegisterTool(ToolDefinition{
@@ -145,6 +151,7 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 				"timezone": map[string]any{"type": "string", "description": "IANA timezone name (e.g. Asia/Shanghai, America/New_York). Defaults to UTC if omitted."},
 			},
 		},
+		Annotations: readOnlyHints(),
 	}, a.getTodayPosts, authModel.ScopeEchoRead)
 
 	reg.RegisterTool(ToolDefinition{
@@ -158,6 +165,7 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 				"id": map[string]any{"type": "string", "format": "uuid", "description": "Post UUID"},
 			},
 		},
+		Annotations: createHints(),
 	}, a.likePost, authModel.ScopeEchoWrite)
 
 	reg.RegisterTool(ToolDefinition{
@@ -171,7 +179,45 @@ func (a *Adapter) registerEchoTools(reg *Registry) {
 				"id": map[string]any{"type": "string", "format": "uuid", "description": "Tag UUID"},
 			},
 		},
+		Annotations: destructiveHints(),
 	}, a.deleteTag, authModel.ScopeEchoWrite)
+
+	reg.RegisterTool(ToolDefinition{
+		Name:        "get_hot_posts",
+		Title:       "Get Hot Posts",
+		Description: "Return the most popular posts, ranked by a weighted score of likes and comment count. Returns an array of post objects.",
+		InputSchema: map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"limit": map[string]any{"type": "integer", "description": "Number of posts to return (1–100)", "default": 5},
+			},
+		},
+		Annotations: readOnlyHints(),
+	}, a.getHotPosts, authModel.ScopeEchoRead)
+
+	reg.RegisterTool(ToolDefinition{
+		Name:        "get_random_post",
+		Title:       "Get Random Post",
+		Description: "Return a single randomly selected post. Returns the post object, or null if there are no posts. No parameters needed.",
+		InputSchema: map[string]any{
+			"type":       "object",
+			"properties": map[string]any{},
+		},
+		Annotations: readOnlyHints(),
+	}, a.getRandomPost, authModel.ScopeEchoRead)
+
+	reg.RegisterTool(ToolDefinition{
+		Name:        "get_on_this_day_posts",
+		Title:       "Get On This Day Posts",
+		Description: "Return posts from past years that share the same month and day as today ('on this day' / this day in history). The day boundary depends on the timezone parameter. Returns an array of post objects.",
+		InputSchema: map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"timezone": map[string]any{"type": "string", "description": "IANA timezone name (e.g. Asia/Shanghai, America/New_York). Defaults to UTC if omitted."},
+			},
+		},
+		Annotations: readOnlyHints(),
+	}, a.getOnThisDayPosts, authModel.ScopeEchoRead)
 }
 
 func (a *Adapter) registerEchoResources(reg *Registry) {
@@ -181,6 +227,7 @@ func (a *Adapter) registerEchoResources(reg *Registry) {
 		Title:       "All Tags",
 		Description: "JSON array of all tags. Each object has id, name, and the number of posts using this tag.",
 		MimeType:    "application/json",
+		Cache:       privateCache(liveTTLMs),
 	}, a.resourceTags, authModel.ScopeEchoRead)
 
 	reg.RegisterResource(ResourceDefinition{
@@ -189,26 +236,23 @@ func (a *Adapter) registerEchoResources(reg *Registry) {
 		Title:       "Recent Posts",
 		Description: "The 20 most recently created posts (newest first). Append ?limit=N (1–100) to the URI to change the count.",
 		MimeType:    "application/json",
+		Cache:       privateCache(liveTTLMs),
 	}, a.resourceRecentPosts, authModel.ScopeEchoRead)
 
-	reg.RegisterResource(ResourceDefinition{
-		URI:         "ech0://posts/{id}",
+	reg.RegisterResourceTemplate(ResourceTemplateDefinition{
+		URITemplate: "ech0://posts/{id}",
 		Name:        "post",
 		Title:       "Post by ID",
 		Description: "Full post object (content, tags, timestamps, like count) for a given UUID. Replace {id} with the post UUID.",
 		MimeType:    "application/json",
+		Cache:       privateCache(liveTTLMs),
 	}, a.resourcePostByID, authModel.ScopeEchoRead)
 }
-
-// --- Tool handlers ---
 
 func (a *Adapter) searchPosts(ctx context.Context, args map[string]any) (*ToolCallResult, error) {
 	query := stringArg(args, "query")
 	page := intArg(args, "page", 1)
-	pageSize := intArg(args, "page_size", 20)
-	if pageSize > 100 {
-		pageSize = 100
-	}
+	pageSize := min(intArg(args, "page_size", 20), 100)
 	sortBy := stringArg(args, "sort_by")
 	sortOrder := stringArg(args, "sort_order")
 
@@ -350,7 +394,31 @@ func (a *Adapter) deleteTag(ctx context.Context, args map[string]any) (*ToolCall
 	return jsonResult(map[string]string{"id": id, "message": "tag deleted successfully"})
 }
 
-// --- Resource handlers ---
+func (a *Adapter) getHotPosts(ctx context.Context, args map[string]any) (*ToolCallResult, error) {
+	limit := min(max(intArg(args, "limit", 5), 1), 100)
+	posts, err := a.echoSvc.GetHotEchos(ctx, limit)
+	if err != nil {
+		return nil, err
+	}
+	return jsonResult(posts)
+}
+
+func (a *Adapter) getRandomPost(ctx context.Context, _ map[string]any) (*ToolCallResult, error) {
+	post, err := a.echoSvc.GetRandomEcho(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return jsonResult(post)
+}
+
+func (a *Adapter) getOnThisDayPosts(ctx context.Context, args map[string]any) (*ToolCallResult, error) {
+	timezone := stringArg(args, "timezone")
+	posts, err := a.echoSvc.GetOnThisDayEchos(ctx, timezone)
+	if err != nil {
+		return nil, err
+	}
+	return jsonResult(posts)
+}
 
 func (a *Adapter) resourceTags(_ context.Context, _ string) (*ResourceReadResult, error) {
 	tags, err := a.echoSvc.GetAllTags()

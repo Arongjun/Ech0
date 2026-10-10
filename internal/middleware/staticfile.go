@@ -4,50 +4,38 @@
 package middleware
 
 import (
+	"mime"
 	"path/filepath"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-// inlineableMIMEPrefixes lists Content-Type prefixes that are safe to display
-// inline in the browser (images and audio only).
 var inlineableMIMEPrefixes = []string{
 	"image/",
 	"audio/",
+	"video/",
 }
 
-// StaticFileSecurity returns a middleware that hardens responses served from the
-// public file endpoint:
-//   - X-Content-Type-Options: nosniff (prevents MIME-sniffing attacks).
-//   - Content-Disposition: attachment for non-image/audio files (forces download
-//     instead of in-browser execution).
-//   - Cache-Control: long-lived immutable cache for inlineable assets (image/audio).
-//     Stored filenames are content-hashed (see storage layer), so reusing a key
-//     implies identical bytes.
 func StaticFileSecurity() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("X-Content-Type-Options", "nosniff")
 
-		c.Next()
-
-		ct := c.Writer.Header().Get("Content-Type")
-		if ct == "" {
-			ext := strings.ToLower(filepath.Ext(c.Request.URL.Path))
-			if ext == "" {
-				ct = "application/octet-stream"
-			}
-		}
-
-		if isInlineableMIME(ct) {
-			if c.Writer.Header().Get("Cache-Control") == "" {
-				c.Header("Cache-Control", "public, max-age=31536000, immutable")
-			}
+		ext := strings.ToLower(filepath.Ext(c.Request.URL.Path))
+		if isInlineableExt(ext) {
+			c.Header("Cache-Control", "public, max-age=31536000, immutable")
 		} else {
 			basename := filepath.Base(c.Request.URL.Path)
 			c.Header("Content-Disposition", "attachment; filename=\""+basename+"\"")
 		}
+
+		c.Next()
 	}
+}
+
+func isInlineableExt(ext string) bool {
+	ct := mime.TypeByExtension(ext)
+	return ct != "" && isInlineableMIME(ct)
 }
 
 func isInlineableMIME(ct string) bool {

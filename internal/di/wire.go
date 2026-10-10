@@ -8,44 +8,106 @@
 package di
 
 import (
+	"context"
+
 	"github.com/google/wire"
-	busen "github.com/lin-snow/Busen"
-	"github.com/lin-snow/ech0/internal/app"
 	"github.com/lin-snow/ech0/internal/cache"
 	"github.com/lin-snow/ech0/internal/database"
 	eventbus "github.com/lin-snow/ech0/internal/event/bus"
-	eventpublisher "github.com/lin-snow/ech0/internal/event/publisher"
-	eventregistry "github.com/lin-snow/ech0/internal/event/registry"
 	eventsubscriber "github.com/lin-snow/ech0/internal/event/subscriber"
 	"github.com/lin-snow/ech0/internal/handler"
+	"github.com/lin-snow/ech0/internal/job"
+	jobRunner "github.com/lin-snow/ech0/internal/job/runner"
+	"github.com/lin-snow/ech0/internal/kvstore"
 	"github.com/lin-snow/ech0/internal/middleware"
 	"github.com/lin-snow/ech0/internal/migrator"
+	jobModel "github.com/lin-snow/ech0/internal/model/job"
 	"github.com/lin-snow/ech0/internal/repository"
 	keyvalueRepository "github.com/lin-snow/ech0/internal/repository/keyvalue"
 	"github.com/lin-snow/ech0/internal/server"
 	"github.com/lin-snow/ech0/internal/service"
-	commentService "github.com/lin-snow/ech0/internal/service/comment"
+	copilotService "github.com/lin-snow/ech0/internal/service/copilot"
+	userService "github.com/lin-snow/ech0/internal/service/user"
+	"github.com/lin-snow/ech0/internal/setting"
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/task"
+	"github.com/lin-snow/ech0/internal/task/scheduled"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"github.com/lin-snow/ech0/internal/visitor"
 	"github.com/lin-snow/ech0/internal/webhook"
+	"github.com/lin-snow/ech0/pkg/app"
+	"github.com/lin-snow/ech0/pkg/busen"
 	"gorm.io/gorm"
 )
 
-var AppSet = app.ProviderSet
+var AppSet = wire.NewSet(ProvideApp)
 
-// VisitorSet 独立于 HandlerSet/TaskerSet,避免 wire 为两个 Build 各自生成一个 Tracker
-// 导致"WebHandler 写入 #1、Tasker 从 #2 读出恒为 0"的 bug。必须在 BuildApp/BuildServer
-// 顶层引入一次,统一下沉给 BuildHandlers 和 BuildTasker。
+// ProvideApp composes Ech0's runtime on the generic app lifecycle: components
+// start in order job → task → server; settings are seeded and event
+// subscriptions registered before any of them, and torn down after all stop.
+func ProvideApp(
+	registrar *eventbus.EventRegistrar,
+	jobManager *job.Manager,
+	taskManager *task.Manager,
+	httpServer *server.Server,
+	durableKV kvstore.Store,
+) *app.App {
+	return app.New(
+		app.Components(jobManager, taskManager, httpServer),
+		app.BeforeStart(func(ctx context.Context) error {
+			if err := setting.Seed(ctx, durableKV); err != nil {
+				return err
+			}
+			return registrar.Register()
+		}),
+		app.AfterStop(func(context.Context) error {
+			return registrar.Stop()
+		}),
+	)
+}
+
 var VisitorSet = wire.NewSet(visitor.NewTracker)
+
+func ProvideJobManager(
+	repo job.JobRepository,
+	reindex *jobRunner.ReindexRunner,
+	migration *jobRunner.MigrationRunner,
+	export *jobRunner.ExportRunner,
+) *job.Manager {
+	m := job.NewManager(repo)
+	m.Register(jobModel.Reindex, reindex.Run)
+	m.Register(jobModel.Migration, migration.Run)
+	m.Register(jobModel.Export, export.Run)
+	return m
+}
+
+func ProvideTaskManager(
+	cleanup *scheduled.Cleanup,
+	snapshot *scheduled.Snapshot,
+	visitorSnapshot *scheduled.VisitorSnapshot,
+) (*task.Manager, error) {
+	return task.NewManager(cleanup, snapshot, visitorSnapshot)
+}
+
+var StorageSet = wire.NewSet(
+	keyvalueRepository.NewKeyValueRepository,
+	ProvideStorageKV,
+	storage.ProviderSet,
+)
+
+func ProvideStorageKV(repo *keyvalueRepository.KeyValueRepository) kvstore.Store {
+	return kvstore.NewPersistent(repo)
+}
+
+func ProvideGormDB(dbProvider func() *gorm.DB) *gorm.DB {
+	return dbProvider()
+}
 
 var DomainSet = wire.NewSet(
 	BuildHandlers,
 	BuildMiddlewares,
 	BuildTasker,
-	BuildMigrator,
-	ProvideBackupScheduleApplier,
+	BuildJobManager,
 	BuildEventRegistrar,
 )
 
@@ -64,25 +126,18 @@ var EventSet = wire.NewSet(
 	repository.UserSet,
 
 	repository.KeyValueSet,
-	repository.QueueSet,
 	repository.WebhookSet,
-
-	wire.Bind(new(eventregistry.WebhookObserver), new(*webhook.Dispatcher)),
-	wire.Bind(new(eventsubscriber.DeadLetterProcessor), new(*webhook.Dispatcher)),
+	repository.EmbeddingSet,
 
 	webhook.NewDispatcher,
-	eventsubscriber.NewBackupScheduler,
-	eventsubscriber.NewDeadLetterResolver,
 	eventsubscriber.NewAgentProcessor,
+	eventsubscriber.NewEmbeddingProcessor,
+	service.EmbeddingSet,
 	ProvideSubscriptionProviders,
-	eventregistry.NewEventRegistry,
+	eventbus.NewEventRegistry,
 )
 
 var HandlerSet = wire.NewSet(
-	eventpublisher.New,
-	wire.Bind(new(commentService.EventPublisher), new(*eventpublisher.Publisher)),
-	storage.ProviderSet,
-	wire.Bind(new(storage.S3SettingStore), new(*keyvalueRepository.KeyValueRepository)),
 	repository.FileSet,
 	handler.WebSet,
 
@@ -110,6 +165,7 @@ var HandlerSet = wire.NewSet(
 	handler.CommonSet,
 
 	repository.WebhookSet,
+	webhook.NewSender,
 	repository.KeyValueSet,
 
 	repository.SettingSet,
@@ -123,12 +179,14 @@ var HandlerSet = wire.NewSet(
 	service.DashboardSet,
 	handler.DashboardSet,
 
-	service.AgentSet,
-	handler.AgentSet,
+	repository.EmbeddingSet,
+	service.EmbeddingSet,
+	handler.EmbeddingSet,
 
-	service.BackupSet,
-	handler.BackupSet,
-	repository.MigrationSet,
+	service.CopilotSet,
+	wire.Bind(new(copilotService.UserReader), new(*userService.UserService)),
+	handler.CopilotSet,
+
 	service.MigratorSet,
 	handler.MigrationSet,
 
@@ -143,15 +201,10 @@ var MiddlewareSet = wire.NewSet(
 )
 
 var TaskerSet = wire.NewSet(
-	eventpublisher.New,
-	storage.ProviderSet,
-	wire.Bind(new(storage.S3SettingStore), new(*keyvalueRepository.KeyValueRepository)),
 	repository.FileSet,
 	repository.KeyValueSet,
 	repository.WebhookSet,
 
-	// SettingService 需要 TokenRevoker (管理员删 token 时写黑名单)，
-	// 而 TokenRevoker 由 AuthSet 提供，因此 Tasker 也得包含一份。
 	repository.AuthSet,
 	repository.SettingSet,
 	service.SettingSet,
@@ -163,20 +216,17 @@ var TaskerSet = wire.NewSet(
 	service.FileSet,
 	service.CommonSet,
 
-	repository.QueueSet,
 	repository.VisitorSet,
-	task.ProviderSet,
+	migrator.NewExportEngine,
+	scheduled.ProviderSet,
+	ProvideTaskManager,
 )
 
-var MigratorSet = wire.NewSet(
-	migrator.ProviderSet,
-)
-
-// BuildApp 构建 Web 生命周期应用。
 func BuildApp() (*app.App, error) {
 	wire.Build(
 		InfraSet,
 		VisitorSet,
+		StorageSet,
 		DomainSet,
 		RuntimeSet,
 		AppSet,
@@ -187,41 +237,63 @@ func BuildApp() (*app.App, error) {
 func BuildEventRegistrar(
 	dbProvider func() *gorm.DB,
 	ebProvider func() *busen.Bus,
-	appCache cache.ICache[string, any],
+	appCache *cache.Cache,
 	tx transaction.Transactor,
-	backupScheduleApplier eventsubscriber.BackupScheduleApplier,
-) (*eventregistry.EventRegistrar, error) {
+) (*eventbus.EventRegistrar, error) {
 	wire.Build(EventSet)
-	return &eventregistry.EventRegistrar{}, nil
+	return &eventbus.EventRegistrar{}, nil
 }
 
-// BuildHandlers 使用 wire 生成的代码来构建 Handlers 实例。
-// tracker 由顶层 BuildApp/BuildServer 注入,保证整个进程只有一个 visitor.Tracker 实例。
 func BuildHandlers(
 	dbProvider func() *gorm.DB,
-	appCache cache.ICache[string, any],
+	appCache *cache.Cache,
 	tx transaction.Transactor,
 	ebProvider func() *busen.Bus,
 	tracker *visitor.Tracker,
+	jobManager *job.Manager,
+	storageManager *storage.Manager,
 ) (*handler.Bundle, error) {
 	wire.Build(HandlerSet)
 	return &handler.Bundle{}, nil
 }
 
-// BuildMiddlewares 构建中间件依赖。
+func BuildJobManager(
+	dbProvider func() *gorm.DB,
+	appCache *cache.Cache,
+	storageManager *storage.Manager,
+	ebProvider func() *busen.Bus,
+	tx transaction.Transactor,
+) (*job.Manager, error) {
+	wire.Build(
+		repository.JobSet,
+		repository.EmbeddingSet,
+		repository.EchoSet,
+		repository.KeyValueSet,
+		service.EmbeddingSet,
+		migrator.NewImportEngine,
+		migrator.NewExportEngine,
+		ProvideGormDB,
+		migrator.NewCapsuleEngine,
+		jobRunner.ProviderSet,
+		ProvideJobManager,
+	)
+	return nil, nil
+}
+
 func BuildMiddlewares(
 	dbProvider func() *gorm.DB,
-	appCache cache.ICache[string, any],
+	appCache *cache.Cache,
 ) (*middleware.Deps, error) {
 	wire.Build(MiddlewareSet)
 	return &middleware.Deps{}, nil
 }
 
-// BuildServer 构建 HTTP server
 func BuildServer() (*server.Server, error) {
 	wire.Build(
 		InfraSet,
 		VisitorSet,
+		StorageSet,
+		BuildJobManager,
 		BuildHandlers,
 		BuildMiddlewares,
 		server.ProviderSet,
@@ -231,32 +303,20 @@ func BuildServer() (*server.Server, error) {
 
 func BuildTasker(
 	dbProvider func() *gorm.DB,
-	appCache cache.ICache[string, any],
+	appCache *cache.Cache,
 	tx transaction.Transactor,
 	ebProvider func() *busen.Bus,
 	tracker *visitor.Tracker,
-) (*task.Tasker, error) {
+	storageManager *storage.Manager,
+) (*task.Manager, error) {
 	wire.Build(TaskerSet)
-	return &task.Tasker{}, nil
-}
-
-func BuildMigrator(
-	dbProvider func() *gorm.DB,
-	appCache cache.ICache[string, any],
-	tx transaction.Transactor,
-) (*migrator.Worker, error) {
-	wire.Build(MigratorSet)
-	return &migrator.Worker{}, nil
-}
-
-func ProvideBackupScheduleApplier(t *task.Tasker) eventsubscriber.BackupScheduleApplier {
-	return t
+	return &task.Manager{}, nil
 }
 
 func ProvideSubscriptionProviders(
-	dlr *eventsubscriber.DeadLetterResolver,
-	bs *eventsubscriber.BackupScheduler,
 	ap *eventsubscriber.AgentProcessor,
-) []eventregistry.SubscriptionProvider {
-	return []eventregistry.SubscriptionProvider{dlr, bs, ap}
+	ep *eventsubscriber.EmbeddingProcessor,
+	disp *webhook.Dispatcher,
+) []eventbus.Subscriber {
+	return []eventbus.Subscriber{ap, ep, disp}
 }

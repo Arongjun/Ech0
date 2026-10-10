@@ -3,14 +3,24 @@
 
 package mcp
 
+type ToolAnnotations struct {
+	ReadOnlyHint    *bool `json:"readOnlyHint,omitempty"`
+	DestructiveHint *bool `json:"destructiveHint,omitempty"`
+	IdempotentHint  *bool `json:"idempotentHint,omitempty"`
+	OpenWorldHint   *bool `json:"openWorldHint,omitempty"`
+}
+
 type ToolDefinition struct {
-	Name        string         `json:"name"`
-	Title       string         `json:"title,omitempty"`
-	Description string         `json:"description"`
-	InputSchema map[string]any `json:"inputSchema"`
+	Name        string           `json:"name"`
+	Title       string           `json:"title,omitempty"`
+	Description string           `json:"description"`
+	InputSchema map[string]any   `json:"inputSchema"`
+	Annotations *ToolAnnotations `json:"annotations,omitempty"`
 }
 
 type ToolsListResult struct {
+	ResultEnvelope
+	*CacheInfo
 	Tools []ToolDefinition `json:"tools"`
 }
 
@@ -25,6 +35,8 @@ type ContentItem struct {
 }
 
 type ToolCallResult struct {
-	Content []ContentItem `json:"content"`
-	IsError bool          `json:"isError"`
+	ResultEnvelope
+	Content           []ContentItem `json:"content"`
+	StructuredContent any           `json:"structuredContent,omitempty"`
+	IsError           bool          `json:"isError"`
 }

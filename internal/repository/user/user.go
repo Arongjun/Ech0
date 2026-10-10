@@ -11,16 +11,17 @@ import (
 	model "github.com/lin-snow/ech0/internal/model/user"
 	"github.com/lin-snow/ech0/internal/transaction"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type UserRepository struct {
 	db    func() *gorm.DB
-	cache cache.ICache[string, any]
+	cache *cache.Cache
 }
 
 func NewUserRepository(
 	dbProvider func() *gorm.DB,
-	cache cache.ICache[string, any],
+	cache *cache.Cache,
 ) *UserRepository {
 	return &UserRepository{
 		db:    dbProvider,
@@ -37,9 +38,8 @@ func (userRepository *UserRepository) getDB(ctx context.Context) *gorm.DB {
 
 func (userRepository *UserRepository) GetUserByUsername(ctx context.Context, username string) (model.User, error) {
 	cacheKey := GetUsernameKey(username)
-	return cache.ReadThroughTypedUnlessTx[model.User](
+	return userRepository.cache.ReadThroughUnlessTx(
 		ctx,
-		userRepository.cache,
 		cacheKey,
 		1,
 		func(ctx context.Context) (model.User, error) {
@@ -84,11 +84,17 @@ func (userRepository *UserRepository) CreateUser(ctx context.Context, user *mode
 	return nil
 }
 
+func (userRepository *UserRepository) UpsertLocalAuth(ctx context.Context, localAuth *model.UserLocalAuth) error {
+	return userRepository.getDB(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"password_hash", "password_algo", "updated_at"}),
+	}).Create(localAuth).Error
+}
+
 func (userRepository *UserRepository) GetUserByID(ctx context.Context, id string) (model.User, error) {
 	cacheKey := GetUserIDKey(id)
-	return cache.ReadThroughTypedUnlessTx[model.User](
+	return userRepository.cache.ReadThroughUnlessTx(
 		ctx,
-		userRepository.cache,
 		cacheKey,
 		1,
 		func(ctx context.Context) (model.User, error) {
@@ -110,9 +116,8 @@ func (userRepository *UserRepository) GetUserByID(ctx context.Context, id string
 
 func (userRepository *UserRepository) GetOwner(ctx context.Context) (model.User, error) {
 	cacheKey := GetOwnerKey()
-	return cache.ReadThroughTypedUnlessTx[model.User](
+	return userRepository.cache.ReadThroughUnlessTx(
 		ctx,
-		userRepository.cache,
 		cacheKey,
 		1,
 		func(ctx context.Context) (model.User, error) {
@@ -203,6 +208,12 @@ func (userRepository *UserRepository) DeleteUser(ctx context.Context, id string)
 
 	err = userRepository.getDB(ctx).Where("id = ?", id).Delete(&model.User{}).Error
 	if err != nil {
+		return err
+	}
+
+	if err := userRepository.getDB(ctx).
+		Where("user_id = ?", id).
+		Delete(&model.UserLocalAuth{}).Error; err != nil {
 		return err
 	}
 

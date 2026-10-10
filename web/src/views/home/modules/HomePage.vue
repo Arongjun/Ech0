@@ -16,6 +16,7 @@
                 v-model:mobile-search-open="mobileSearchOpen"
                 class="mx-1"
                 @open-palette="paletteOpen = true"
+                @open-chat="chatLauncherOpen = true"
               />
             </aside>
             <div
@@ -47,7 +48,11 @@
         <aside class="home-aside home-aside--rail">
           <HomeSidebarNav />
           <div class="home-aside__filter-block">
-            <TheFilter @open-palette="paletteOpen = true" />
+            <TheFilter
+              show-chat-trigger
+              @open-palette="paletteOpen = true"
+              @open-chat="chatLauncherOpen = true"
+            />
             <div class="home-aside__version">
               version: {{ settingStore.hello?.version || '--' }}
             </div>
@@ -56,6 +61,7 @@
       </div>
     </div>
     <TheCommandPalette v-model="paletteOpen" />
+    <TheChatLauncher v-model="chatLauncherOpen" />
   </div>
 </template>
 
@@ -66,6 +72,7 @@ import HomeSidebarNav from './HomeSidebarNav.vue'
 import TheFilter from './TheFilter.vue'
 import TheEchos from './TheEchos.vue'
 import TheCommandPalette from './TheCommandPalette.vue'
+import TheChatLauncher from './TheChatLauncher.vue'
 import { defineAsyncComponent, onMounted, ref, onBeforeUnmount, computed, watch } from 'vue'
 import { useEchoStore, useUserStore, useSettingStore } from '@/stores'
 import { useRoute } from 'vue-router'
@@ -107,17 +114,26 @@ let timelineScrollRaf: number | null = null
 let windowScrollRaf: number | null = null
 
 const paletteOpen = ref<boolean>(false)
+const chatLauncherOpen = ref<boolean>(false)
+const chatAvailable = computed(() => isLogin.value && AgentSetting.value.enable)
 
 const handleGlobalKeydown = (event: KeyboardEvent) => {
-  const isSearchShortcut =
-    (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && event.key === 'k'
+  const withModifier = (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey
+  const isSearchShortcut = withModifier && event.key === 'k'
   if (isSearchShortcut) {
     event.preventDefault()
     paletteOpen.value = !paletteOpen.value
     return
   }
-  if (event.key === 'Escape' && paletteOpen.value) {
-    paletteOpen.value = false
+  const isChatShortcut = withModifier && event.key === 'j'
+  if (isChatShortcut && chatAvailable.value) {
+    event.preventDefault()
+    chatLauncherOpen.value = !chatLauncherOpen.value
+    return
+  }
+  if (event.key === 'Escape') {
+    if (paletteOpen.value) paletteOpen.value = false
+    if (chatLauncherOpen.value) chatLauncherOpen.value = false
   }
 }
 
@@ -131,7 +147,6 @@ const saveTimelineScrollPosition = () => {
   })
 }
 
-// 手机布局下滚动发生在 window 上，单独持久化以便恢复。
 const saveWindowScrollPosition = () => {
   if (windowScrollRaf !== null) return
   windowScrollRaf = window.requestAnimationFrame(() => {
@@ -155,9 +170,6 @@ const restoreTimelineScrollPosition = () => {
   }
 }
 
-// 空闲时预热下游 chunk：
-//   - EchoView：点击日期跳详情前提前下好
-//   - markdown core：避免慢网下首屏 echo 卡片显示原文 fallback 的过渡时长
 const prefetchHeavyChunks = () => {
   const trigger = () => {
     import('@/views/echo/EchoView.vue').catch(() => {})
@@ -178,7 +190,6 @@ onMounted(async () => {
     mainColumn.value.addEventListener('scroll', saveTimelineScrollPosition, { passive: true })
   }
   window.addEventListener('scroll', saveWindowScrollPosition, { passive: true })
-  // 等首批 echo 渲染后再恢复滚动位置，否则容器高度还没撑开，scrollTop 会被夹到 0。
   const stopScrollRestoreWatch = watch(
     () => echoStore.echoList.length > 0 && !echoStore.isLoading,
     (ready) => {
