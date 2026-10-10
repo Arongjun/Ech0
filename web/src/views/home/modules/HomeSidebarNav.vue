@@ -3,7 +3,7 @@
 <template>
   <div class="home-sidebar-nav">
     <div class="home-sidebar-nav__mobile-row">
-      <nav class="home-sidebar-nav__nav" aria-label="Primary">
+      <nav ref="navRef" class="home-sidebar-nav__nav" aria-label="Primary">
         <RouterLink
           v-for="item in visibleItems"
           :key="item.id"
@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useEchoStore, useSettingStore, useUserStore } from '@/stores'
 import { storeToRefs } from 'pinia'
@@ -152,6 +152,21 @@ const handleSearchClick = async () => {
   searchOpenState.value = !searchOpenState.value
 }
 
+const navRef = ref<HTMLElement | null>(null)
+
+const scrollActiveIntoView = () => {
+  nextTick(() => {
+    if (!navRef.value) return
+    const activeEl = navRef.value.querySelector<HTMLElement>('.home-sidebar-nav__link--active')
+    if (activeEl) {
+      activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+    }
+  })
+}
+
+watch([() => route.name, () => route.query.tab], scrollActiveIntoView)
+onMounted(scrollActiveIntoView)
+
 watch(showSearchTrigger, (visible) => {
   if (!visible) searchOpenState.value = false
 })
@@ -232,11 +247,37 @@ watch(showSearchTrigger, (visible) => {
 }
 
 @media (width <= 819.98px) {
+  .home-sidebar-nav__mobile-row {
+    background: var(--ag-glass-strong, rgba(255, 255, 255, 0.72));
+    backdrop-filter: blur(24px) saturate(190%);
+    -webkit-backdrop-filter: blur(24px) saturate(190%);
+    border: 1px solid var(--ag-line-soft, rgba(255, 255, 255, 0.8));
+    border-radius: 9999px;
+    padding: 0.24rem 0.32rem;
+    box-shadow:
+      0 4px 18px -2px rgba(18, 24, 38, 0.05),
+      0 1px 3px rgba(18, 24, 38, 0.02),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    gap: 0.25rem;
+    box-sizing: border-box;
+    width: 100%;
+  }
+
   .home-sidebar-nav__nav {
     flex-direction: row;
-    gap: 0.2rem;
+    align-items: center;
+    gap: 0.16rem;
+    min-width: 0;
+    flex: 1 1 auto;
     overflow-x: auto;
+    overflow-y: hidden;
     white-space: nowrap;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-behavior: smooth;
+    padding: 0.02rem;
+    margin: 0;
+    -webkit-overflow-scrolling: touch;
   }
 
   .home-sidebar-nav__nav::-webkit-scrollbar {
@@ -244,11 +285,49 @@ watch(showSearchTrigger, (visible) => {
   }
 
   .home-sidebar-nav__link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     flex: 0 0 auto;
-    padding: 0.3rem 0.5rem;
-    border-radius: var(--radius-xs);
-    font-size: 0.9rem;
-    line-height: 1.2;
+    height: 2.15rem;
+    padding: 0 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.84rem;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--ag-ink-soft, var(--color-text-secondary));
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    margin: 0;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      color 0.2s cubic-bezier(0.2, 0, 0, 1),
+      background-color 0.2s cubic-bezier(0.2, 0, 0, 1),
+      transform 0.18s cubic-bezier(0.2, 0, 0, 1),
+      box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .home-sidebar-nav__link:hover {
+    color: var(--ag-ink, var(--color-text-primary));
+    background: rgba(255, 255, 255, 0.42);
+  }
+
+  .home-sidebar-nav__link:active {
+    transform: scale(0.96);
+  }
+
+  .home-sidebar-nav__link.home-sidebar-nav__link--active {
+    color: var(--ag-blue, #007aff);
+    font-weight: 600;
+    background: #ffffff;
+    border-radius: 9999px;
+    box-shadow:
+      0 2px 7px rgba(18, 24, 38, 0.08),
+      0 1px 2px rgba(18, 24, 38, 0.04),
+      inset 0 1px 0 #ffffff;
+    transform: scale(1.02);
   }
 
   .home-sidebar-nav__search-trigger,
@@ -257,18 +336,41 @@ watch(showSearchTrigger, (visible) => {
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    padding: 0.2rem;
-    border-radius: 0.375rem;
-    color: var(--color-text-muted);
-    transition:
-      color 0.2s,
-      background 0.2s;
+    width: 2.15rem;
+    height: 2.15rem;
+    padding: 0;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.52);
+    border: 0.5px solid rgba(255, 255, 255, 0.7);
+    color: var(--ag-ink-soft, var(--color-text-muted));
+    box-shadow: 0 1px 3px rgba(18, 24, 38, 0.03);
+    cursor: pointer;
+    margin: 0;
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    -webkit-tap-highlight-color: transparent;
   }
 
   .home-sidebar-nav__search-trigger:hover,
-  .home-sidebar-nav__chat-trigger:hover {
-    color: var(--color-text-secondary);
-    background: var(--color-bg-muted);
+  .home-sidebar-nav__chat-trigger:hover,
+  .home-sidebar-nav__search-trigger:active,
+  .home-sidebar-nav__chat-trigger:active {
+    color: var(--ag-blue, #007aff);
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(18, 24, 38, 0.08);
+    transform: scale(1.06);
+  }
+
+  .home-sidebar-nav__search-trigger[aria-expanded="true"] {
+    background: #ffffff;
+    color: var(--ag-blue, #007aff);
+    border-color: rgba(0, 122, 255, 0.35);
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.16);
+  }
+
+  .home-sidebar-nav__search-icon,
+  .home-sidebar-nav__chat-icon {
+    width: 0.95rem;
+    height: 0.95rem;
   }
 
   .home-sidebar-nav__mobile-filter {

@@ -371,7 +371,7 @@ onBeforeUnmount(() => {
 
 .home-aside--mobile {
   display: flex;
-  margin-top: 0.5rem;
+  margin-top: 0.2rem;
   margin-bottom: 0.75rem;
 }
 
