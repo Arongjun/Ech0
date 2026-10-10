@@ -275,7 +275,7 @@ watch(showSearchTrigger, (visible) => {
     scrollbar-width: none;
     -ms-overflow-style: none;
     scroll-behavior: smooth;
-    padding: 0.02rem;
+    padding: 0.08rem 0.04rem;
     margin: 0;
     -webkit-overflow-scrolling: touch;
   }
@@ -305,7 +305,6 @@ watch(showSearchTrigger, (visible) => {
     transition:
       color 0.2s cubic-bezier(0.2, 0, 0, 1),
       background-color 0.2s cubic-bezier(0.2, 0, 0, 1),
-      transform 0.18s cubic-bezier(0.2, 0, 0, 1),
       box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
   }
 
@@ -324,10 +323,9 @@ watch(showSearchTrigger, (visible) => {
     background: #ffffff;
     border-radius: 9999px;
     box-shadow:
-      0 2px 7px rgba(18, 24, 38, 0.08),
-      0 1px 2px rgba(18, 24, 38, 0.04),
-      inset 0 1px 0 #ffffff;
-    transform: scale(1.02);
+      0 0 0 0.5px rgba(0, 0, 0, 0.05),
+      0 1px 2px rgba(0, 0, 0, 0.06);
+    transform: none;
   }
 
   .home-sidebar-nav__search-trigger,
