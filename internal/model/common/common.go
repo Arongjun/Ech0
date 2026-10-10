@@ -83,6 +83,7 @@ const (
 	AgentSettingProtocolRenamedKey = "agent_setting_protocol_renamed_v1"
 	UserLocalAuthBackfilledKey     = "user_local_auth_backfilled_v1"
 	UsersPasswordColumnDroppedKey  = "users_password_column_dropped_v1"
+	EchoUserIDReconciledKey        = "echo_user_id_reconciled_v1"
 	ChatSessionKeyPrefix           = "chat_session:"
 )
 

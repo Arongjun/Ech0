@@ -164,7 +164,7 @@ func (r *EmbeddingRepository) Search(ctx context.Context, vector []float32, k in
 		Select("id", "content", "username", "created_at").
 		Where("id IN ?", ids)
 	if authorID != "" {
-		echoQuery = echoQuery.Where("user_id = ?", authorID)
+		echoQuery = echoQuery.Where("user_id = ? OR username = (SELECT username FROM users WHERE id = ?)", authorID, authorID)
 	}
 	var echos []echoModel.Echo
 	if err := echoQuery.Find(&echos).Error; err != nil {

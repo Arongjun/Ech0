@@ -2054,27 +2054,74 @@ img.home-header__logo {
   background: transparent !important;
 }
 
-.hairline-chat .ghost-ctrl {
+.chat-topbar {
   background: var(--ag-glass-strong) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border-bottom: 1px solid var(--ag-line) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02) !important;
+}
+
+.chat-topbar .topbar-btn {
+  background: var(--ag-glass-soft) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
   border: 1px solid var(--ag-line) !important;
   border-radius: 9999px !important;
-  box-shadow: var(--ag-shadow) !important;
   color: var(--color-text-secondary) !important;
-  opacity: 0.9 !important;
+  box-shadow: var(--ag-shadow) !important;
   transition: all 0.2s cubic-bezier(0.2, 0, 0, 1) !important;
 }
 
-.hairline-chat .ghost-ctrl:hover {
-  opacity: 1 !important;
+.chat-topbar .topbar-btn:hover {
+  background: var(--ag-glass-strong) !important;
   color: var(--ag-blue) !important;
-  transform: scale(1.08) !important;
-  box-shadow: 0 4px 12px rgba(10, 132, 255, 0.16) !important;
+  border-color: rgba(10, 132, 255, 0.35) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 14px rgba(10, 132, 255, 0.16) !important;
 }
 
-.hairline-chat .ghost-ctrl:active {
-  transform: scale(0.92) !important;
+.chat-bottom-dock {
+  background: linear-gradient(to top, var(--color-bg-canvas, #fbfcfe) 70%, transparent 100%) !important;
+}
+
+.chat-bottom-dock .composer {
+  background: var(--ag-glass-strong) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid var(--ag-line) !important;
+  border-radius: 28px !important;
+  box-shadow: 0 10px 32px rgba(40, 48, 62, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+:root.dark .chat-bottom-dock .composer {
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+.chat-bottom-dock .composer:focus-within {
+  border-color: rgba(10, 132, 255, 0.45) !important;
+  box-shadow: 0 12px 36px rgba(10, 132, 255, 0.14), 0 0 0 3px rgba(10, 132, 255, 0.16) !important;
+}
+
+.chat-hero__chip,
+.chat-dock__chip {
+  background: var(--ag-glass-strong) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid var(--ag-line) !important;
+  border-radius: 9999px !important;
+  color: var(--color-text-secondary) !important;
+  box-shadow: var(--ag-shadow) !important;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1) !important;
+}
+
+.chat-hero__chip:hover,
+.chat-dock__chip:hover {
+  background: var(--ag-glass-strong) !important;
+  color: var(--ag-blue) !important;
+  border-color: rgba(10, 132, 255, 0.35) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 18px rgba(10, 132, 255, 0.16) !important;
 }
 
 .hairline-chat .turn--user .bubble {

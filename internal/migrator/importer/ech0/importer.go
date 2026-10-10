@@ -20,6 +20,7 @@ import (
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	fileModel "github.com/lin-snow/ech0/internal/model/file"
+	userModel "github.com/lin-snow/ech0/internal/model/user"
 	"github.com/lin-snow/ech0/internal/storage"
 	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
 	logUtil "github.com/lin-snow/ech0/pkg/log"
@@ -162,6 +163,25 @@ func migrateEchos(ctx context.Context, tx *gorm.DB, sourceDB *gorm.DB, sourceRoo
 		return fmt.Errorf("load source echos: %w", err)
 	}
 	if len(sourceEchos) > 0 {
+		var localUsers []userModel.User
+		if err := tx.WithContext(ctx).Find(&localUsers).Error; err == nil && len(localUsers) > 0 {
+			userByUsername := make(map[string]string, len(localUsers))
+			var ownerID string
+			for _, u := range localUsers {
+				userByUsername[u.Username] = u.ID
+				if u.IsOwner || ownerID == "" {
+					ownerID = u.ID
+				}
+			}
+			for i := range sourceEchos {
+				if uid, ok := userByUsername[sourceEchos[i].Username]; ok {
+					sourceEchos[i].UserID = uid
+				} else if ownerID != "" {
+					sourceEchos[i].UserID = ownerID
+				}
+			}
+		}
+
 		if err := tx.Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(sourceEchos, dbBatchSize).Error; err != nil {
 			return fmt.Errorf("migrate echos: %w", err)
 		}

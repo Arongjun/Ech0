@@ -129,6 +129,7 @@ func InitDatabase() {
 			dbMigration.NewUserLocalAuthBackfillMigrator(),
 			dbMigration.NewUsersPasswordDropMigrator(),
 			dbMigration.NewEchoExtensionOrphansMigrator(),
+			dbMigration.NewEchoUserIDReconcileMigrator(),
 		),
 	)
 }

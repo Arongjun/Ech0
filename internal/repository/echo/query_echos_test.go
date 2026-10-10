@@ -293,3 +293,21 @@ func TestEchoRepository_QueryEchos_UserIDFilter(t *testing.T) {
 	require.Len(t, echos, 1)
 	assert.Equal(t, "e-alice", echos[0].ID)
 }
+
+func TestEchoRepository_QueryEchos_UserIDFilter_MatchesUsernameFallback(t *testing.T) {
+	repo, db := newEchoRepo(t)
+	require.NoError(t, db.Exec("INSERT INTO users (id, username, email) VALUES ('u-real', 'alice', 'alice@test.com')").Error)
+	// Echo has imported/old user_id 'u-old', but username 'alice'
+	require.NoError(t, db.Create(&echoModel.Echo{ID: "e-imported", Content: "hello", UserID: "u-old", Username: "alice", CreatedAt: 100}).Error)
+	require.NoError(t, db.Create(&echoModel.Echo{ID: "e-other", Content: "world", UserID: "u-other", Username: "bob", CreatedAt: 200}).Error)
+
+	echos, total, err := repo.QueryEchos(
+		commonModel.EchoQueryDto{Page: 1, PageSize: 10, UserID: "u-real"},
+		true,
+	)
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), total)
+	require.Len(t, echos, 1)
+	assert.Equal(t, "e-imported", echos[0].ID)
+}
+

@@ -2,24 +2,59 @@
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <div ref="rootEl" class="hairline-chat" :class="{ 'hairline-chat--empty': isEmpty }">
-    <button class="ghost-ctrl ghost-ctrl--back" :title="t('commonNav.backHome')" @click="goHome">
-      <Back class="ghost-ctrl__icon" />
-    </button>
-    <button
-      v-if="messages.length > 0"
-      class="ghost-ctrl ghost-ctrl--clear"
-      :title="t('chatPanel.clear')"
-      @click="handleClear"
-    >
-      <Close class="ghost-ctrl__icon" />
-    </button>
+    <!-- iOS Frosted Glass Topbar -->
+    <header class="chat-topbar">
+      <button class="topbar-btn topbar-btn--back" :title="t('commonNav.backHome')" @click="goHome">
+        <Back class="topbar-btn__icon" />
+        <span class="topbar-btn__label">{{ t('commonNav.back') }}</span>
+      </button>
 
+      <div class="topbar-title">
+        <span class="topbar-title__glow" />
+        <span class="topbar-title__text">Ech0 Copilot</span>
+        <span class="topbar-title__badge">AI</span>
+      </div>
+
+      <div class="topbar-actions">
+        <button
+          v-if="messages.length > 0"
+          class="topbar-btn topbar-btn--clear"
+          :title="t('chatPanel.clear')"
+          @click="handleClear"
+        >
+          <Close class="topbar-btn__icon" />
+        </button>
+      </div>
+    </header>
+
+    <!-- Transcript Scroll Area -->
     <div ref="scrollArea" class="transcript">
       <div
         ref="transcriptInner"
         class="transcript__inner"
         :style="{ '--tail-space': tailSpace + 'px' }"
       >
+        <!-- Empty State Hero -->
+        <div v-if="isEmpty" class="chat-hero">
+          <div class="chat-hero__icon-wrap">
+            <Chat class="chat-hero__icon" />
+          </div>
+          <h1 class="chat-hero__title">Ech0 Copilot</h1>
+          <p class="chat-hero__subtitle">{{ t('chatPanel.suggestionsTitle') }}</p>
+          <div class="chat-hero__suggestions">
+            <button
+              v-for="(s, i) in suggestions"
+              :key="i"
+              class="chat-hero__chip"
+              @click="send(s)"
+            >
+              <span class="chat-hero__chip-sparkle">✦</span>
+              <span class="chat-hero__chip-text">{{ s }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Conversation Stream -->
         <div
           v-for="(msg, idx) in messages"
           :key="idx"
@@ -93,6 +128,7 @@
       </div>
     </div>
 
+    <!-- Long Thread Question Navigation (Desktop) -->
     <nav v-if="questionNav.length > 0" class="qnav" :aria-label="t('chatPanel.navLabel')">
       <ul class="qnav__list">
         <li v-for="item in questionNav" :key="item.idx">
@@ -110,57 +146,59 @@
       </ul>
     </nav>
 
-    <div
-      ref="composerEl"
-      class="composer"
-      :class="{
-        'composer--active': input.trim().length > 0 || loading,
-        'composer--loading': loading,
-      }"
-    >
-      <textarea
-        ref="inputEl"
-        v-model="input"
-        class="composer__field"
-        rows="1"
-        :placeholder="t('chatPanel.inputPlaceholder')"
-        @input="autoGrow"
-        @keydown="handleKeydown"
-      />
-      <Transition name="send-pop">
-        <button
-          v-if="loading"
-          class="composer__action composer__action--stop"
-          :title="t('chatPanel.clear')"
-          @click="handleStop"
-        >
-          <span class="composer__stop-glyph" />
-        </button>
-        <button
-          v-else-if="canSend"
-          class="composer__action composer__action--send"
-          :title="t('chatPanel.send')"
-          @click="send(input)"
-        >
-          <Send class="composer__send-icon" />
-        </button>
-      </Transition>
-    </div>
-
-    <div class="understory">
-      <Transition name="understory-fade">
-        <div v-if="showSuggestions" class="understory__list">
-          <p class="understory__hint">{{ t('chatPanel.suggestionsTitle') }}</p>
+    <!-- Bottom Dock: Suggestions & Floating Capsule Composer -->
+    <div class="chat-bottom-dock">
+      <!-- In-Conversation Quick Suggestion Chips -->
+      <Transition name="chips-fade">
+        <div v-if="!isEmpty && showSuggestions" class="chat-dock__chips">
           <button
             v-for="(s, i) in suggestions"
             :key="i"
-            class="understory__suggestion"
+            class="chat-dock__chip"
             @click="send(s)"
           >
-            {{ s }}
+            <span class="chat-dock__chip-sparkle">✦</span>
+            <span class="chat-dock__chip-text">{{ s }}</span>
           </button>
         </div>
       </Transition>
+
+      <div
+        ref="composerEl"
+        class="composer"
+        :class="{
+          'composer--active': input.trim().length > 0 || loading,
+          'composer--loading': loading,
+        }"
+      >
+        <textarea
+          ref="inputEl"
+          v-model="input"
+          class="composer__field"
+          rows="1"
+          :placeholder="t('chatPanel.inputPlaceholder')"
+          @input="autoGrow"
+          @keydown="handleKeydown"
+        />
+        <Transition name="send-pop">
+          <button
+            v-if="loading"
+            class="composer__action composer__action--stop"
+            :title="t('chatPanel.clear')"
+            @click="handleStop"
+          >
+            <span class="composer__stop-glyph" />
+          </button>
+          <button
+            v-else-if="canSend"
+            class="composer__action composer__action--send"
+            :title="t('chatPanel.send')"
+            @click="send(input)"
+          >
+            <Send class="composer__send-icon" />
+          </button>
+        </Transition>
+      </div>
     </div>
   </div>
 </template>
@@ -169,6 +207,7 @@
 import Back from '@/components/icons/back.vue'
 import Close from '@/components/icons/close.vue'
 import Send from '@/components/icons/send.vue'
+import Chat from '@/components/icons/chat.vue'
 import { TheMdPreview } from '@/components/advanced/md'
 import AnimatedMarkdown from './AnimatedMarkdown.vue'
 import ChatSources from './ChatSources.vue'
@@ -237,8 +276,6 @@ const activeQuestionIdx = ref<number>(-1)
 
 const NAV_TOP_GUTTER = 84
 
-const NAV_ACTIVE_TOLERANCE = 8
-
 const turnElAt = (idx: number): HTMLElement | null =>
   (transcriptInner.value?.children[idx] as HTMLElement | undefined) ?? null
 
@@ -249,12 +286,7 @@ const updateActiveQuestion = () => {
     activeQuestionIdx.value = -1
     return
   }
-  if (jumping) return
-  if (pinned.value) {
-    activeQuestionIdx.value = nav[nav.length - 1].idx
-    return
-  }
-  const refLine = area.getBoundingClientRect().top + NAV_TOP_GUTTER + NAV_ACTIVE_TOLERANCE
+  const refLine = area.getBoundingClientRect().top + NAV_TOP_GUTTER + 8
   let active = nav[0].idx
   for (const item of nav) {
     const el = turnElAt(item.idx)
@@ -351,12 +383,6 @@ const autoGrow = () => {
 const goHome = () => router.push('/')
 const goToEcho = (echoId: string) => router.push(`/echo/${echoId}`)
 
-/**
- * The round the run is currently blocked on lives on the message (`pendingAsk`),
- * so it renders under the turn that raised it. The draft beside it carries how
- * far through that round the reader is, keyed on `ask_id` so a new round
- * replaces the old one instead of stacking behind it.
- */
 const askDraft = ref<{
   askId: string
   index: number
@@ -373,10 +399,6 @@ const openAskOn = (msg: App.Api.Chat.ChatMessage): App.Api.Chat.ChatAsk | undefi
 const askedMessage = (askId: string): App.Api.Chat.ChatMessage | undefined =>
   messages.value.find((m) => m.pendingAsk?.ask_id === askId)
 
-/**
- * The run stopped waiting — its budget ran out, it was stopped, or it ended. The
- * picker leaves without recording anything, because nobody answered it.
- */
 const dropAsk = (askId?: string) => {
   for (const m of messages.value) {
     if (m.pendingAsk && (askId === undefined || m.pendingAsk.ask_id === askId)) {
@@ -397,13 +419,6 @@ const askBack = () => {
   askError.value = ''
 }
 
-/**
- * Questions are answered one at a time; the POST fires once, on the last one,
- * carrying every answer in the order the questions arrived.
- *
- * Returns false only when an answer was written and did not land, so a caller
- * holding the reader's typed text knows whether it is safe to discard.
- */
 const submitAskAnswer = async (answer: App.Api.Chat.ChatAskAnswer): Promise<boolean> => {
   const draft = askDraft.value
   if (!draft || askPending.value) return true
@@ -422,16 +437,12 @@ const submitAskAnswer = async (answer: App.Api.Chat.ChatAskAnswer): Promise<bool
   askError.value = ''
   let delivered = false
   try {
-    // `request` resolves with the envelope and has already surfaced the server's
-    // own message, so the code is what says whether the run got the answer.
     delivered = (await answerChatAsk(draft.askId, answers)).code === 1
   } catch {
     delivered = false
   }
   askPending.value = false
 
-  // The round may have closed while the answer was in flight; there is nothing
-  // to record against a run that has stopped waiting for it.
   if (askDraft.value?.askId !== draft.askId) return true
 
   if (!delivered) {
@@ -494,8 +505,6 @@ const streamInto = (question: string, assistant: App.Api.Chat.ChatMessage) => {
       assistant.content += text
     },
     onAsk: (ask) => {
-      // `loading` deliberately stays true: the run is alive, just waiting, which
-      // is also what keeps the Stop button — the only way to refuse — in reach.
       assistant.pendingAsk = ask
       askDraft.value = { askId: ask.ask_id, index: 0, answers: [] }
       askPending.value = false
@@ -505,9 +514,6 @@ const streamInto = (question: string, assistant: App.Api.Chat.ChatMessage) => {
       dropAsk(askId)
     },
     onAskMalformed: () => {
-      // The run is parked behind a question this client cannot draw, and it will
-      // stay parked until its budget runs out. Say so, and offer Stop — silence
-      // here is indistinguishable from the assistant having given up.
       theToast.error(String(t('chatPanel.askMalformed')))
     },
     onError: (message) => {
@@ -527,9 +533,6 @@ const send = (question: string) => {
   const q = question.trim()
   if (q.length === 0) return
 
-  // A picker is open: the composer answers it rather than starting a new turn.
-  // The text is the reader's own words — it is never matched against an option,
-  // so typing what an option says is a typed answer, not a pick.
   const draft = askDraft.value
   if (draft) {
     if (askPending.value) return
@@ -538,8 +541,6 @@ const send = (question: string) => {
     input.value = ''
     nextTick(autoGrow)
     void submitAskAnswer({ question_id: current.id, selected: [], custom: q }).then((ok) => {
-      // An answer that did not land leaves the picker open, so the words that
-      // were meant for it go back in the composer rather than being lost.
       if (ok) return
       input.value = q
       nextTick(autoGrow)
@@ -555,13 +556,11 @@ const send = (question: string) => {
   streamInto(q, messages.value[messages.value.length - 1])
 }
 
-/** Anything the run reported about how it worked: a thought, queries, coverage. */
 const hasTrace = (msg: App.Api.Chat.ChatMessage): boolean =>
   msg.reasoning !== undefined ||
   (msg.searches !== undefined && msg.searches.length > 0) ||
   msg.coverage !== undefined
 
-/** Only the newest turn re-runs, because `retryLast` rewrites that turn in place. */
 const canRetry = (idx: number): boolean =>
   !loading.value &&
   messages.value.length >= 2 &&
@@ -597,7 +596,6 @@ const retryLast = () => {
   assistant.reasoning_ms = undefined
   assistant.reasoningActive = false
   assistant.asks = undefined
-  // Clears this turn's open round too, along with any draft answer behind it.
   dropAsk()
   streamInto(user.content, assistant)
 }
@@ -613,7 +611,6 @@ const handleStop = () => {
   if (abort) abort()
   abort = null
   loading.value = false
-  // Stopping the run is how an open question is refused.
   dropAsk()
 }
 
@@ -698,10 +695,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .hairline-chat {
   --composer-max: min(8.5rem, 30dvh);
-
-  --composer-h: 1.6rem;
-
-  --line-pos: 25dvh;
+  --composer-h: 3.2rem;
 
   position: relative;
   width: 100%;
@@ -710,98 +704,231 @@ onBeforeUnmount(() => {
   overflow: hidden;
   background: var(--color-bg-canvas);
   color: var(--color-text-primary);
+  display: flex;
+  flex-direction: column;
 }
 
-.hairline-chat--empty {
-  --line-pos: 52dvh;
-}
-
-.ghost-ctrl {
+/* iOS Glass Topbar */
+.chat-topbar {
   position: absolute;
-  top: 1.25rem;
-  z-index: 3;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3.5rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+  background: var(--ag-glass-strong, rgba(255, 255, 255, 0.78));
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--ag-line, rgba(55, 48, 42, 0.1));
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+}
+
+.topbar-btn {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: none;
-  border-radius: 999px;
-
-  background: color-mix(in srgb, var(--color-bg-canvas) 92%, transparent);
-  backdrop-filter: blur(8px);
-  color: var(--color-text-muted);
+  gap: 0.35rem;
+  padding: 0.38rem 0.8rem;
+  border-radius: 9999px;
+  background: var(--ag-glass-soft, rgba(255, 255, 255, 0.45));
+  border: 1px solid var(--ag-line, rgba(55, 48, 42, 0.1));
+  color: var(--color-text-secondary);
   cursor: pointer;
-  opacity: 0.95;
-  transition:
-    opacity 0.2s ease,
-    background 0.2s ease,
-    color 0.2s ease;
+  font-size: 0.85rem;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 
-.ghost-ctrl--back {
-  left: 1.25rem;
+.topbar-btn:hover {
+  color: var(--ag-blue, #0a84ff);
+  border-color: rgba(10, 132, 255, 0.3);
+  background: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(10, 132, 255, 0.12);
 }
 
-.ghost-ctrl--clear {
-  right: 1.25rem;
+.topbar-btn:active {
+  transform: translateY(0);
 }
 
-.ghost-ctrl:hover {
-  opacity: 1;
-  background: color-mix(in srgb, var(--color-bg-canvas) 98%, transparent);
-  color: var(--color-text-primary);
+.topbar-btn__icon {
+  width: 1.05rem;
+  height: 1.05rem;
 }
 
-.ghost-ctrl__icon {
-  width: 1.2rem;
-  height: 1.2rem;
-}
-
-.ghost-ctrl__icon :deep(path) {
+.topbar-btn__icon :deep(path) {
   fill: currentColor;
 }
 
+.topbar-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
+}
+
+.topbar-title__glow {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: #34c759;
+  box-shadow: 0 0 8px rgba(52, 199, 89, 0.6);
+}
+
+.topbar-title__badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.08rem 0.4rem;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #0a84ff, #5856d6);
+  color: #ffffff;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.topbar-btn--clear {
+  padding: 0.38rem 0.45rem;
+}
+
+/* Transcript Scroll Area */
 .transcript {
   position: absolute;
-
-  inset: 0 0 calc(var(--line-pos) + var(--composer-h, 1.6rem) + 1rem);
-
+  top: 3.5rem;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   justify-content: center;
   overflow-y: auto;
-
   overflow-anchor: none;
-
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    #000 4.5rem,
-    #000 calc(100% - 1rem),
-    transparent 100%
-  );
 }
 
 .transcript__inner {
   width: 100%;
-  max-width: 42rem;
-
-  align-self: flex-start;
-
-  padding: 4.5rem 1.5rem 1.5rem;
-
-  padding-bottom: calc(1.5rem + var(--tail-space, 0px));
+  max-width: 44rem;
+  padding: 1.5rem 1.25rem calc(6.5rem + var(--tail-space, 0px));
   display: flex;
   flex-direction: column;
-  gap: 1.6rem;
+  gap: 1.5rem;
+  min-height: 100%;
 }
 
+/* Empty State Hero */
+.chat-hero {
+  margin: auto 0;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.85rem;
+  animation: hero-fade-in 0.45s ease both;
+}
+
+@keyframes hero-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.chat-hero__icon-wrap {
+  width: 4.25rem;
+  height: 4.25rem;
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(10, 132, 255, 0.12), rgba(88, 86, 214, 0.16));
+  border: 1px solid rgba(10, 132, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ag-blue, #0a84ff);
+  box-shadow: 0 10px 24px rgba(10, 132, 255, 0.12);
+}
+
+.chat-hero__icon {
+  width: 2.2rem;
+  height: 2.2rem;
+}
+
+.chat-hero__icon :deep(path) {
+  fill: currentColor;
+}
+
+.chat-hero__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.chat-hero__subtitle {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  margin: 0 0 0.5rem;
+}
+
+.chat-hero__suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  max-width: 38rem;
+}
+
+.chat-hero__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.15rem;
+  border-radius: 9999px;
+  background: var(--ag-glass-strong, rgba(255, 255, 255, 0.8));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--ag-line, rgba(55, 48, 42, 0.1));
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  box-shadow: var(--ag-shadow, 0 4px 12px rgba(0, 0, 0, 0.04));
+  transition: all 0.22s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.chat-hero__chip:hover {
+  color: var(--ag-blue, #0a84ff);
+  border-color: rgba(10, 132, 255, 0.35);
+  background: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(10, 132, 255, 0.14);
+}
+
+.chat-hero__chip-sparkle {
+  color: var(--ag-blue, #0a84ff);
+  font-size: 0.82rem;
+}
+
+/* Turn (Message Container) */
 .turn {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
   animation: turn-in 0.32s ease both;
-
   contain: layout style;
 }
 
@@ -818,7 +945,6 @@ onBeforeUnmount(() => {
     opacity: 0;
     transform: translateY(6px);
   }
-
   to {
     opacity: 1;
     transform: none;
@@ -826,122 +952,131 @@ onBeforeUnmount(() => {
 }
 
 .bubble {
-  max-width: 85%;
-  padding: 0.55rem 0.9rem;
-  border-radius: 1.1rem 1.1rem 0.25rem;
-  background: var(--color-accent-soft);
-  color: var(--color-text-primary);
-  font-size: 0.9rem;
-  line-height: 1.6;
+  max-width: 82%;
+  padding: 0.7rem 1.15rem;
+  border-radius: 20px 20px 4px 20px;
+  background: linear-gradient(135deg, #0a84ff 0%, #0071e3 100%);
+  color: #ffffff;
+  font-size: 0.94rem;
+  line-height: 1.55;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  box-shadow: 0 4px 16px rgba(10, 132, 255, 0.25);
+  letter-spacing: -0.01em;
 }
 
 .answer {
   width: 100%;
-  font-size: 1rem;
+  font-size: 0.96rem;
+  line-height: 1.75;
 }
 
 .answer :deep(.echo-markdown) {
   line-height: 1.8;
 }
 
-/* Reasoning and retrieval read as one column of activity rows, tighter than the
-   turn's own rhythm, with the gap to the answer owned here instead of by each
-   row's own margin. */
 .trace {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.05rem;
+  gap: 0.25rem;
   width: 100%;
   margin-bottom: 0.5rem;
 }
 
-.composer {
+/* Bottom Dock */
+.chat-bottom-dock {
   position: absolute;
-  left: 50%;
-  bottom: var(--line-pos);
-  transform: translateX(-50%);
-  z-index: 2;
-  width: min(42rem, calc(100% - 3rem));
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem calc(0.9rem + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to top, var(--color-bg-canvas, #fbfcfe) 70%, transparent 100%);
+  pointer-events: none;
+}
+
+.chat-dock__chips {
+  pointer-events: auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.45rem;
+  max-width: 44rem;
+  margin-bottom: 0.15rem;
+}
+
+.chat-dock__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.85rem;
+  border-radius: 9999px;
+  background: var(--ag-glass-strong, rgba(255, 255, 255, 0.8));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--ag-line, rgba(55, 48, 42, 0.1));
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.18s ease;
+}
+
+.chat-dock__chip:hover {
+  color: var(--ag-blue, #0a84ff);
+  border-color: rgba(10, 132, 255, 0.35);
+  background: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(10, 132, 255, 0.12);
+}
+
+.chat-dock__chip-sparkle {
+  color: var(--ag-blue, #0a84ff);
+  font-size: 0.78rem;
+}
+
+.chips-fade-enter-active,
+.chips-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.chips-fade-enter-from,
+.chips-fade-leave-to {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+/* Floating Frosted Capsule Composer */
+.composer {
+  pointer-events: auto;
+  width: min(44rem, 100%);
   display: flex;
   align-items: flex-end;
-  gap: 0.6rem;
-
-  transition: bottom 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  gap: 0.75rem;
+  background: var(--ag-glass-strong, rgba(255, 255, 255, 0.82));
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--ag-line, rgba(55, 48, 42, 0.1));
+  border-radius: 28px;
+  padding: 0.45rem 0.65rem 0.45rem 1.25rem;
+  box-shadow: 0 8px 30px rgba(40, 48, 62, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
 }
 
-.composer::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    var(--color-border-strong) 18%,
-    var(--color-border-strong) 82%,
-    transparent
-  );
+.composer:focus-within {
+  border-color: rgba(10, 132, 255, 0.45);
+  box-shadow: 0 10px 32px rgba(10, 132, 255, 0.12), 0 0 0 3px rgba(10, 132, 255, 0.14);
+  background: #ffffff;
 }
 
-.composer::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1;
-  height: 1px;
-  background: var(--color-accent);
-  mask-image: linear-gradient(to right, transparent, #000 15%, #000 85%, transparent);
-  transform: scaleX(0);
-  transform-origin: 50% 50%;
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.composer--active::before,
-.composer:focus-within::before {
-  transform: scaleX(1);
-}
-
-.composer--loading::before {
-  background-image: linear-gradient(
-    90deg,
-    var(--color-accent) 0%,
-    color-mix(in srgb, var(--color-accent) 35%, #fff) 50%,
-    var(--color-accent) 100%
-  );
-  background-size: 200% 100%;
-  animation: composer-shimmer 1.6s linear infinite;
-}
-
-@keyframes composer-shimmer {
-  from {
-    background-position: 150% 0;
-  }
-
-  to {
-    background-position: -150% 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .composer,
-  .understory {
-    transition: none;
-  }
-
-  .composer::before {
-    transition: none;
-  }
-
-  .composer--loading::before {
-    animation: none;
-  }
+.composer--loading {
+  border-color: rgba(10, 132, 255, 0.35);
 }
 
 .composer__field {
@@ -950,17 +1085,17 @@ onBeforeUnmount(() => {
   border: none;
   outline: none;
   background: transparent;
-  padding: 0 0 0.7rem;
+  padding: 0.45rem 0;
   max-height: var(--composer-max);
-  font-size: 1rem;
-  line-height: 1.6;
+  font-size: 0.95rem;
+  line-height: 1.5;
   color: var(--color-text-primary);
   overflow-y: auto;
 }
 
 .composer__field::placeholder {
   color: var(--color-text-muted);
-  opacity: 0.7;
+  opacity: 0.75;
 }
 
 .composer__action {
@@ -968,29 +1103,35 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.6rem;
-  height: 1.6rem;
-  margin-bottom: 0.5rem;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 9999px;
   border: none;
   background: transparent;
-  color: var(--color-text-muted);
   cursor: pointer;
-  transition:
-    color 0.18s ease,
-    transform 0.18s ease;
+  margin-bottom: 0.15rem;
+  transition: all 0.18s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .composer__action--send {
-  color: var(--color-accent);
+  background: linear-gradient(135deg, #0a84ff 0%, #0071e3 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(10, 132, 255, 0.35);
 }
 
-.composer__action:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.1);
+.composer__action--send:hover {
+  transform: scale(1.06);
+  filter: brightness(1.08);
+  box-shadow: 0 4px 14px rgba(10, 132, 255, 0.45);
 }
 
-.composer__action:active {
-  transform: translateY(0);
+.composer__action--send:active {
+  transform: scale(0.94);
+}
+
+.composer__action--stop {
+  background: var(--color-text-secondary);
+  color: #ffffff;
 }
 
 .composer__send-icon {
@@ -998,10 +1139,14 @@ onBeforeUnmount(() => {
   height: 1.15rem;
 }
 
+.composer__send-icon :deep(path) {
+  fill: currentColor;
+}
+
 .composer__stop-glyph {
-  width: 0.6rem;
-  height: 0.6rem;
-  border-radius: 0.14rem;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 0.15rem;
   background: currentColor;
 }
 
@@ -1018,76 +1163,16 @@ onBeforeUnmount(() => {
   opacity: 0;
 }
 
-.understory {
-  position: absolute;
-  left: 50%;
-
-  top: calc(100dvh - var(--line-pos));
-  transform: translateX(-50%);
-  width: min(42rem, calc(100% - 3rem));
-  padding-top: 1.5rem;
-
-  transition: top 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.understory__list {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.35rem;
-}
-
-.understory-fade-enter-active,
-.understory-fade-leave-active {
-  transition:
-    opacity 0.25s ease,
-    transform 0.25s ease;
-}
-
-.understory-fade-enter-from,
-.understory-fade-leave-to {
-  opacity: 0;
-  transform: translateY(4px);
-}
-
-.understory__hint {
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-  opacity: 0.7;
-  margin-bottom: 0.25rem;
-}
-
-.understory__suggestion {
-  border: none;
-  background: transparent;
-  padding: 0.15rem 0;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  color: var(--color-text-secondary);
-  text-align: left;
-  cursor: pointer;
-  transition:
-    color 0.18s ease,
-    transform 0.18s ease;
-}
-
-.understory__suggestion:hover {
-  color: var(--color-accent);
-  transform: translateX(3px);
-}
-
+/* Question Navigation (Desktop side rail) */
 .qnav {
   position: absolute;
   top: 50%;
   right: 0;
   transform: translateY(-50%);
-  z-index: 3;
+  z-index: 8;
   display: flex;
   align-items: center;
   max-height: 72dvh;
-
   padding-right: 0.4rem;
 }
 
@@ -1100,7 +1185,6 @@ onBeforeUnmount(() => {
   margin: 0;
   padding: 0;
   list-style: none;
-
   overflow-y: auto;
   scrollbar-width: none;
 }
@@ -1153,7 +1237,7 @@ onBeforeUnmount(() => {
 
 .qnav__item--active .qnav__pill {
   width: 1.7rem;
-  background: var(--color-accent);
+  background: var(--ag-blue, #0a84ff);
   opacity: 1;
 }
 
@@ -1183,18 +1267,41 @@ onBeforeUnmount(() => {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .qnav__item,
-  .qnav__label,
-  .qnav__pill {
-    transition: none;
+@media (width <= 640px) {
+  .chat-topbar {
+    padding: 0 0.85rem;
+  }
+
+  .topbar-btn__label {
+    display: none;
+  }
+
+  .transcript__inner {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-bottom: calc(7rem + var(--tail-space, 0px));
+  }
+
+  .chat-bottom-dock {
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+  }
+
+  .composer {
+    padding: 0.4rem 0.5rem 0.4rem 1rem;
+    border-radius: 24px;
   }
 }
 
-@media (width <= 640px) {
-  .transcript__inner {
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
+@media (prefers-reduced-motion: reduce) {
+  .turn,
+  .chat-hero,
+  .composer,
+  .qnav__item,
+  .qnav__label,
+  .qnav__pill {
+    animation: none;
+    transition: none;
   }
 }
 </style>
