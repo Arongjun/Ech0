@@ -170,7 +170,9 @@ func TestFetchGoogleUserInfo_Errors(t *testing.T) {
 }
 
 func TestExchangeQQCodeForToken(t *testing.T) {
-	mux := http.NewServeMux()
+	mux.HandleFunc("/json-string-expires", func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = io.WriteString(w, `{"access_token":"qq-tok-str","expires_in":"5184000","openid":"qq-open-str","refresh_token":"rt-str"}`)
+	})
 	mux.HandleFunc("/jsonp", func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = io.WriteString(w, `callback({"access_token":"qq-tok","expires_in":7776000,"openid":"qq-open"});`)
 	})
@@ -188,6 +190,17 @@ func TestExchangeQQCodeForToken(t *testing.T) {
 	swapOIDCClient(t, ts.Client())
 
 	base := fullOAuth2Setting(string(commonModel.OAuth2QQ))
+
+	t.Run("pure json with string expires_in", func(t *testing.T) {
+		setting := base
+		setting.TokenURL = ts.URL + "/json-string-expires"
+		resp, err := exchangeQQCodeForToken(&setting, "code")
+		require.NoError(t, err)
+		assert.Equal(t, "qq-tok-str", resp.AccessToken)
+		assert.Equal(t, "qq-open-str", resp.OpenID)
+		assert.Equal(t, "rt-str", resp.RefreshToken)
+		assert.Equal(t, int64(5184000), resp.ExpiresIn)
+	})
 
 	t.Run("jsonp wrapped json", func(t *testing.T) {
 		setting := base

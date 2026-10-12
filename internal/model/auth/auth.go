@@ -5,6 +5,8 @@ package model
 
 import (
 	"encoding/json"
+	"strconv"
+	"strings"
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/golang-jwt/jwt/v5"
@@ -95,6 +97,28 @@ type QQTokenResponse struct {
 	ExpiresIn    int64  `json:"expires_in"`
 	RefreshToken string `json:"refresh_token"`
 	OpenID       string `json:"openid,omitempty"`
+}
+
+func (q *QQTokenResponse) UnmarshalJSON(data []byte) error {
+	type Alias QQTokenResponse
+	aux := struct {
+		*Alias
+		ExpiresIn any `json:"expires_in"`
+	}{
+		Alias: (*Alias)(q),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	switch v := aux.ExpiresIn.(type) {
+	case float64:
+		q.ExpiresIn = int64(v)
+	case string:
+		q.ExpiresIn, _ = strconv.ParseInt(strings.TrimSpace(v), 10, 64)
+	case json.Number:
+		q.ExpiresIn, _ = v.Int64()
+	}
+	return nil
 }
 
 type QQOpenIDResponse struct {

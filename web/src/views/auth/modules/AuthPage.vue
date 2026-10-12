@@ -4,9 +4,9 @@
   <div class="flex justify-center items-center h-screen">
     <div class="h-1/2 w-[min(86vw,12rem)] sm:w-[min(82vw,18rem)] md:w-[15rem]">
       <h1
-        class="text-6xl italic font-bold text-center text-[var(--color-text-muted)] mb-4 font-serif"
+        class="text-4xl sm:text-5xl md:text-6xl italic font-bold text-center text-[var(--color-text-muted)] mb-4 font-serif break-words line-clamp-2"
       >
-        Ech0
+        {{ siteTitle }}
       </h1>
       <div v-if="AuthMode === 'login'">
         <div class="flex items-center justify-between gap-3 mb-3">
@@ -117,11 +117,12 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
-import { useUserStore } from '@/stores'
+import { useSettingStore, useUserStore } from '@/stores'
+import { storeToRefs } from 'pinia'
 import Arrow from '@/components/icons/arrow.vue'
 import Passkey from '@/components/icons/passkey.vue'
 import Home from '@/components/icons/home.vue'
@@ -140,6 +141,11 @@ const AuthMode = ref<'login' | 'register'>('login')
 const username = ref<string>('')
 const password = ref<string>('')
 const userStore = useUserStore()
+const settingStore = useSettingStore()
+const { SystemSetting } = storeToRefs(settingStore)
+const siteTitle = computed(() => {
+  return SystemSetting.value.site_title?.trim() || SystemSetting.value.server_name?.trim() || 'Ech0'
+})
 const { t } = useI18n()
 const passkeySupported = !!(window.PublicKeyCredential && navigator.credentials)
 
@@ -292,6 +298,10 @@ onMounted(async () => {
     theToast.error(decodeURIComponent(errorMsg))
     window.history.replaceState({}, '', url.pathname)
   }
-  await Promise.all([getOAuth2Status(), getPasskeyStatus()])
+  await Promise.all([
+    getOAuth2Status(),
+    getPasskeyStatus(),
+    settingStore.getSystemSetting().catch(() => undefined),
+  ])
 })
 </script>

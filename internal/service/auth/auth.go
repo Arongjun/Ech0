@@ -1218,11 +1218,33 @@ func exchangeQQCodeForToken(
 		}
 	}
 
+	var rawMap map[string]any
+	if err := json.Unmarshal([]byte(raw), &rawMap); err == nil {
+		if token, ok := rawMap["access_token"].(string); ok && token != "" {
+			tokenResp.AccessToken = token
+			if ref, ok := rawMap["refresh_token"].(string); ok {
+				tokenResp.RefreshToken = ref
+			}
+			if openid, ok := rawMap["openid"].(string); ok {
+				tokenResp.OpenID = openid
+			}
+			switch v := rawMap["expires_in"].(type) {
+			case float64:
+				tokenResp.ExpiresIn = int64(v)
+			case string:
+				tokenResp.ExpiresIn, _ = strconv.ParseInt(strings.TrimSpace(v), 10, 64)
+			case json.Number:
+				tokenResp.ExpiresIn, _ = v.Int64()
+			}
+			return &tokenResp, nil
+		}
+	}
+
 	vals, err := url.ParseQuery(raw)
 	if err == nil && vals.Get("access_token") != "" {
 		tokenResp.AccessToken = vals.Get("access_token")
 		tokenResp.RefreshToken = vals.Get("refresh_token")
-		tokenResp.ExpiresIn, _ = strconv.ParseInt(vals.Get("expires_in"), 10, 64)
+		tokenResp.ExpiresIn, _ = strconv.ParseInt(strings.TrimSpace(vals.Get("expires_in")), 10, 64)
 		tokenResp.OpenID = vals.Get("openid")
 		return &tokenResp, nil
 	}
