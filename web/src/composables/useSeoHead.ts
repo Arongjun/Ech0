@@ -91,10 +91,6 @@ export const useSeoHead = (systemSetting: Ref<SeoSystemSetting>) => {
 
     document.title = pageTitle
     upsertCanonicalLink(canonicalUrl)
-    upsertMetaTag('meta[name="apple-mobile-web-app-capable"]', {
-      name: 'apple-mobile-web-app-capable',
-      content: 'yes',
-    })
     upsertMetaTag('meta[name="apple-mobile-web-app-title"]', {
       name: 'apple-mobile-web-app-title',
       content: siteTitle,

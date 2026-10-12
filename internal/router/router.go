@@ -26,9 +26,9 @@ type AppRouterGroup struct {
 }
 
 func SetupRouter(r *gin.Engine, h *handler.Bundle, mwDeps *middleware.Deps) {
-	setupMiddleware(r)
-	setupStaticFiles(r)
 	setupTemplateRoutes(r, h)
+	setupStaticFiles(r)
+	setupMiddleware(r)
 	groups := setupRouterGroup(r, mwDeps)
 	api := setupHumaAPI(r)
 

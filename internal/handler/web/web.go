@@ -75,7 +75,6 @@ func (webHandler *WebHandler) renderIndexHTML(subFS fs.FS, ctx *gin.Context) boo
 	webHandler.visitorTracker.Record(ctx.Request, ctx.ClientIP())
 	ctx.Header("Content-Type", "text/html; charset=utf-8")
 	setNoStoreHeaders(ctx)
-	setStaticCorsHeaders(ctx)
 	ctx.Data(http.StatusOK, "text/html; charset=utf-8", []byte(htmlStr))
 	return true
 }
@@ -93,7 +92,6 @@ func (webHandler *WebHandler) renderManifest(subFS fs.FS, ctx *gin.Context) bool
 		manifestStr = strings.Replace(manifestStr, `"short_name": "Ech0"`, `"short_name": `+string(titleBytes), 1)
 	}
 	setNoStoreHeaders(ctx)
-	setStaticCorsHeaders(ctx)
 	ctx.Data(http.StatusOK, "application/manifest+json", []byte(manifestStr))
 	return true
 }
@@ -106,12 +104,6 @@ func (webHandler *WebHandler) Templates() gin.HandlerFunc {
 		requestPath := ctx.Request.URL.Path
 		if shouldBypassSPAFallback(requestPath) {
 			ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "not found"})
-			return
-		}
-
-		if ctx.Request.Method == http.MethodOptions {
-			setStaticCorsHeaders(ctx)
-			ctx.Status(http.StatusNoContent)
 			return
 		}
 
@@ -137,7 +129,6 @@ func (webHandler *WebHandler) Templates() gin.HandlerFunc {
 		f, err := fileServer.Open(fullPath)
 		if err != nil {
 			if isStaticAsset(requestPath) {
-				setStaticCorsHeaders(ctx)
 				ctx.Status(http.StatusNotFound)
 				return
 			}
@@ -154,7 +145,6 @@ func (webHandler *WebHandler) Templates() gin.HandlerFunc {
 			webHandler.visitorTracker.Record(ctx.Request, ctx.ClientIP())
 			ctx.Header("Content-Type", "text/html; charset=utf-8")
 			setNoStoreHeaders(ctx)
-			setStaticCorsHeaders(ctx)
 			http.ServeContent(
 				ctx.Writer,
 				ctx.Request,
@@ -178,7 +168,6 @@ func (webHandler *WebHandler) Templates() gin.HandlerFunc {
 				ctx.Header("Content-Encoding", "gzip")
 				ctx.Header("Content-Type", getMimeType(fullPath))
 				setCacheControlHeader(ctx, requestPath)
-				setStaticCorsHeaders(ctx)
 				http.ServeContent(ctx.Writer, ctx.Request, gzPath, stat.ModTime(), gzFile)
 				return
 			}
@@ -186,18 +175,11 @@ func (webHandler *WebHandler) Templates() gin.HandlerFunc {
 
 		ctx.Header("Content-Type", getMimeType(fullPath))
 		setCacheControlHeader(ctx, requestPath)
-		setStaticCorsHeaders(ctx)
 		if requestPath == "/index.html" {
 			webHandler.visitorTracker.Record(ctx.Request, ctx.ClientIP())
 		}
 		http.ServeContent(ctx.Writer, ctx.Request, fullPath, stat.ModTime(), f)
 	}
-}
-
-func setStaticCorsHeaders(ctx *gin.Context) {
-	ctx.Header("Access-Control-Allow-Origin", "*")
-	ctx.Header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
-	ctx.Header("Access-Control-Allow-Headers", "*")
 }
 
 func setCacheControlHeader(ctx *gin.Context, requestPath string) {

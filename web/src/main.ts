@@ -9,8 +9,6 @@ import 'floating-vue/dist/style.css'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
-import FloatingVue from 'floating-vue'
-
 import App from './App.vue'
 import router from './router'
 import { initStores } from './stores/store-init'
@@ -35,6 +33,7 @@ const siteDefaultLocale = initStore.initialized
   ? settingStore.SystemSetting.default_locale
   : undefined
 const i18n = await setupI18n(siteDefaultLocale)
+const { default: FloatingVue } = await import('floating-vue')
 
 app.use(router)
 app.use(i18n)
@@ -81,6 +80,11 @@ const startLoaderFade = () => {
 const loaderTimeout = new Promise<void>((resolve) => {
   window.setTimeout(resolve, 3000)
 })
-Promise.race([router.isReady().catch(() => undefined), loaderTimeout]).then(() => {
-  startLoaderFade()
-})
+const loaderFallbackTimer = window.setTimeout(startLoaderFade, 3500)
+Promise.race([router.isReady().catch(() => undefined), loaderTimeout])
+  .then(() => {
+    startLoaderFade()
+  })
+  .finally(() => {
+    window.clearTimeout(loaderFallbackTimer)
+  })
