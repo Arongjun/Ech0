@@ -128,6 +128,10 @@ func (webHandler *WebHandler) Templates() gin.HandlerFunc {
 		fullPath := path.Clean("." + requestPath)
 		f, err := fileServer.Open(fullPath)
 		if err != nil {
+			if isStaticAsset(requestPath) {
+				ctx.Status(http.StatusNotFound)
+				return
+			}
 			if webHandler.renderIndexHTML(subFS, ctx) {
 				return
 			}
@@ -203,6 +207,14 @@ func shouldBypassSPAFallback(requestPath string) bool {
 		}
 	}
 	return false
+}
+
+func isStaticAsset(requestPath string) bool {
+	if strings.HasPrefix(requestPath, "/assets/") {
+		return true
+	}
+	ext := path.Ext(requestPath)
+	return ext != "" && ext != ".html"
 }
 
 func getMimeType(path string) string {

@@ -273,32 +273,66 @@
           return DEFAULT_TITLE
         }
 
-        const applyTitle = (title) => {
-          const normalized = normalizeTitle(title)
-          const brand = document.getElementById('app-loader-brand')
-          if (brand) brand.textContent = normalized
-          if (normalized && normalized !== DEFAULT_TITLE) {
-            document.title = normalized
-            const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]')
-            if (appleTitle) appleTitle.setAttribute('content', normalized)
-            const ogTitle = document.querySelector('meta[property="og:title"]')
-            if (ogTitle) ogTitle.setAttribute('content', normalized)
+        const dismissLoader = () => {
+          try {
+            const loader = document.getElementById('app-loader')
+            if (loader) {
+              loader.classList.add('fade-out')
+              setTimeout(() => {
+                try {
+                  loader.remove()
+                } catch (_) {}
+                document.documentElement.classList.remove('app-loading')
+              }, 400)
+            } else {
+              document.documentElement.classList.remove('app-loading')
+            }
+          } catch (_) {
+            document.documentElement.classList.remove('app-loading')
           }
+        }
+        window.__ech0DismissLoader = dismissLoader
+
+        // 终极防卡死兜底：无论任何内嵌浏览器（如手机QQ/沙盒WebView）发生网络、缓存或脚本执行异常，
+        // 保证最多 3 秒后移除启动页遮罩，恢复页面展示与操作。
+        setTimeout(dismissLoader, 3000)
+        window.addEventListener('error', () => {
+          setTimeout(dismissLoader, 1000)
+        })
+        window.addEventListener('unhandledrejection', () => {
+          setTimeout(dismissLoader, 1000)
+        })
+
+        const applyTitle = (title) => {
+          try {
+            const normalized = normalizeTitle(title)
+            const brand = document.getElementById('app-loader-brand')
+            if (brand) brand.textContent = normalized
+            if (normalized && normalized !== DEFAULT_TITLE) {
+              document.title = normalized
+              const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]')
+              if (appleTitle) appleTitle.setAttribute('content', normalized)
+              const ogTitle = document.querySelector('meta[property="og:title"]')
+              if (ogTitle) ogTitle.setAttribute('content', normalized)
+            }
+          } catch (_) {}
         }
 
         const upsertEarlyCustomStyle = (css) => {
-          const normalized = String(css || '').trim()
-          if (!normalized || !document.head) return
-          if (document.getElementById(APP_CUSTOM_STYLE_ID)) return
-          const existing = document.getElementById(EARLY_CUSTOM_STYLE_ID)
-          if (existing) {
-            existing.textContent = normalized
-            return
-          }
-          const style = document.createElement('style')
-          style.id = EARLY_CUSTOM_STYLE_ID
-          style.textContent = normalized
-          document.head.appendChild(style)
+          try {
+            const normalized = String(css || '').trim()
+            if (!normalized || !document.head) return
+            if (document.getElementById(APP_CUSTOM_STYLE_ID)) return
+            const existing = document.getElementById(EARLY_CUSTOM_STYLE_ID)
+            if (existing) {
+              existing.textContent = normalized
+              return
+            }
+            const style = document.createElement('style')
+            style.id = EARLY_CUSTOM_STYLE_ID
+            style.textContent = normalized
+            document.head.appendChild(style)
+          } catch (_) {}
         }
 
         try {
