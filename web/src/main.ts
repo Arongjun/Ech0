@@ -54,33 +54,38 @@ app.use(FloatingVue, {
 
 app.component('BaseDialog', BaseDialog)
 
-app.mount('#app')
-
 const appLoader = document.getElementById('app-loader')
 let loaderCleared = false
 const clearStartupLoader = () => {
   if (loaderCleared) return
   loaderCleared = true
-  appLoader?.remove()
+  try {
+    appLoader?.remove()
+  } catch {}
   document.documentElement.classList.remove('app-loading')
 }
 
 const startLoaderFade = () => {
+  if (typeof window !== 'undefined') {
+    const w = window as Window & { __ech0DismissLoader?: () => void }
+    if (typeof w.__ech0DismissLoader === 'function') {
+      w.__ech0DismissLoader()
+      return
+    }
+  }
   if (!appLoader) {
     clearStartupLoader()
     return
   }
-  window.requestAnimationFrame(() => {
-    appLoader.classList.add('fade-out')
-  })
+  appLoader.classList.add('fade-out')
   appLoader.addEventListener('transitionend', clearStartupLoader, { once: true })
-  window.setTimeout(clearStartupLoader, 800)
+  window.setTimeout(clearStartupLoader, 600)
 }
 
 const loaderTimeout = new Promise<void>((resolve) => {
-  window.setTimeout(resolve, 3000)
+  window.setTimeout(resolve, 2000)
 })
-const loaderFallbackTimer = window.setTimeout(startLoaderFade, 3500)
+const loaderFallbackTimer = window.setTimeout(startLoaderFade, 2500)
 Promise.race([router.isReady().catch(() => undefined), loaderTimeout])
   .then(() => {
     startLoaderFade()
@@ -88,3 +93,10 @@ Promise.race([router.isReady().catch(() => undefined), loaderTimeout])
   .finally(() => {
     window.clearTimeout(loaderFallbackTimer)
   })
+
+try {
+  app.mount('#app')
+} catch (err) {
+  console.error('Failed to mount application:', err)
+  startLoaderFade()
+}

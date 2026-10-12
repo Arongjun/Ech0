@@ -19,7 +19,13 @@ const DEFAULT_SEO_DESCRIPTION =
 const resolvePageTitle = (siteTitle: string, routeTitle: unknown) => {
   if (typeof routeTitle !== 'string') return siteTitle
   const normalizedRouteTitle = routeTitle.trim()
-  if (!normalizedRouteTitle || normalizedRouteTitle === siteTitle) return siteTitle
+  if (
+    !normalizedRouteTitle ||
+    normalizedRouteTitle === siteTitle ||
+    normalizedRouteTitle.toLowerCase() === 'home'
+  ) {
+    return siteTitle
+  }
   return `${normalizedRouteTitle} | ${siteTitle}`
 }
 
