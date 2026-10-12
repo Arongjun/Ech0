@@ -1010,6 +1010,17 @@ func (authService *AuthService) GetOAuthInfo(
 	return oauthInfo, nil
 }
 
+func (authService *AuthService) UnbindOAuth(
+	ctx context.Context,
+	provider string,
+) error {
+	v, ok := viewer.FromContext(ctx)
+	if !ok || v == nil || v.UserID() == "" {
+		return commonModel.NewBizError(commonModel.ErrCodeTokenMissing, commonModel.TOKEN_NOT_FOUND)
+	}
+	return authService.repository.DeleteOAuthBinding(ctx, v.UserID(), provider)
+}
+
 func exchangeGithubCodeForToken(
 	setting *settingModel.OAuth2Setting,
 	code string,

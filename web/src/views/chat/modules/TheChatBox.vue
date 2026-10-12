@@ -179,6 +179,7 @@
           :placeholder="t('chatPanel.inputPlaceholder')"
           @input="autoGrow"
           @keydown="handleKeydown"
+          @blur="handleBlur"
         />
         <Transition name="send-pop">
           <button
@@ -190,8 +191,10 @@
             <span class="composer__stop-glyph" />
           </button>
           <button
-            v-else-if="canSend"
+            v-else
             class="composer__action composer__action--send"
+            :class="{ 'composer__action--disabled': !canSend }"
+            :disabled="!canSend"
             :title="t('chatPanel.send')"
             @click="send(input)"
           >
@@ -392,6 +395,22 @@ const autoGrow = () => {
   syncComposerHeight()
   syncDockHeight()
   onContentResize()
+}
+
+const handleBlur = () => {
+  if (typeof window !== 'undefined') {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+  }
+}
+
+const handleViewportScroll = () => {
+  if (typeof window !== 'undefined' && window.scrollY !== 0) {
+    window.scrollTo(0, 0)
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+  }
 }
 
 const goHome = () => router.push('/')
@@ -700,6 +719,11 @@ onMounted(async () => {
     void router.replace({ query: {} })
     send(q)
   }
+
+  if (typeof window !== 'undefined' && window.visualViewport) {
+    window.visualViewport.addEventListener('resize', handleViewportScroll)
+    window.visualViewport.addEventListener('scroll', handleViewportScroll)
+  }
 })
 
 watch(
@@ -714,6 +738,10 @@ watch(
 )
 
 onBeforeUnmount(() => {
+  if (typeof window !== 'undefined' && window.visualViewport) {
+    window.visualViewport.removeEventListener('resize', handleViewportScroll)
+    window.visualViewport.removeEventListener('scroll', handleViewportScroll)
+  }
   resizeObserver?.disconnect()
   resizeObserver = null
   scrollArea.value?.removeEventListener('scroll', onScroll)
@@ -745,12 +773,13 @@ onBeforeUnmount(() => {
   top: 0;
   left: 0;
   right: 0;
-  height: 3.5rem;
+  height: calc(3.5rem + env(safe-area-inset-top, 0px));
   z-index: 10;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1.25rem;
+  padding: env(safe-area-inset-top, 0px) 1.25rem 0;
+  box-sizing: border-box;
   background: var(--ag-glass-strong, rgba(255, 255, 255, 0.78));
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -836,7 +865,7 @@ onBeforeUnmount(() => {
 /* Transcript Scroll Area */
 .transcript {
   position: absolute;
-  top: 3.5rem;
+  top: calc(3.5rem + env(safe-area-inset-top, 0px));
   left: 0;
   right: 0;
   bottom: 0;
@@ -1126,6 +1155,14 @@ onBeforeUnmount(() => {
   line-height: 1.5;
   color: var(--color-text-primary);
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.composer__field::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .composer__field::placeholder {
@@ -1154,14 +1191,23 @@ onBeforeUnmount(() => {
   box-shadow: 0 2px 8px rgba(10, 132, 255, 0.35);
 }
 
-.composer__action--send:hover {
+.composer__action--send:hover:not(:disabled) {
   transform: scale(1.06);
   filter: brightness(1.08);
   box-shadow: 0 4px 14px rgba(10, 132, 255, 0.45);
 }
 
-.composer__action--send:active {
+.composer__action--send:active:not(:disabled) {
   transform: scale(0.94);
+}
+
+.composer__action--send:disabled,
+.composer__action--disabled {
+  background: rgba(120, 120, 128, 0.12) !important;
+  color: rgba(120, 120, 128, 0.38) !important;
+  box-shadow: none !important;
+  cursor: default !important;
+  transform: none !important;
 }
 
 .composer__action--stop {
@@ -1172,10 +1218,15 @@ onBeforeUnmount(() => {
 .composer__send-icon {
   width: 1.15rem;
   height: 1.15rem;
+  display: block;
 }
 
 .composer__send-icon :deep(path) {
-  fill: currentColor;
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 2.2px !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
 }
 
 .composer__stop-glyph {

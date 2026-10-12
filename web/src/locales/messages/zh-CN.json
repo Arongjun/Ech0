@@ -547,7 +547,16 @@
     "isAdmin": "管理员",
     "deleteUser": "删除用户",
     "deleteConfirmTitle": "确定要删除该用户吗？",
-    "deleteConfirmDesc": "删除后将无法恢复，请谨慎操作"
+    "deleteConfirmDesc": "删除后将无法恢复，请谨慎操作",
+    "modifyPassword": "修改密码",
+    "modifyPasswordTitle": "修改用户密码",
+    "newPassword": "新密码",
+    "confirmNewPassword": "确认新密码",
+    "passwordPlaceholder": "输入新密码（至少6位）",
+    "confirmPasswordPlaceholder": "再次输入新密码",
+    "passwordTooShort": "密码长度不能小于6位",
+    "passwordMismatch": "两次输入的密码不一致",
+    "modifyPasswordSuccess": "密码修改成功"
   },
   "systemSetting": {
     "title": "系统设置",
@@ -678,7 +687,11 @@
     "redirectAllowlistInvalid": "Redirect Allowlist 需为 http/https URL",
     "corsOriginsInvalid": "CORS Origins 需为 http/https URL",
     "bindSuccess": "OAuth2账号绑定成功",
-    "bindFailed": "OAuth2账号绑定失败，请重试"
+    "bindFailed": "OAuth2账号绑定失败，请重试",
+    "unbind": "解除绑定",
+    "unbindConfirmTitle": "解除账号绑定",
+    "unbindConfirmDesc": "确定要解除该账号绑定吗？解除后可重新绑定新账号。",
+    "unbindSuccess": "账号解绑成功"
   },
   "exportSetting": {
     "title": "数据导出",

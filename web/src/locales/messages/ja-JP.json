@@ -547,7 +547,16 @@
     "isAdmin": "管理者",
     "deleteUser": "ユーザーを削除",
     "deleteConfirmTitle": "このユーザーを削除しますか？",
-    "deleteConfirmDesc": "削除すると復元できません。慎重に操作してください"
+    "deleteConfirmDesc": "削除すると復元できません。慎重に操作してください",
+    "modifyPassword": "パスワード変更",
+    "modifyPasswordTitle": "ユーザーのパスワードを変更",
+    "newPassword": "新しいパスワード",
+    "confirmNewPassword": "新しいパスワード（確認）",
+    "passwordPlaceholder": "新しいパスワードを入力（6文字以上）",
+    "confirmPasswordPlaceholder": "もう一度新しいパスワードを入力",
+    "passwordTooShort": "パスワードは6文字以上である必要があります",
+    "passwordMismatch": "パスワードが一致しません",
+    "modifyPasswordSuccess": "パスワードを変更しました"
   },
   "systemSetting": {
     "title": "システム設定",
@@ -678,7 +687,11 @@
     "redirectAllowlistInvalid": "Redirect Allowlist は http/https の URL である必要があります",
     "corsOriginsInvalid": "CORS Origins は http/https の URL である必要があります",
     "bindSuccess": "OAuth2 アカウントの連携に成功しました",
-    "bindFailed": "OAuth2 アカウントの連携に失敗しました。再試行してください"
+    "bindFailed": "OAuth2 アカウントの連携に失敗しました。再試行してください",
+    "unbind": "連携解除",
+    "unbindConfirmTitle": "アカウント連携解除",
+    "unbindConfirmDesc": "このアカウントの連携を解除してもよろしいですか？解除後は新しいアカウントを再連携できます。",
+    "unbindSuccess": "アカウント連携を解除しました"
   },
   "exportSetting": {
     "title": "データエクスポート",

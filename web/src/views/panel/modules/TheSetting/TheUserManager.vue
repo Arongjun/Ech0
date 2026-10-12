@@ -35,7 +35,7 @@
               <th class="w-[94px] px-2 py-2 text-center whitespace-nowrap">
                 {{ t('userManager.isAdmin') }}
               </th>
-              <th class="w-[86px] px-2 py-2 text-right whitespace-nowrap">
+              <th class="w-[100px] px-2 py-2 text-right whitespace-nowrap">
                 {{ t('commonUi.actions') }}
               </th>
             </tr>
@@ -57,18 +57,70 @@
                 <BaseSwitch v-model="user.is_admin" @click="handleUpdateUserPermission(user.id)" />
               </td>
               <td class="px-2 py-2 text-right">
-                <BaseButton
-                  class="h-8 w-8 !p-1.5"
-                  :icon="Deluser"
-                  @click="handleDeleteUser(user.id)"
-                  :tooltip="t('userManager.deleteUser')"
-                />
+                <div class="flex items-center justify-end gap-1.5">
+                  <BaseButton
+                    class="h-8 w-8 !p-1.5"
+                    :icon="KeyIcon"
+                    @click="openResetPasswordModal(user)"
+                    :tooltip="t('userManager.modifyPassword')"
+                  />
+                  <BaseButton
+                    class="h-8 w-8 !p-1.5"
+                    :icon="Deluser"
+                    @click="handleDeleteUser(user.id)"
+                    :tooltip="t('userManager.deleteUser')"
+                  />
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
+
+    <BaseModal v-model="showResetPasswordModal">
+      <div class="flex flex-col gap-4 max-w-sm mx-auto">
+        <h2 class="text-base font-semibold text-[var(--dialog-title-color)]">
+          {{ t('userManager.modifyPasswordTitle') }} ({{ selectedUser?.username }})
+        </h2>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs text-[var(--color-text-muted)]">{{
+            t('userManager.newPassword')
+          }}</label>
+          <BaseInput
+            v-model="newPassword"
+            type="password"
+            :placeholder="t('userManager.passwordPlaceholder')"
+            class="w-full py-1.5!"
+            autocomplete="new-password"
+          />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs text-[var(--color-text-muted)]">{{
+            t('userManager.confirmNewPassword')
+          }}</label>
+          <BaseInput
+            v-model="confirmPassword"
+            type="password"
+            :placeholder="t('userManager.confirmPasswordPlaceholder')"
+            class="w-full py-1.5!"
+            autocomplete="new-password"
+          />
+        </div>
+        <div class="flex justify-end gap-2 mt-2">
+          <BaseButton @click="showResetPasswordModal = false">
+            {{ t('commonUi.cancel') }}
+          </BaseButton>
+          <BaseButton
+            class="!bg-[var(--ag-blue,#0a84ff)] !text-white"
+            :disabled="resetSubmitting"
+            @click="handleResetPasswordSubmit"
+          >
+            {{ t('commonUi.confirm') }}
+          </BaseButton>
+        </div>
+      </div>
+    </BaseModal>
   </PanelCard>
 </template>
 
@@ -77,18 +129,64 @@ import PanelCard from '@/layout/PanelCard.vue'
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseButton from '@/components/common/BaseButton.vue'
+import BaseInput from '@/components/common/BaseInput.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 import BaseSwitch from '@/components/common/BaseSwitch.vue'
 import Deluser from '@/components/icons/deluser.vue'
+import KeyIcon from '@/components/icons/key.vue'
 import { theToast } from '@/utils/toast'
 import { useBaseDialog } from '@/composables/useBaseDialog'
+import {
+  fetchGetAllUsers,
+  fetchUpdateUserPermission,
+  fetchDeleteUser,
+  fetchAdminResetPassword,
+} from '@/service/api'
+
 const { openConfirm } = useBaseDialog()
 const { t } = useI18n()
 
 const loading = ref<boolean>(true)
-
-import { fetchGetAllUsers, fetchUpdateUserPermission, fetchDeleteUser } from '@/service/api'
-
 const allusers = ref<App.Api.User.User[]>([])
+
+const showResetPasswordModal = ref(false)
+const selectedUser = ref<App.Api.User.User | null>(null)
+const newPassword = ref('')
+const confirmPassword = ref('')
+const resetSubmitting = ref(false)
+
+const openResetPasswordModal = (user: App.Api.User.User) => {
+  selectedUser.value = user
+  newPassword.value = ''
+  confirmPassword.value = ''
+  showResetPasswordModal.value = true
+}
+
+const handleResetPasswordSubmit = async () => {
+  if (!selectedUser.value) return
+  if (newPassword.value.length < 6) {
+    theToast.error(String(t('userManager.passwordTooShort')))
+    return
+  }
+  if (newPassword.value !== confirmPassword.value) {
+    theToast.error(String(t('userManager.passwordMismatch')))
+    return
+  }
+  resetSubmitting.value = true
+  try {
+    const res = await fetchAdminResetPassword(selectedUser.value.id, newPassword.value)
+    if (res.code === 1) {
+      theToast.success(res.msg || String(t('userManager.modifyPasswordSuccess')))
+      showResetPasswordModal.value = false
+    } else {
+      theToast.error(res.msg)
+    }
+  } catch (err: any) {
+    theToast.error(err?.message || 'Failed to modify password')
+  } finally {
+    resetSubmitting.value = false
+  }
+}
 
 const handleDeleteUser = async (userId: string) => {
   openConfirm({

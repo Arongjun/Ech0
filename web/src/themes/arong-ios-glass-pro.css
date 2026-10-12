@@ -2237,7 +2237,14 @@ img.home-header__logo {
 }
 
 .composer__action--send {
-  color: var(--ag-blue) !important;
+  color: #ffffff !important;
+}
+
+.composer__action--send:disabled,
+.composer__action--disabled {
+  background: rgba(120, 120, 128, 0.14) !important;
+  color: rgba(120, 120, 128, 0.4) !important;
+  box-shadow: none !important;
 }
 
 .understory__suggestion {

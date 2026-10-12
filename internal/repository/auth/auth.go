@@ -222,6 +222,16 @@ func (authRepository *AuthRepository) GetOAuthOIDCInfo(
 	return identity, nil
 }
 
+func (authRepository *AuthRepository) DeleteOAuthBinding(
+	ctx context.Context,
+	userID string,
+	provider string,
+) error {
+	return authRepository.getDB(ctx).
+		Where("user_id = ? AND provider = ?", userID, provider).
+		Delete(&model.UserExternalIdentity{}).Error
+}
+
 func (authRepository *AuthRepository) CreatePasskey(
 	ctx context.Context,
 	passkey *authModel.Passkey,

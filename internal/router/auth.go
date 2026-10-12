@@ -34,6 +34,11 @@ func setupAuthRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 		middleware.RequireScopes(authModel.ScopeProfileWrite),
 		h.AuthHandler.PasskeyRegisterFinishV2(),
 	)
+	appRouterGroup.AuthRouterGroup.POST(
+		"/oauth/:provider/unbind",
+		middleware.RequireScopes(authModel.ScopeProfileWrite),
+		h.AuthHandler.OAuthUnbind(),
+	)
 }
 
 func registerAuth(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {

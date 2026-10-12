@@ -39,6 +39,7 @@ func SetupRouter(r *gin.Engine, h *handler.Bundle, mwDeps *middleware.Deps) {
 	setupFileRoutes(groups, h)
 	setupDashboardRoutes(groups, h)
 	setupCopilotRoutes(groups, h)
+	setupUserRoutes(groups, h)
 	registerOperations(api, h, revoker)
 	setupMigrationRoutes(groups, h)
 	setupMCPRoutes(groups, h)

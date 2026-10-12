@@ -110,3 +110,16 @@ func (h *AuthHandler) GetOAuthInfo(ctx context.Context, in *GetOAuthInfoInput) (
 	oauthInfo, _ := h.authService.GetOAuthInfo(ctx, provider)
 	return commonModel.OK(oauthInfo, commonModel.GET_OAUTH_INFO_SUCCESS), nil
 }
+
+func (h *AuthHandler) OAuthUnbind() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		provider, ok := normalizeOAuthProvider(ctx.Param("provider"))
+		if !ok {
+			return res.Response{Msg: commonModel.INVALID_PARAMS, Err: commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, commonModel.INVALID_PARAMS)}
+		}
+		if err := h.authService.UnbindOAuth(ctx.Request.Context(), provider); err != nil {
+			return res.Response{Msg: commonModel.OPERATION_FAILED, Err: err}
+		}
+		return res.Response{Msg: commonModel.OPERATION_SUCCESS}
+	})
+}

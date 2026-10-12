@@ -6,6 +6,8 @@ package handler
 import (
 	"context"
 
+	"github.com/gin-gonic/gin"
+	res "github.com/lin-snow/ech0/internal/handler/response"
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/user"
@@ -87,4 +89,25 @@ func (userHandler *UserHandler) GetUserInfo(ctx context.Context, _ *GetUserInfoI
 		return UserOutput{}, err
 	}
 	return commonModel.OK(user, commonModel.GET_USER_INFO_SUCCESS), nil
+}
+
+type AdminResetPasswordRequest struct {
+	Password string `json:"password" binding:"required"`
+}
+
+func (userHandler *UserHandler) AdminResetPassword() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		targetUserID := ctx.Param("id")
+		if targetUserID == "" {
+			return res.Response{Msg: commonModel.INVALID_PARAMS, Err: commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, commonModel.INVALID_PARAMS)}
+		}
+		var req AdminResetPasswordRequest
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			return res.Response{Msg: commonModel.INVALID_PARAMS, Err: err}
+		}
+		if err := userHandler.userService.AdminResetPassword(ctx.Request.Context(), targetUserID, req.Password); err != nil {
+			return res.Response{Msg: commonModel.OPERATION_FAILED, Err: err}
+		}
+		return res.Response{Msg: commonModel.OPERATION_SUCCESS}
+	})
 }

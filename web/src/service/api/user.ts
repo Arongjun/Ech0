@@ -48,3 +48,13 @@ export function fetchBindOAuth2(provider: string, redirect_uri: string) {
     },
   })
 }
+
+export function fetchAdminResetPassword(userId: string, password: string) {
+  return request({
+    url: `/users/${userId}/password`,
+    method: 'PUT',
+    data: {
+      password,
+    },
+  })
+}

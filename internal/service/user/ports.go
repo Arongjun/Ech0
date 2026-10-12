@@ -20,6 +20,7 @@ type Service interface {
 	GetOwner() (model.User, error)
 	DeleteUser(ctx context.Context, id string) error
 	GetUserByID(userId string) (model.User, error)
+	AdminResetPassword(ctx context.Context, targetUserID string, newPassword string) error
 }
 
 type FileService = fileService.Service

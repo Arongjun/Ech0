@@ -93,6 +93,13 @@ export function fetchGetOAuthInfo(provider?: string) {
   })
 }
 
+export function fetchUnbindOAuth(provider: string) {
+  return request({
+    url: `/oauth/${encodeURIComponent(provider)}/unbind`,
+    method: 'POST',
+  })
+}
+
 export function fetchGetAllWebhooks() {
   return request<App.Api.Setting.Webhook[]>({
     url: '/webhook',

@@ -547,7 +547,16 @@
     "isAdmin": "Admin",
     "deleteUser": "Delete user",
     "deleteConfirmTitle": "Are you sure to delete this user?",
-    "deleteConfirmDesc": "This action cannot be undone."
+    "deleteConfirmDesc": "This action cannot be undone.",
+    "modifyPassword": "Change Password",
+    "modifyPasswordTitle": "Change User Password",
+    "newPassword": "New Password",
+    "confirmNewPassword": "Confirm New Password",
+    "passwordPlaceholder": "Enter new password (at least 6 characters)",
+    "confirmPasswordPlaceholder": "Re-enter new password",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordMismatch": "Passwords do not match",
+    "modifyPasswordSuccess": "Password updated successfully"
   },
   "systemSetting": {
     "title": "System Settings",
@@ -678,7 +687,11 @@
     "redirectAllowlistInvalid": "Redirect Allowlist must be valid http/https URLs",
     "corsOriginsInvalid": "CORS Origins must be valid http/https URLs",
     "bindSuccess": "OAuth2 account linked successfully",
-    "bindFailed": "OAuth2 account linking failed, please retry"
+    "bindFailed": "OAuth2 account linking failed, please retry",
+    "unbind": "Unlink",
+    "unbindConfirmTitle": "Unlink Account",
+    "unbindConfirmDesc": "Are you sure you want to unlink this account? You can re-link a new account afterwards.",
+    "unbindSuccess": "Account unlinked successfully"
   },
   "exportSetting": {
     "title": "Data Export",

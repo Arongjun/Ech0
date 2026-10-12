@@ -547,7 +547,16 @@
     "isAdmin": "Admin",
     "deleteUser": "Benutzer löschen",
     "deleteConfirmTitle": "Diesen Benutzer wirklich löschen?",
-    "deleteConfirmDesc": "Diese Aktion kann nicht rückgängig gemacht werden."
+    "deleteConfirmDesc": "Diese Aktion kann nicht rückgängig gemacht werden.",
+    "modifyPassword": "Passwort ändern",
+    "modifyPasswordTitle": "Benutzerpasswort ändern",
+    "newPassword": "Neues Passwort",
+    "confirmNewPassword": "Neues Passwort bestätigen",
+    "passwordPlaceholder": "Neues Passwort eingeben (mindestens 6 Zeichen)",
+    "confirmPasswordPlaceholder": "Neues Passwort erneut eingeben",
+    "passwordTooShort": "Das Passwort muss mindestens 6 Zeichen lang sein",
+    "passwordMismatch": "Die Passwörter stimmen nicht überein",
+    "modifyPasswordSuccess": "Passwort erfolgreich aktualisiert"
   },
   "systemSetting": {
     "title": "Systemeinstellungen",
@@ -678,7 +687,11 @@
     "redirectAllowlistInvalid": "Redirect Allowlist muss gültige http-/https-URLs enthalten",
     "corsOriginsInvalid": "CORS Origins müssen gültige http-/https-URLs enthalten",
     "bindSuccess": "OAuth2-Konto erfolgreich verknüpft",
-    "bindFailed": "OAuth2-Kontoverknüpfung fehlgeschlagen, bitte erneut versuchen"
+    "bindFailed": "OAuth2-Kontoverknüpfung fehlgeschlagen, bitte erneut versuchen",
+    "unbind": "Verknüpfung aufheben",
+    "unbindConfirmTitle": "Kontoverknüpfung aufheben",
+    "unbindConfirmDesc": "Möchten Sie dieses Konto wirklich trennen? Sie können danach ein neues Konto verknüpfen.",
+    "unbindSuccess": "Kontoverknüpfung erfolgreich aufgehoben"
   },
   "exportSetting": {
     "title": "Datenexport",

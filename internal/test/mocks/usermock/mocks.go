@@ -42,6 +42,69 @@ func (_m *MockService) EXPECT() *MockService_Expecter {
 	return &MockService_Expecter{mock: &_m.Mock}
 }
 
+// AdminResetPassword provides a mock function for the type MockService
+func (_mock *MockService) AdminResetPassword(ctx context.Context, targetUserID string, newPassword string) error {
+	ret := _mock.Called(ctx, targetUserID, newPassword)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AdminResetPassword")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = returnFunc(ctx, targetUserID, newPassword)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockService_AdminResetPassword_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AdminResetPassword'
+type MockService_AdminResetPassword_Call struct {
+	*mock.Call
+}
+
+// AdminResetPassword is a helper method to define mock.On call
+//   - ctx context.Context
+//   - targetUserID string
+//   - newPassword string
+func (_e *MockService_Expecter) AdminResetPassword(ctx any, targetUserID any, newPassword any) *MockService_AdminResetPassword_Call {
+	return &MockService_AdminResetPassword_Call{Call: _e.mock.On("AdminResetPassword", ctx, targetUserID, newPassword)}
+}
+
+func (_c *MockService_AdminResetPassword_Call) Run(run func(ctx context.Context, targetUserID string, newPassword string)) *MockService_AdminResetPassword_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockService_AdminResetPassword_Call) Return(err error) *MockService_AdminResetPassword_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockService_AdminResetPassword_Call) RunAndReturn(run func(ctx context.Context, targetUserID string, newPassword string) error) *MockService_AdminResetPassword_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // DeleteUser provides a mock function for the type MockService
 func (_mock *MockService) DeleteUser(ctx context.Context, id string) error {
 	ret := _mock.Called(ctx, id)

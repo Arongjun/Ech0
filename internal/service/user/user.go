@@ -383,3 +383,29 @@ func (userService *UserService) DeleteUser(ctx context.Context, id string) error
 func (userService *UserService) GetUserByID(userId string) (model.User, error) {
 	return userService.userRepository.GetUserByID(context.Background(), userId)
 }
+
+func (userService *UserService) AdminResetPassword(ctx context.Context, targetUserID string, newPassword string) error {
+	v, ok := viewer.FromContext(ctx)
+	if !ok || v == nil || v.UserID() == "" {
+		return errors.New(commonModel.NO_PERMISSION_DENIED)
+	}
+	caller, err := userService.userRepository.GetUserByID(ctx, v.UserID())
+	if err != nil || !caller.IsAdmin {
+		return errors.New(commonModel.NO_PERMISSION_DENIED)
+	}
+	if err := ensurePasswordLength(newPassword); err != nil {
+		return err
+	}
+	if _, err := userService.userRepository.GetUserByID(ctx, targetUserID); err != nil {
+		return err
+	}
+	hashed, err := cryptoUtil.HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+	return userService.userRepository.UpsertLocalAuth(ctx, &model.UserLocalAuth{
+		UserID:       targetUserID,
+		PasswordHash: hashed,
+		PasswordAlgo: cryptoUtil.AlgoBcrypt,
+	})
+}

@@ -365,7 +365,7 @@
           </p>
           <div
             v-if="oauthInfo && isBound"
-            class="mt-2 border border-dashed border-[var(--color-border-strong)] rounded-md p-3 flex items-center justify-center"
+            class="mt-2 border border-dashed border-[var(--color-border-strong)] rounded-md p-3 flex items-center justify-between"
           >
             <p class="text-[var(--color-text-secondary)] font-bold flex items-center">
               <component
@@ -391,8 +391,16 @@
                           type: oauthInfo?.auth_type === 'oidc' ? 'OIDC' : 'OAuth2',
                         })
               }}</span>
-              {{ t('oauth2Setting.bound') }}
+              <span class="ml-1 text-xs font-normal text-[var(--color-text-muted)]">
+                ({{ t('oauth2Setting.bound') }})
+              </span>
             </p>
+            <BaseButton
+              class="rounded-md text-xs py-1 px-3 border border-red-500/30 text-red-500 hover:bg-red-500/10 transition-colors"
+              @click="handleUnbindOAuth2()"
+            >
+              {{ t('oauth2Setting.unbind') }}
+            </BaseButton>
           </div>
           <BaseButton v-else class="rounded-md mt-3" @click="handleBindOAuth2()">
             <div class="flex items-center justify-between">
@@ -440,12 +448,14 @@ import { ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSettingStore } from '@/stores'
 import { theToast } from '@/utils/toast'
+import { useBaseDialog } from '@/composables/useBaseDialog'
 import { OAuth2Provider } from '@/enums/enums'
 import {
   fetchUpdateOAuth2Settings,
   fetchBindOAuth2,
   fetchGetOAuthInfo,
   fetchGetOAuth2Status,
+  fetchUnbindOAuth,
 } from '@/service/api'
 import Github from '@/components/icons/github.vue'
 import Google from '@/components/icons/google.vue'
@@ -455,6 +465,7 @@ import { storeToRefs } from 'pinia'
 
 const settingStore = useSettingStore()
 const { t } = useI18n()
+const { openConfirm } = useBaseDialog()
 const { getOAuth2Setting } = settingStore
 const { OAuth2Setting } = storeToRefs(settingStore)
 
@@ -523,6 +534,25 @@ const handleBindOAuth2 = async () => {
   } else {
     window.location.href = res.data
   }
+}
+
+const handleUnbindOAuth2 = () => {
+  openConfirm({
+    title: String(t('oauth2Setting.unbindConfirmTitle')),
+    description: String(t('oauth2Setting.unbindConfirmDesc')),
+    onConfirm: async () => {
+      try {
+        const res = await fetchUnbindOAuth(OAuth2Setting.value.provider)
+        if (res.code === 1) {
+          theToast.success(res.msg || String(t('oauth2Setting.unbindSuccess')))
+          isBound.value = false
+          oauthInfo.value = null
+        }
+      } catch (err: any) {
+        theToast.error(err?.message || 'Unbind failed')
+      }
+    },
+  })
 }
 
 const oauthInfo = ref<App.Api.Setting.OAuthInfo | null>(null)

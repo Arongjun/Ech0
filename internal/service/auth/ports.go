@@ -19,6 +19,7 @@ type Service interface {
 	HandleOAuthCallback(provider string, code string, state string) (string, error)
 	ExchangeOAuthCode(code string) (*authModel.TokenPair, error)
 	GetOAuthInfo(ctx context.Context, provider string) (model.OAuthInfoDto, error)
+	UnbindOAuth(ctx context.Context, provider string) error
 	PasskeyRegisterBegin(ctx context.Context, rpID, origin, deviceName string) (authModel.PasskeyRegisterBeginResp, error)
 	PasskeyRegisterFinish(ctx context.Context, rpID, origin, nonce string, credential json.RawMessage) error
 	PasskeyLoginBegin(rpID, origin string) (authModel.PasskeyLoginBeginResp, error)
@@ -51,6 +52,7 @@ type IdentityRepo interface {
 	GetUserByOIDC(ctx context.Context, provider, oauthID, issuer string) (model.User, error)
 	GetOAuthInfo(userId string, provider string) (model.UserExternalIdentity, error)
 	GetOAuthOIDCInfo(userId string, provider string, issuer string) (model.UserExternalIdentity, error)
+	DeleteOAuthBinding(ctx context.Context, userID string, provider string) error
 }
 
 type PasskeyRepo interface {
