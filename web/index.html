@@ -32,6 +32,8 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
 
     <link rel="manifest" href="/app.webmanifest" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Ech0" />
     <meta name="theme-color" content="#f3f7fb" />
     <meta
       name="description"
@@ -271,10 +273,17 @@
           return DEFAULT_TITLE
         }
 
-        const setLoaderTitle = (title) => {
+        const applyTitle = (title) => {
+          const normalized = normalizeTitle(title)
           const brand = document.getElementById('app-loader-brand')
-          if (!brand) return
-          brand.textContent = normalizeTitle(title)
+          if (brand) brand.textContent = normalized
+          if (normalized && normalized !== DEFAULT_TITLE) {
+            document.title = normalized
+            const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]')
+            if (appleTitle) appleTitle.setAttribute('content', normalized)
+            const ogTitle = document.querySelector('meta[property="og:title"]')
+            if (ogTitle) ogTitle.setAttribute('content', normalized)
+          }
         }
 
         const upsertEarlyCustomStyle = (css) => {
@@ -293,9 +302,9 @@
         }
 
         try {
-          setLoaderTitle(window.localStorage.getItem(TITLE_STORAGE_KEY))
+          applyTitle(window.localStorage.getItem(TITLE_STORAGE_KEY))
         } catch {
-          setLoaderTitle(DEFAULT_TITLE)
+          applyTitle(DEFAULT_TITLE)
         }
 
         fetch('/api/settings', {
@@ -312,7 +321,7 @@
           .then((response) => {
             const data = response?.data || {}
             const title = normalizeTitle(data.server_name, data.site_title)
-            setLoaderTitle(title)
+            applyTitle(title)
             upsertEarlyCustomStyle(data.custom_css)
             try {
               window.localStorage.setItem(TITLE_STORAGE_KEY, title)

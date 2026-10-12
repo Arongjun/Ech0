@@ -37,34 +37,34 @@ import (
 	"github.com/lin-snow/ech0/internal/model/job"
 	repository14 "github.com/lin-snow/ech0/internal/repository"
 	repository7 "github.com/lin-snow/ech0/internal/repository/auth"
-	repository8 "github.com/lin-snow/ech0/internal/repository/comment"
-	repository5 "github.com/lin-snow/ech0/internal/repository/common"
+	repository9 "github.com/lin-snow/ech0/internal/repository/comment"
+	repository4 "github.com/lin-snow/ech0/internal/repository/common"
 	repository11 "github.com/lin-snow/ech0/internal/repository/connect"
 	repository2 "github.com/lin-snow/ech0/internal/repository/echo"
 	"github.com/lin-snow/ech0/internal/repository/embedding"
-	repository6 "github.com/lin-snow/ech0/internal/repository/file"
-	repository9 "github.com/lin-snow/ech0/internal/repository/init"
+	repository5 "github.com/lin-snow/ech0/internal/repository/file"
+	repository10 "github.com/lin-snow/ech0/internal/repository/init"
 	repository12 "github.com/lin-snow/ech0/internal/repository/job"
 	"github.com/lin-snow/ech0/internal/repository/keyvalue"
-	repository10 "github.com/lin-snow/ech0/internal/repository/setting"
-	repository4 "github.com/lin-snow/ech0/internal/repository/user"
+	repository6 "github.com/lin-snow/ech0/internal/repository/setting"
+	repository8 "github.com/lin-snow/ech0/internal/repository/user"
 	repository13 "github.com/lin-snow/ech0/internal/repository/visitor"
 	repository3 "github.com/lin-snow/ech0/internal/repository/webhook"
 	"github.com/lin-snow/ech0/internal/server"
 	service13 "github.com/lin-snow/ech0/internal/service"
 	"github.com/lin-snow/ech0/internal/service/auth"
-	service6 "github.com/lin-snow/ech0/internal/service/comment"
-	service4 "github.com/lin-snow/ech0/internal/service/common"
+	service7 "github.com/lin-snow/ech0/internal/service/comment"
+	service2 "github.com/lin-snow/ech0/internal/service/common"
 	service9 "github.com/lin-snow/ech0/internal/service/connect"
 	service12 "github.com/lin-snow/ech0/internal/service/copilot"
 	service11 "github.com/lin-snow/ech0/internal/service/dashboard"
-	service5 "github.com/lin-snow/ech0/internal/service/echo"
+	service6 "github.com/lin-snow/ech0/internal/service/echo"
 	"github.com/lin-snow/ech0/internal/service/embedding"
-	service2 "github.com/lin-snow/ech0/internal/service/file"
+	service3 "github.com/lin-snow/ech0/internal/service/file"
 	service8 "github.com/lin-snow/ech0/internal/service/init"
 	service10 "github.com/lin-snow/ech0/internal/service/migrator"
-	service7 "github.com/lin-snow/ech0/internal/service/setting"
-	service3 "github.com/lin-snow/ech0/internal/service/user"
+	service4 "github.com/lin-snow/ech0/internal/service/setting"
+	service5 "github.com/lin-snow/ech0/internal/service/user"
 	"github.com/lin-snow/ech0/internal/setting"
 	"github.com/lin-snow/ech0/internal/storage"
 	"github.com/lin-snow/ech0/internal/task"
@@ -133,32 +133,32 @@ func BuildEventRegistrar(dbProvider func() *gorm.DB, ebProvider func() *busen.Bu
 }
 
 func BuildHandlers(dbProvider func() *gorm.DB, appCache *cache.Cache, tx transaction.Transactor, ebProvider func() *busen.Bus, tracker *visitor.Tracker, jobManager *job.Manager, storageManager *storage.Manager) (*handler.Bundle, error) {
-	webHandler := handler2.NewWebHandler(tracker)
-	userRepository := repository4.NewUserRepository(dbProvider, appCache)
+	commonRepository := repository4.NewCommonRepository(dbProvider)
+	commonService := service2.NewCommonService(commonRepository, appCache)
+	fileRepository := repository5.NewFileRepository(dbProvider)
+	fileService := service3.NewFileService(tx, commonRepository, fileRepository, storageManager, ebProvider)
 	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
 	persistent := kvstore.NewPersistent(keyValueRepository)
-	commonRepository := repository5.NewCommonRepository(dbProvider)
-	fileRepository := repository6.NewFileRepository(dbProvider)
-	fileService := service2.NewFileService(tx, commonRepository, fileRepository, storageManager, ebProvider)
-	userService := service3.NewUserService(tx, userRepository, persistent, fileService, ebProvider)
-	userHandler := handler3.NewUserHandler(userService)
-	authRepository := repository7.NewAuthRepository(dbProvider, appCache)
-	authService := auth.NewAuthService(tx, authRepository, authRepository, persistent)
-	authHandler := handler4.NewAuthHandler(authService, userService)
-	commonService := service4.NewCommonService(commonRepository, appCache)
-	echoRepository := repository2.NewEchoRepository(dbProvider, appCache)
-	echoService := service5.NewEchoService(tx, commonService, fileService, echoRepository, ebProvider)
-	echoHandler := handler5.NewEchoHandler(echoService)
-	fileHandler := handler6.NewFileHandler(fileService)
-	commentRepository := repository8.NewCommentRepository(dbProvider)
-	goMailSender := service6.NewGoMailSender()
-	commentService := service6.NewCommentService(commonService, commentRepository, persistent, ebProvider, goMailSender)
-	commentHandler := handler7.NewCommentHandler(commentService)
-	initRepository := repository9.NewInitRepository(dbProvider)
-	settingRepository := repository10.NewSettingRepository(dbProvider)
+	settingRepository := repository6.NewSettingRepository(dbProvider)
 	webhookRepository := repository3.NewWebhookRepository(dbProvider)
 	sender := webhook.NewSender()
-	settingService := service7.NewSettingService(tx, commonService, fileService, storageManager, persistent, settingRepository, webhookRepository, sender, authRepository, ebProvider)
+	authRepository := repository7.NewAuthRepository(dbProvider, appCache)
+	settingService := service4.NewSettingService(tx, commonService, fileService, storageManager, persistent, settingRepository, webhookRepository, sender, authRepository, ebProvider)
+	webHandler := handler2.NewWebHandler(tracker, settingService)
+	userRepository := repository8.NewUserRepository(dbProvider, appCache)
+	userService := service5.NewUserService(tx, userRepository, persistent, fileService, ebProvider)
+	userHandler := handler3.NewUserHandler(userService)
+	authService := auth.NewAuthService(tx, authRepository, authRepository, persistent)
+	authHandler := handler4.NewAuthHandler(authService, userService)
+	echoRepository := repository2.NewEchoRepository(dbProvider, appCache)
+	echoService := service6.NewEchoService(tx, commonService, fileService, echoRepository, ebProvider)
+	echoHandler := handler5.NewEchoHandler(echoService)
+	fileHandler := handler6.NewFileHandler(fileService)
+	commentRepository := repository9.NewCommentRepository(dbProvider)
+	goMailSender := service7.NewGoMailSender()
+	commentService := service7.NewCommentService(commonService, commentRepository, persistent, ebProvider, goMailSender)
+	commentHandler := handler7.NewCommentHandler(commentService)
+	initRepository := repository10.NewInitRepository(dbProvider)
 	initService := service8.NewInitService(initRepository, userService, settingService)
 	initHandler := handler8.NewInitHandler(initService)
 	commonHandler := handler9.NewCommonHandler(commonService)
@@ -234,9 +234,9 @@ func BuildServer() (*server.Server, error) {
 }
 
 func BuildTasker(dbProvider func() *gorm.DB, appCache *cache.Cache, tx transaction.Transactor, ebProvider func() *busen.Bus, tracker *visitor.Tracker, storageManager *storage.Manager) (*task.Manager, error) {
-	commonRepository := repository5.NewCommonRepository(dbProvider)
-	fileRepository := repository6.NewFileRepository(dbProvider)
-	fileService := service2.NewFileService(tx, commonRepository, fileRepository, storageManager, ebProvider)
+	commonRepository := repository4.NewCommonRepository(dbProvider)
+	fileRepository := repository5.NewFileRepository(dbProvider)
+	fileService := service3.NewFileService(tx, commonRepository, fileRepository, storageManager, ebProvider)
 	cleanup := scheduled.NewCleanup(fileService)
 	keyValueRepository := keyvalue.NewKeyValueRepository(dbProvider, appCache)
 	persistent := kvstore.NewPersistent(keyValueRepository)
@@ -323,7 +323,7 @@ var RuntimeSet = server.ProviderSet
 
 var EventSet = wire.NewSet(repository14.EchoSet, repository14.UserSet, repository14.KeyValueSet, repository14.WebhookSet, repository14.EmbeddingSet, webhook.NewDispatcher, subscriber.NewAgentProcessor, subscriber.NewEmbeddingProcessor, service13.EmbeddingSet, ProvideSubscriptionProviders, bus.NewEventRegistry)
 
-var HandlerSet = wire.NewSet(repository14.FileSet, handler.WebSet, repository14.UserSet, repository14.AuthSet, service13.UserSet, service13.AuthSet, handler.UserSet, handler.AuthSet, repository14.EchoSet, service13.EchoSet, handler.EchoSet, repository14.CommentSet, service13.CommentSet, handler.CommentSet, repository14.CommonSet, service13.FileSet, handler.FileSet, repository14.InitSet, service13.InitSet, handler.InitSet, service13.CommonSet, handler.CommonSet, repository14.WebhookSet, webhook.NewSender, repository14.KeyValueSet, repository14.SettingSet, service13.SettingSet, handler.SettingSet, repository14.ConnectSet, service13.ConnectSet, handler.ConnectSet, service13.DashboardSet, handler.DashboardSet, repository14.EmbeddingSet, service13.EmbeddingSet, handler.EmbeddingSet, service13.CopilotSet, wire.Bind(new(service12.UserReader), new(*service3.UserService)), handler.CopilotSet, service13.MigratorSet, handler.MigrationSet, handler.MCPSet, handler.NewBundle)
+var HandlerSet = wire.NewSet(repository14.FileSet, handler.WebSet, repository14.UserSet, repository14.AuthSet, service13.UserSet, service13.AuthSet, handler.UserSet, handler.AuthSet, repository14.EchoSet, service13.EchoSet, handler.EchoSet, repository14.CommentSet, service13.CommentSet, handler.CommentSet, repository14.CommonSet, service13.FileSet, handler.FileSet, repository14.InitSet, service13.InitSet, handler.InitSet, service13.CommonSet, handler.CommonSet, repository14.WebhookSet, webhook.NewSender, repository14.KeyValueSet, repository14.SettingSet, service13.SettingSet, handler.SettingSet, repository14.ConnectSet, service13.ConnectSet, handler.ConnectSet, service13.DashboardSet, handler.DashboardSet, repository14.EmbeddingSet, service13.EmbeddingSet, handler.EmbeddingSet, service13.CopilotSet, wire.Bind(new(service12.UserReader), new(*service5.UserService)), handler.CopilotSet, service13.MigratorSet, handler.MigrationSet, handler.MCPSet, handler.NewBundle)
 
 var MiddlewareSet = wire.NewSet(repository14.AuthSet, middleware.ProviderSet)
 

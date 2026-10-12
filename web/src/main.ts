@@ -30,12 +30,18 @@ const normalizeLoaderSiteTitle = (...values: unknown[]) => {
 }
 
 const setStartupLoaderSiteTitle = (title: string) => {
+  const normalized = normalizeLoaderSiteTitle(title)
   const loaderBrand =
     document.getElementById('app-loader-brand') ??
     document.querySelector<HTMLElement>('#app-loader .loader-brand')
-  if (!loaderBrand) return
-
-  loaderBrand.textContent = normalizeLoaderSiteTitle(title)
+  if (loaderBrand) {
+    loaderBrand.textContent = normalized
+  }
+  if (normalized && normalized !== DEFAULT_LOADER_SITE_TITLE) {
+    document.title = normalized
+    const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]')
+    if (appleTitle) appleTitle.setAttribute('content', normalized)
+  }
 }
 
 const getCachedStartupLoaderSiteTitle = () => {

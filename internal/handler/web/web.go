@@ -4,6 +4,8 @@
 package handler
 
 import (
+	"encoding/json"
+	"html"
 	"io/fs"
 	"mime"
 	"net/http"
@@ -12,6 +14,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	settingModel "github.com/lin-snow/ech0/internal/model/setting"
+	settingService "github.com/lin-snow/ech0/internal/service/setting"
 	"github.com/lin-snow/ech0/internal/visitor"
 	"github.com/lin-snow/ech0/template"
 )
@@ -24,10 +28,72 @@ var spaBypassPrefixes = []string{
 
 type WebHandler struct {
 	visitorTracker *visitor.Tracker
+	settingService settingService.Service
 }
 
-func NewWebHandler(visitorTracker *visitor.Tracker) *WebHandler {
-	return &WebHandler{visitorTracker: visitorTracker}
+func NewWebHandler(visitorTracker *visitor.Tracker, settingService settingService.Service) *WebHandler {
+	return &WebHandler{
+		visitorTracker: visitorTracker,
+		settingService: settingService,
+	}
+}
+
+func (webHandler *WebHandler) getSiteTitle() string {
+	if webHandler.settingService == nil {
+		return "Ech0"
+	}
+	var s settingModel.SystemSetting
+	if err := webHandler.settingService.GetSetting(&s); err != nil {
+		return "Ech0"
+	}
+	title := strings.TrimSpace(s.SiteTitle)
+	if title == "" {
+		title = strings.TrimSpace(s.ServerName)
+	}
+	if title == "" {
+		title = "Ech0"
+	}
+	return title
+}
+
+func (webHandler *WebHandler) renderIndexHTML(subFS fs.FS, ctx *gin.Context) bool {
+	rawHTML, err := fs.ReadFile(subFS, "index.html")
+	if err != nil {
+		return false
+	}
+	siteTitle := webHandler.getSiteTitle()
+	htmlStr := string(rawHTML)
+	if siteTitle != "Ech0" && siteTitle != "" {
+		escaped := html.EscapeString(siteTitle)
+		htmlStr = strings.Replace(htmlStr, "<title>Ech0</title>", "<title>"+escaped+"</title>", 1)
+		htmlStr = strings.Replace(htmlStr, `<meta name="apple-mobile-web-app-title" content="Ech0" />`, `<meta name="apple-mobile-web-app-title" content="`+escaped+`" />`, 1)
+		htmlStr = strings.Replace(htmlStr, `<meta property="og:title" content="Ech0" />`, `<meta property="og:title" content="`+escaped+`" />`, 1)
+		htmlStr = strings.Replace(htmlStr, `<meta property="og:site_name" content="Ech0" />`, `<meta property="og:site_name" content="`+escaped+`" />`, 1)
+		htmlStr = strings.Replace(htmlStr, `<meta name="twitter:title" content="Ech0" />`, `<meta name="twitter:title" content="`+escaped+`" />`, 1)
+		htmlStr = strings.Replace(htmlStr, `<h1 id="app-loader-brand" class="loader-brand">Ech0</h1>`, `<h1 id="app-loader-brand" class="loader-brand">`+escaped+`</h1>`, 1)
+	}
+	webHandler.visitorTracker.Record(ctx.Request, ctx.ClientIP())
+	ctx.Header("Content-Type", "text/html; charset=utf-8")
+	setNoStoreHeaders(ctx)
+	ctx.Data(http.StatusOK, "text/html; charset=utf-8", []byte(htmlStr))
+	return true
+}
+
+func (webHandler *WebHandler) renderManifest(subFS fs.FS, ctx *gin.Context) bool {
+	rawManifest, err := fs.ReadFile(subFS, "app.webmanifest")
+	if err != nil {
+		return false
+	}
+	siteTitle := webHandler.getSiteTitle()
+	manifestStr := string(rawManifest)
+	if siteTitle != "Ech0" && siteTitle != "" {
+		titleBytes, _ := json.Marshal(siteTitle)
+		manifestStr = strings.Replace(manifestStr, `"name": "Ech0"`, `"name": `+string(titleBytes), 1)
+		manifestStr = strings.Replace(manifestStr, `"short_name": "Ech0"`, `"short_name": `+string(titleBytes), 1)
+	}
+	setNoStoreHeaders(ctx)
+	ctx.Data(http.StatusOK, "application/manifest+json", []byte(manifestStr))
+	return true
 }
 
 func (webHandler *WebHandler) Templates() gin.HandlerFunc {
@@ -41,8 +107,17 @@ func (webHandler *WebHandler) Templates() gin.HandlerFunc {
 			return
 		}
 
-		if requestPath == "/" {
+		if requestPath == "/" || requestPath == "/index.html" {
+			if webHandler.renderIndexHTML(subFS, ctx) {
+				return
+			}
 			requestPath = "/index.html"
+		}
+
+		if requestPath == "/app.webmanifest" {
+			if webHandler.renderManifest(subFS, ctx) {
+				return
+			}
 		}
 
 		if strings.Contains(requestPath, "..") {
@@ -53,6 +128,9 @@ func (webHandler *WebHandler) Templates() gin.HandlerFunc {
 		fullPath := path.Clean("." + requestPath)
 		f, err := fileServer.Open(fullPath)
 		if err != nil {
+			if webHandler.renderIndexHTML(subFS, ctx) {
+				return
+			}
 			fallback, err := fileServer.Open("index.html")
 			if err != nil {
 				ctx.Status(http.StatusNotFound)
