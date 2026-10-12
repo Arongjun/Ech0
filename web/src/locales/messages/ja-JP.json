@@ -521,7 +521,9 @@
     "deleteConfirmDesc": "削除すると復元できません。慎重に操作してください",
     "deleteSuccess": "削除しました！",
     "exitUpdateModeFirst": "先に更新モードを終了してください！",
-    "openDetail": "詳細を開く"
+    "openDetail": "詳細を開く",
+    "expand": "全文を表示",
+    "collapse": "折りたたむ"
   },
   "userSetting": {
     "title": "ユーザーセンター",

@@ -48,7 +48,7 @@
     <div class="hub-echo-body py-1.5">
       <template v-if="isContentLeadingEcho(props.echo)">
         <div class="mb-2.5">
-          <TheMdPreview :content="props.echo.content" />
+          <TheMdPreview :content="props.echo.content" collapsible @open-detail="handleJumpToEcho" />
         </div>
 
         <TheMediaPlayer :echo="props.echo" :baseUrl="echo.server_url" :layout="props.echo.layout" />
@@ -58,7 +58,7 @@
         <TheMediaPlayer :echo="props.echo" :baseUrl="echo.server_url" :layout="props.echo.layout" />
 
         <div class="mt-2.5">
-          <TheMdPreview :content="props.echo.content" />
+          <TheMdPreview :content="props.echo.content" collapsible @open-detail="handleJumpToEcho" />
         </div>
       </template>
 
@@ -129,6 +129,10 @@ watch(
     fav_count.value = next
   },
 )
+
+const handleJumpToEcho = () => {
+  window.open(`${server_url.value}/echo/${echo_id.value}`, '_blank', 'noopener,noreferrer')
+}
 
 const handleLikeEcho = async () => {
   isLikeAnimating.value = true

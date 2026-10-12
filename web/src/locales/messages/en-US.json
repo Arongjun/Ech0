@@ -521,7 +521,9 @@
     "deleteConfirmDesc": "This action cannot be undone.",
     "deleteSuccess": "Deleted successfully",
     "exitUpdateModeFirst": "Please exit update mode first",
-    "openDetail": "Open detail"
+    "openDetail": "Open detail",
+    "expand": "Show more",
+    "collapse": "Show less"
   },
   "userSetting": {
     "title": "User Center",

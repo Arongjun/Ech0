@@ -42,7 +42,7 @@
     <div class="zen-echo-body py-1.5">
       <template v-if="isContentLeadingEcho(echo)">
         <div v-if="echo.content" class="mb-2.5">
-          <TheMdPreview :content="echo.content" />
+          <TheMdPreview :content="echo.content" collapsible :echo-id="echo.id" />
         </div>
 
         <TheMediaPlayer :echo="echo" :layout="echo.layout" />
@@ -52,7 +52,7 @@
         <TheMediaPlayer :echo="echo" :layout="echo.layout" />
 
         <div v-if="echo.content" :class="hasMedia ? 'mt-2.5' : ''">
-          <TheMdPreview :content="echo.content" />
+          <TheMdPreview :content="echo.content" collapsible :echo-id="echo.id" />
         </div>
       </template>
     </div>
@@ -124,7 +124,7 @@ const goDetail = () => {
   position: relative;
   background: var(--color-bg-surface);
   backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
   border-radius: var(--ag-radius-lg, 24px);
   border: 1px solid var(--ag-line);
   box-shadow: var(--ag-shadow);
@@ -136,9 +136,9 @@ const goDetail = () => {
 .zen-echo-card:hover {
   transform: translateY(-2px);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 14px 28px rgba(40, 48, 62, 0.08),
-    0 2px 6px rgba(40, 48, 62, 0.04);
+    inset 0 1px 0 rgb(255 255 255 / 90%),
+    0 14px 28px rgb(40 48 62 / 8%),
+    0 2px 6px rgb(40 48 62 / 4%);
 }
 
 .zen-echo-card:active {
@@ -147,9 +147,9 @@ const goDetail = () => {
 
 :root.dark .zen-echo-card:hover {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 16px 32px rgba(0, 0, 0, 0.3),
-    0 2px 8px rgba(0, 0, 0, 0.2);
+    inset 0 1px 0 rgb(255 255 255 / 12%),
+    0 16px 32px rgb(0 0 0 / 30%),
+    0 2px 8px rgb(0 0 0 / 20%);
 }
 
 .zen-echo-card::before {

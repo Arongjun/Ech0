@@ -521,7 +521,9 @@
     "deleteConfirmDesc": "Diese Aktion kann nicht rückgängig gemacht werden.",
     "deleteSuccess": "Gelöscht",
     "exitUpdateModeFirst": "Bitte zuerst den Bearbeitungsmodus verlassen",
-    "openDetail": "Detail öffnen"
+    "openDetail": "Detail öffnen",
+    "expand": "Mehr anzeigen",
+    "collapse": "Weniger anzeigen"
   },
   "userSetting": {
     "title": "Benutzerverwaltung",

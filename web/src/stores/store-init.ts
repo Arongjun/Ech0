@@ -17,9 +17,5 @@ export async function initStores() {
   themeStore.init()
   editorStore.init()
 
-  await Promise.allSettled([
-    initStore.init(),
-    userStore.init(),
-    settingStore.init(),
-  ])
+  await Promise.allSettled([initStore.init(), userStore.init(), settingStore.init()])
 }
