@@ -106,8 +106,8 @@ func (userHandler *UserHandler) AdminResetPassword() gin.HandlerFunc {
 			return res.Response{Msg: commonModel.INVALID_PARAMS, Err: err}
 		}
 		if err := userHandler.userService.AdminResetPassword(ctx.Request.Context(), targetUserID, req.Password); err != nil {
-			return res.Response{Msg: commonModel.OPERATION_FAILED, Err: err}
+			return res.Response{Err: err}
 		}
-		return res.Response{Msg: commonModel.OPERATION_SUCCESS}
+		return res.Response{Msg: commonModel.UPDATE_USER_SUCCESS}
 	})
 }

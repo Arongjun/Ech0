@@ -118,8 +118,8 @@ func (h *AuthHandler) OAuthUnbind() gin.HandlerFunc {
 			return res.Response{Msg: commonModel.INVALID_PARAMS, Err: commonModel.NewBizError(commonModel.ErrCodeInvalidRequest, commonModel.INVALID_PARAMS)}
 		}
 		if err := h.authService.UnbindOAuth(ctx.Request.Context(), provider); err != nil {
-			return res.Response{Msg: commonModel.OPERATION_FAILED, Err: err}
+			return res.Response{Err: err}
 		}
-		return res.Response{Msg: commonModel.OPERATION_SUCCESS}
+		return res.Response{Msg: commonModel.SUCCESS_MESSAGE}
 	})
 }
