@@ -15,10 +15,11 @@ export async function initStores() {
   const initStore = useInitStore()
 
   themeStore.init()
-  await initStore.init()
-  await userStore.init()
-  if (initStore.initialized) {
-    await settingStore.init()
-  }
   editorStore.init()
+
+  await Promise.allSettled([
+    initStore.init(),
+    userStore.init(),
+    settingStore.init(),
+  ])
 }

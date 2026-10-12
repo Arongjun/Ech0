@@ -277,24 +277,6 @@
       <h1 class="loader-brand">Ech0</h1>
       <p>静候灵感落笔</p>
     </div>
-    <script>
-      (function () {
-        var loader = document.getElementById('app-loader');
-        var hide = function () {
-          if (!loader) return;
-          loader.classList.add('fade-out');
-          setTimeout(function () {
-            if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
-            document.documentElement.classList.remove('app-loading');
-          }, 400);
-        };
-        var timer = setTimeout(hide, 2500);
-        window.__ech0DismissLoader = function () {
-          clearTimeout(timer);
-          hide();
-        };
-      })();
-    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

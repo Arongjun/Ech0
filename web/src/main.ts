@@ -8,6 +8,7 @@ import 'floating-vue/dist/style.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import FloatingVue from 'floating-vue'
 
 import App from './App.vue'
 import router from './router'
@@ -32,11 +33,15 @@ const initStore = useInitStore()
 const siteDefaultLocale = initStore.initialized
   ? settingStore.SystemSetting.default_locale
   : undefined
-const i18n = await setupI18n(siteDefaultLocale)
-const { default: FloatingVue } = await import('floating-vue')
+const i18n = await setupI18n(siteDefaultLocale).catch((e) => {
+  console.warn('Failed to setup i18n:', e)
+  return undefined
+})
 
 app.use(router)
-app.use(i18n)
+if (i18n) {
+  app.use(i18n)
+}
 app.use(FloatingVue, {
   themes: {
     tooltip: {
@@ -54,6 +59,8 @@ app.use(FloatingVue, {
 
 app.component('BaseDialog', BaseDialog)
 
+app.mount('#app')
+
 const appLoader = document.getElementById('app-loader')
 let loaderCleared = false
 const clearStartupLoader = () => {
@@ -66,37 +73,22 @@ const clearStartupLoader = () => {
 }
 
 const startLoaderFade = () => {
-  if (typeof window !== 'undefined') {
-    const w = window as Window & { __ech0DismissLoader?: () => void }
-    if (typeof w.__ech0DismissLoader === 'function') {
-      w.__ech0DismissLoader()
-      return
-    }
-  }
   if (!appLoader) {
     clearStartupLoader()
     return
   }
-  appLoader.classList.add('fade-out')
+  window.requestAnimationFrame(() => {
+    try {
+      appLoader.classList.add('fade-out')
+    } catch {}
+  })
   appLoader.addEventListener('transitionend', clearStartupLoader, { once: true })
   window.setTimeout(clearStartupLoader, 600)
 }
 
 const loaderTimeout = new Promise<void>((resolve) => {
-  window.setTimeout(resolve, 2000)
+  window.setTimeout(resolve, 3000)
 })
-const loaderFallbackTimer = window.setTimeout(startLoaderFade, 2500)
-Promise.race([router.isReady().catch(() => undefined), loaderTimeout])
-  .then(() => {
-    startLoaderFade()
-  })
-  .finally(() => {
-    window.clearTimeout(loaderFallbackTimer)
-  })
-
-try {
-  app.mount('#app')
-} catch (err) {
-  console.error('Failed to mount application:', err)
+Promise.race([router.isReady().catch(() => undefined), loaderTimeout]).then(() => {
   startLoaderFade()
-}
+})

@@ -165,6 +165,8 @@ func (webHandler *WebHandler) Templates() gin.HandlerFunc {
 			if err == nil {
 				defer func() { _ = gzFile.Close() }()
 				stat, _ := gzFile.Stat()
+				ctx.Header("Access-Control-Allow-Origin", "*")
+				ctx.Header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
 				ctx.Header("Content-Encoding", "gzip")
 				ctx.Header("Content-Type", getMimeType(fullPath))
 				setCacheControlHeader(ctx, requestPath)
@@ -173,6 +175,8 @@ func (webHandler *WebHandler) Templates() gin.HandlerFunc {
 			}
 		}
 
+		ctx.Header("Access-Control-Allow-Origin", "*")
+		ctx.Header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
 		ctx.Header("Content-Type", getMimeType(fullPath))
 		setCacheControlHeader(ctx, requestPath)
 		if requestPath == "/index.html" {

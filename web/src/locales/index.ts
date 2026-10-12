@@ -23,9 +23,7 @@ export const LOCALE_OPTIONS = SUPPORTED_LOCALES.map((value) => ({
   label: LOCALE_ENDONYMS[value],
 }))
 
-import zhCN from './messages/zh-CN.json'
-
-const loadedLocales = new Set<string>(['zh-CN'])
+const loadedLocales = new Set<string>()
 
 const toSupported = (raw?: string | null): AppLocale | null => {
   const value = String(raw || '').trim()
@@ -59,12 +57,6 @@ export const i18n = createI18n({
   fallbackLocale: DEFAULT_LOCALE,
   messages: {},
 })
-
-try {
-  i18n.global.setLocaleMessage('zh-CN', zhCN)
-} catch (e) {
-  console.warn('Failed to register initial zh-CN locale:', e)
-}
 
 async function loadLocaleMessages(locale: AppLocale) {
   if (loadedLocales.has(locale)) return
