@@ -11,10 +11,13 @@ const { t } = useI18n()
 onMounted(() => {
   const url = new URL(window.location.href)
   const bind = url.searchParams.get('bind')
+  const errorMsg = url.searchParams.get('error')
   if (bind === 'success') {
     theToast.success(String(t('oauth2Setting.bindSuccess')), { duration: 5000 })
-  } else if (bind === 'failed') {
-    theToast.error(String(t('oauth2Setting.bindFailed')))
+    window.history.replaceState({}, '', url.pathname)
+  } else if (bind === 'failed' || errorMsg) {
+    theToast.error(errorMsg ? decodeURIComponent(errorMsg) : String(t('oauth2Setting.bindFailed')))
+    window.history.replaceState({}, '', url.pathname)
   }
 })
 </script>

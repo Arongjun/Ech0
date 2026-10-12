@@ -137,26 +137,22 @@ func (authRepository *AuthRepository) BindOAuth(
 		issuerVal = strings.TrimSpace(issuer)
 	}
 
-	var identity model.UserExternalIdentity
-	err := authRepository.getDB(ctx).
-		Where("user_id = ? AND provider = ? AND issuer = ? AND protocol = ?", userID, provider, issuerVal, protocol).
-		First(&identity).Error
-	if err == nil {
-		identity.Subject = oauthID
-		return authRepository.getDB(ctx).Save(&identity).Error
-	}
-	if err != gorm.ErrRecordNotFound {
+	db := authRepository.getDB(ctx)
+	if err := db.Where(
+		"(provider = ? AND subject = ? AND protocol = ? AND issuer = ?) OR (user_id = ? AND provider = ? AND protocol = ? AND issuer = ?)",
+		provider, oauthID, protocol, issuerVal, userID, provider, protocol, issuerVal,
+	).Delete(&model.UserExternalIdentity{}).Error; err != nil {
 		return err
 	}
 
-	identity = model.UserExternalIdentity{
+	identity := model.UserExternalIdentity{
 		UserID:   userID,
 		Provider: provider,
 		Subject:  oauthID,
 		Issuer:   issuerVal,
 		Protocol: protocol,
 	}
-	return authRepository.getDB(ctx).Create(&identity).Error
+	return db.Create(&identity).Error
 }
 
 func (authRepository *AuthRepository) GetUserByOAuthID(
@@ -166,11 +162,19 @@ func (authRepository *AuthRepository) GetUserByOAuthID(
 	var binding model.UserExternalIdentity
 	err := authRepository.getDB(ctx).
 		Where("provider = ? AND subject = ? AND protocol = ?", provider, oauthID, string(authModel.AuthTypeOAuth2)).
+		Order("id DESC").
 		First(&binding).Error
 	if err != nil {
 		return model.User{}, err
 	}
-	return authRepository.getUserByID(ctx, binding.UserID)
+	u, err := authRepository.getUserByID(ctx, binding.UserID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			_ = authRepository.getDB(ctx).Delete(&binding).Error
+		}
+		return model.User{}, err
+	}
+	return u, nil
 }
 
 func (authRepository *AuthRepository) GetUserByOIDC(
@@ -186,11 +190,19 @@ func (authRepository *AuthRepository) GetUserByOIDC(
 			issuer,
 			string(authModel.AuthTypeOIDC),
 		).
+		Order("id DESC").
 		First(&binding).Error
 	if err != nil {
 		return model.User{}, err
 	}
-	return authRepository.getUserByID(ctx, binding.UserID)
+	u, err := authRepository.getUserByID(ctx, binding.UserID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			_ = authRepository.getDB(ctx).Delete(&binding).Error
+		}
+		return model.User{}, err
+	}
+	return u, nil
 }
 
 func (authRepository *AuthRepository) GetOAuthInfo(

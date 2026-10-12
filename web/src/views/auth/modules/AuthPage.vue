@@ -287,6 +287,11 @@ onMounted(async () => {
     await userStore.loginWithCode(code)
     return
   }
+  const errorMsg = url.searchParams.get('error')
+  if (errorMsg) {
+    theToast.error(decodeURIComponent(errorMsg))
+    window.history.replaceState({}, '', url.pathname)
+  }
   await Promise.all([getOAuth2Status(), getPasskeyStatus()])
 })
 </script>

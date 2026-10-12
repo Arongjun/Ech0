@@ -548,8 +548,9 @@ const handleUnbindOAuth2 = () => {
           isBound.value = false
           oauthInfo.value = null
         }
-      } catch (err: any) {
-        theToast.error(err?.message || 'Unbind failed')
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err || 'Unbind failed')
+        theToast.error(message)
       }
     },
   })
@@ -577,12 +578,39 @@ const refreshHealthCheck = async () => {
 
 const handleAutoFillBoundary = () => {
   const currentOrigin = window.location.origin
-  if (!OAuth2Setting.value.auth_redirect_allowed_return_urls?.length) {
-    OAuth2Setting.value.auth_redirect_allowed_return_urls = [`${currentOrigin}/auth`]
+  let altOrigin = ''
+  try {
+    const u = new URL(currentOrigin)
+    const isWww = u.hostname.startsWith('www.')
+    const altHost = isWww ? u.hostname.replace(/^www\./, '') : `www.${u.hostname}`
+    altOrigin = `${u.protocol}//${altHost}${u.port ? `:${u.port}` : ''}`
+  } catch {
+    // ignore
   }
-  if (!OAuth2Setting.value.cors_allowed_origins?.length) {
-    OAuth2Setting.value.cors_allowed_origins = [currentOrigin]
+
+  const defaultUrls = [
+    `${currentOrigin}/auth`,
+    `${currentOrigin}/panel`,
+  ]
+  const defaultCors = [currentOrigin]
+
+  if (altOrigin) {
+    defaultUrls.push(`${altOrigin}/auth`, `${altOrigin}/panel`)
+    defaultCors.push(altOrigin)
   }
+
+  OAuth2Setting.value.auth_redirect_allowed_return_urls = Array.from(
+    new Set([
+      ...(OAuth2Setting.value.auth_redirect_allowed_return_urls || []),
+      ...defaultUrls,
+    ]),
+  )
+  OAuth2Setting.value.cors_allowed_origins = Array.from(
+    new Set([
+      ...(OAuth2Setting.value.cors_allowed_origins || []),
+      ...defaultCors,
+    ]),
+  )
 
   redirectAllowlistString.value = OAuth2Setting.value.auth_redirect_allowed_return_urls.join(', ')
   corsOriginsString.value = OAuth2Setting.value.cors_allowed_origins.join(', ')

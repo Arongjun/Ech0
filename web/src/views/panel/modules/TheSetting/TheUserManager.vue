@@ -181,8 +181,9 @@ const handleResetPasswordSubmit = async () => {
     } else {
       theToast.error(res.msg)
     }
-  } catch (err: any) {
-    theToast.error(err?.message || 'Failed to modify password')
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err || 'Failed to modify password')
+    theToast.error(message)
   } finally {
     resetSubmitting.value = false
   }

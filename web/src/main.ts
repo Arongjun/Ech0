@@ -45,7 +45,7 @@ const setStartupLoaderSiteTitle = (title: string) => {
       const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]')
       if (appleTitle) appleTitle.setAttribute('content', normalized)
     }
-  } catch (_) {
+  } catch {
     // Ignore DOM update errors
   }
 }
@@ -73,7 +73,7 @@ const clearStartupLoader = () => {
   loaderCleared = true
   try {
     appLoader?.remove()
-  } catch (_) {}
+  } catch {}
   document.documentElement.classList.remove('app-loading')
 }
 
@@ -85,7 +85,7 @@ const startLoaderFade = () => {
   window.requestAnimationFrame(() => {
     try {
       appLoader.classList.add('fade-out')
-    } catch (_) {}
+    } catch {}
   })
   appLoader.addEventListener('transitionend', clearStartupLoader, { once: true })
   window.setTimeout(clearStartupLoader, 600)

@@ -409,6 +409,9 @@ func (authService *AuthService) resolveOAuthCallback(
 				slog.String("result", "fail"),
 				slog.String("reason", "identity_not_bound_or_lookup_failed"),
 			)
+			if errors.Is(err, gorm.ErrRecordNotFound) || strings.Contains(strings.ToLower(err.Error()), "record not found") {
+				return "", fmt.Errorf("当前 %s 账号尚未绑定任何系统用户，请先使用密码登录并在管理后台绑定", strings.ToUpper(provider))
+			}
 			return "", err
 		}
 
@@ -502,6 +505,18 @@ func (authService *AuthService) resolveOAuthCallback(
 	}
 }
 
+func isHostEquivalent(rHost, aHost string) bool {
+	r := strings.ToLower(strings.TrimSpace(rHost))
+	a := strings.ToLower(strings.TrimSpace(aHost))
+	if r == a {
+		return true
+	}
+	if strings.TrimPrefix(r, "www.") == strings.TrimPrefix(a, "www.") {
+		return true
+	}
+	return false
+}
+
 func (authService *AuthService) parseAndValidateClientRedirect(redirect string) (*url.URL, error) {
 	redirectURL, err := url.Parse(redirect)
 	if err != nil || redirectURL == nil {
@@ -530,19 +545,33 @@ func (authService *AuthService) parseAndValidateClientRedirect(redirect string) 
 	if len(candidates) == 0 {
 		return nil, errors.New(commonModel.INVALID_PARAMS)
 	}
-	redirectNorm := strings.ToLower(redirectURL.Scheme) + "://" +
-		strings.ToLower(redirectURL.Host) +
-		redirectURL.Path
+
+	rHost := strings.ToLower(redirectURL.Host)
+	rPath := strings.TrimRight(redirectURL.Path, "/")
+	if rPath == "" {
+		rPath = "/"
+	}
+
 	matched := false
 	for _, item := range candidates {
 		allowURL, parseErr := url.Parse(strings.TrimSpace(item))
 		if parseErr != nil || allowURL == nil || allowURL.Host == "" {
 			continue
 		}
-		allowNorm := strings.ToLower(allowURL.Scheme) + "://" +
-			strings.ToLower(allowURL.Host) +
-			allowURL.Path
-		if redirectNorm == allowNorm {
+		if !strings.EqualFold(redirectURL.Scheme, allowURL.Scheme) {
+			continue
+		}
+		if !isHostEquivalent(rHost, allowURL.Host) {
+			continue
+		}
+
+		aPath := strings.TrimRight(allowURL.Path, "/")
+		if aPath == "" {
+			// Origin-level allowance matches any path on that host
+			matched = true
+			break
+		}
+		if rPath == aPath || (rPath == "/" && aPath == "") {
 			matched = true
 			break
 		}
@@ -562,8 +591,30 @@ func selfClientReturnURLs(oauthRedirectURI string) []string {
 	if u.Scheme != "http" && u.Scheme != "https" {
 		return nil
 	}
-	origin := u.Scheme + "://" + u.Host
-	return []string{origin + "/panel", origin + "/auth"}
+	scheme := strings.ToLower(u.Scheme)
+	host := strings.ToLower(u.Host)
+
+	hosts := []string{host}
+	if strings.HasPrefix(host, "www.") {
+		apex := strings.TrimPrefix(host, "www.")
+		if apex != "" {
+			hosts = append(hosts, apex)
+		}
+	} else {
+		hosts = append(hosts, "www."+host)
+	}
+
+	var returns []string
+	for _, h := range hosts {
+		origin := scheme + "://" + h
+		returns = append(returns,
+			origin+"/panel",
+			origin+"/auth",
+			origin+"/",
+			origin,
+		)
+	}
+	return returns
 }
 
 const passkeySessionTTL = 5 * time.Minute
@@ -1137,10 +1188,27 @@ func exchangeQQCodeForToken(
 	}
 
 	raw := strings.TrimSpace(string(body))
-	if strings.HasPrefix(raw, "callback(") && strings.HasSuffix(raw, ");") {
+	if strings.HasPrefix(raw, "callback(") {
 		raw = strings.TrimPrefix(raw, "callback(")
-		raw = strings.TrimSuffix(raw, ");")
+		raw = strings.TrimSuffix(raw, ";")
+		raw = strings.TrimSuffix(raw, ")")
+		raw = strings.TrimSuffix(raw, ";")
 		raw = strings.TrimSpace(raw)
+	}
+
+	var errResp struct {
+		Error            int    `json:"error"`
+		ErrorDescription string `json:"error_description"`
+		Ret              int    `json:"ret"`
+		Msg              string `json:"msg"`
+	}
+	if err := json.Unmarshal([]byte(raw), &errResp); err == nil {
+		if errResp.Error != 0 || errResp.ErrorDescription != "" {
+			return nil, fmt.Errorf("QQ 授权失败 [%d]: %s", errResp.Error, errResp.ErrorDescription)
+		}
+		if errResp.Ret != 0 && errResp.Msg != "" {
+			return nil, fmt.Errorf("QQ 授权失败 [%d]: %s", errResp.Ret, errResp.Msg)
+		}
 	}
 
 	var tokenResp authModel.QQTokenResponse
@@ -1183,20 +1251,36 @@ func fetchQQUserInfo(accessToken string) (*authModel.QQOpenIDResponse, error) {
 	raw := strings.TrimSpace(string(body))
 	if strings.HasPrefix(raw, "callback(") {
 		raw = strings.TrimPrefix(raw, "callback(")
-		raw = strings.TrimSuffix(raw, ");")
+		raw = strings.TrimSuffix(raw, ";")
 		raw = strings.TrimSuffix(raw, ")")
+		raw = strings.TrimSuffix(raw, ";")
 		raw = strings.TrimSpace(raw)
 	}
 
+	var openIDErrResp struct {
+		Error            int    `json:"error"`
+		ErrorDescription string `json:"error_description"`
+		Ret              int    `json:"ret"`
+		Msg              string `json:"msg"`
+	}
+	if err := json.Unmarshal([]byte(raw), &openIDErrResp); err == nil {
+		if openIDErrResp.Error != 0 || openIDErrResp.ErrorDescription != "" {
+			return nil, fmt.Errorf("QQ OpenID 获取失败 [%d]: %s", openIDErrResp.Error, openIDErrResp.ErrorDescription)
+		}
+		if openIDErrResp.Ret != 0 && openIDErrResp.Msg != "" {
+			return nil, fmt.Errorf("QQ OpenID 获取失败 [%d]: %s", openIDErrResp.Ret, openIDErrResp.Msg)
+		}
+	}
+
 	var openIDResp authModel.QQOpenIDResponse
-	if err := json.Unmarshal([]byte(raw), &openIDResp); err != nil {
-		return nil, errors.New("无法解析 QQ openid 响应: " + string(body))
+	if err := json.Unmarshal([]byte(raw), &openIDResp); err == nil && openIDResp.OpenID != "" {
+		return &openIDResp, nil
 	}
 	if openIDResp.OpenID == "" {
 		return nil, errors.New("QQ openid 为空: " + string(body))
 	}
 
-	return &openIDResp, nil
+	return nil, errors.New("无法解析 QQ openid 响应: " + string(body))
 }
 
 func exchangeCustomCodeForToken(
