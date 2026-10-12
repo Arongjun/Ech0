@@ -5,6 +5,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useInitStore } from '@/stores/init'
 import { useUserStore } from '@/stores/user'
 import { useEchoStore } from '@/stores/echo'
+import { localStg } from '@/utils/storage'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -187,12 +188,27 @@ const router = createRouter({
   ],
 })
 
+const withTimeout = <T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ])
+}
+
 router.beforeEach(async (to) => {
   const initStore = useInitStore()
   const userStore = useUserStore()
 
-  if (!initStore.ready) {
-    await initStore.init()
+  try {
+    if (!initStore.ready) {
+      await withTimeout(
+        initStore.init().catch(() => undefined),
+        2000,
+        undefined,
+      )
+    }
+  } catch (err) {
+    console.warn('[router] initStore.init failed in beforeEach:', err)
   }
 
   const isInitReady = initStore.initialized || initStore.ownerExists
@@ -205,21 +221,39 @@ router.beforeEach(async (to) => {
     return { name: 'auth' }
   }
 
-  if (!userStore.initialized) {
-    await userStore.init()
+  try {
+    if (!userStore.initialized) {
+      await withTimeout(
+        userStore.init().catch(() => undefined),
+        2000,
+        undefined,
+      )
+    }
+  } catch (err) {
+    console.warn('[router] userStore.init failed in beforeEach:', err)
   }
 
-  const needRedirect = localStorage.getItem('needLoginRedirect')
+  const needRedirect = localStg.getItem<boolean | string>('needLoginRedirect')
 
   if (
     (to.meta.requiresAuth && !userStore.isLogin) ||
-    (to.meta.optionalAuth && !userStore.isLogin && needRedirect === 'true')
+    (to.meta.optionalAuth &&
+      !userStore.isLogin &&
+      (needRedirect === true || needRedirect === 'true'))
   ) {
-    localStorage.removeItem('needLoginRedirect')
+    localStg.removeItem('needLoginRedirect')
     return { name: 'auth' }
   }
 
   return true
+})
+
+router.onError((error) => {
+  console.error('[router] Navigation error:', error)
+  if (typeof window !== 'undefined') {
+    const w = window as Window & { __ech0ReportError?: (e: unknown, ctx: string) => void }
+    w.__ech0ReportError?.(error, 'Router Navigation Error')
+  }
 })
 
 export default router

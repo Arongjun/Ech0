@@ -83,6 +83,7 @@ import {
   TheHeatMap,
   TheRecentCard,
 } from '@/components/advanced/widget'
+import { sessionStg } from '@/utils/storage'
 
 const route = useRoute()
 const TheEditor = defineAsyncComponent(() => import('./TheEditor.vue'))
@@ -143,7 +144,7 @@ const saveTimelineScrollPosition = () => {
   timelineScrollRaf = window.requestAnimationFrame(() => {
     timelineScrollRaf = null
     if (!mainColumn.value) return
-    sessionStorage.setItem(TIMELINE_SCROLL_KEY, String(mainColumn.value.scrollTop))
+    sessionStg.setItem(TIMELINE_SCROLL_KEY, String(mainColumn.value.scrollTop))
   })
 }
 
@@ -151,19 +152,19 @@ const saveWindowScrollPosition = () => {
   if (windowScrollRaf !== null) return
   windowScrollRaf = window.requestAnimationFrame(() => {
     windowScrollRaf = null
-    sessionStorage.setItem(WINDOW_SCROLL_KEY, String(window.scrollY))
+    sessionStg.setItem(WINDOW_SCROLL_KEY, String(window.scrollY))
   })
 }
 
 const restoreTimelineScrollPosition = () => {
   if (mainColumn.value) {
-    const raw = sessionStorage.getItem(TIMELINE_SCROLL_KEY)
+    const raw = sessionStg.getItem(TIMELINE_SCROLL_KEY)
     const scrollTop = raw ? Number(raw) : 0
     if (Number.isFinite(scrollTop) && scrollTop > 0) {
       mainColumn.value.scrollTop = scrollTop
     }
   }
-  const rawWindow = sessionStorage.getItem(WINDOW_SCROLL_KEY)
+  const rawWindow = sessionStg.getItem(WINDOW_SCROLL_KEY)
   const windowTop = rawWindow ? Number(rawWindow) : 0
   if (Number.isFinite(windowTop) && windowTop > 0) {
     window.scrollTo({ top: windowTop, behavior: 'auto' })

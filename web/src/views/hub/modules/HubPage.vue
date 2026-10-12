@@ -111,6 +111,7 @@ import { useBfCacheRestore } from '@/composables/useBfCacheRestore'
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
 import { getEchoFilesBy } from '@/utils/echo'
 import { useI18n } from 'vue-i18n'
+import { sessionStg } from '@/utils/storage'
 
 const props = withDefaults(
   defineProps<{
@@ -259,7 +260,7 @@ const onScrollForBackTop = () => {
   if (saveScrollTimer !== null) window.clearTimeout(saveScrollTimer)
   saveScrollTimer = window.setTimeout(() => {
     const { scrollTop } = getScrollMetrics()
-    sessionStorage.setItem(HUB_SCROLL_KEY, String(scrollTop))
+    sessionStg.setItem(HUB_SCROLL_KEY, String(scrollTop))
     saveScrollTimer = null
   }, 120)
 }
@@ -287,7 +288,7 @@ const unbindScrollListenerForBackTop = () => {
 }
 
 const restoreHubScrollPosition = () => {
-  const raw = sessionStorage.getItem(HUB_SCROLL_KEY)
+  const raw = sessionStg.getItem(HUB_SCROLL_KEY)
   if (!raw) return
   const scrollTop = Number(raw)
   if (!Number.isFinite(scrollTop) || scrollTop < 0) return
@@ -346,7 +347,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', schedulePositionUpdate)
   teardownSentinelObserver()
   unbindScrollListenerForBackTop()
-  sessionStorage.setItem(HUB_SCROLL_KEY, String(getScrollMetrics().scrollTop))
+  sessionStg.setItem(HUB_SCROLL_KEY, String(getScrollMetrics().scrollTop))
   if (saveScrollTimer !== null) {
     window.clearTimeout(saveScrollTimer)
     saveScrollTimer = null

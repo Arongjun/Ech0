@@ -23,7 +23,9 @@ export const LOCALE_OPTIONS = SUPPORTED_LOCALES.map((value) => ({
   label: LOCALE_ENDONYMS[value],
 }))
 
-const loadedLocales = new Set<string>()
+import zhCN from './messages/zh-CN.json'
+
+const loadedLocales = new Set<string>(['zh-CN'])
 
 const toSupported = (raw?: string | null): AppLocale | null => {
   const value = String(raw || '').trim()
@@ -45,7 +47,9 @@ const normalizeLocale = (raw?: string | null): AppLocale => toSupported(raw) ?? 
 
 const initialLocale =
   toSupported(localStg.getItem<string>(LOCALE_STORAGE_KEY)) ||
-  toSupported(navigator.languages?.[0] || navigator.language) ||
+  toSupported(
+    typeof navigator !== 'undefined' ? navigator.languages?.[0] || navigator.language : undefined,
+  ) ||
   FALLBACK_LOCALE
 
 export const i18n = createI18n({
@@ -56,30 +60,49 @@ export const i18n = createI18n({
   messages: {},
 })
 
+try {
+  i18n.global.setLocaleMessage('zh-CN', zhCN)
+} catch (e) {
+  console.warn('Failed to register initial zh-CN locale:', e)
+}
+
 async function loadLocaleMessages(locale: AppLocale) {
   if (loadedLocales.has(locale)) return
-  const messages = await import(`./messages/${locale}.json`)
-  i18n.global.setLocaleMessage(locale, messages.default)
-  loadedLocales.add(locale)
+  try {
+    const messages = await import(`./messages/${locale}.json`)
+    i18n.global.setLocaleMessage(locale, messages.default)
+    loadedLocales.add(locale)
+  } catch (err) {
+    console.warn(`[i18n] Failed to load locale ${locale}, fallback to zh-CN:`, err)
+  }
 }
 
 export async function setI18nLocale(locale: string): Promise<AppLocale> {
   const normalized = normalizeLocale(locale)
   await loadLocaleMessages(normalized)
   i18n.global.locale.value = normalized
-  document.documentElement.setAttribute('lang', normalized)
-  localStg.setItem(LOCALE_STORAGE_KEY, normalized)
+  try {
+    document.documentElement.setAttribute('lang', normalized)
+    localStg.setItem(LOCALE_STORAGE_KEY, normalized)
+  } catch {
+    // Ignore storage/attribute errors
+  }
   return normalized
 }
 
 export async function setupI18n(defaultLocale?: string) {
-  const fromStorage = localStg.getItem<string>(LOCALE_STORAGE_KEY)
-  const fromNavigator = navigator.languages?.[0] || navigator.language
-  const locale =
-    toSupported(fromStorage) ||
-    toSupported(fromNavigator) ||
-    toSupported(defaultLocale) ||
-    FALLBACK_LOCALE
-  await setI18nLocale(locale)
+  try {
+    const fromStorage = localStg.getItem<string>(LOCALE_STORAGE_KEY)
+    const fromNavigator =
+      typeof navigator !== 'undefined' ? navigator.languages?.[0] || navigator.language : undefined
+    const locale =
+      toSupported(fromStorage) ||
+      toSupported(fromNavigator) ||
+      toSupported(defaultLocale) ||
+      FALLBACK_LOCALE
+    await setI18nLocale(locale)
+  } catch (err) {
+    console.warn('[i18n] setupI18n fallback:', err)
+  }
   return i18n
 }

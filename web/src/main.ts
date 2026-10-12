@@ -15,8 +15,9 @@ import App from './App.vue'
 import router from './router'
 import { initStores } from './stores/store-init'
 import { useSettingStore } from './stores/setting'
+import { useThemeStore } from './stores/theme'
 import { useInitStore } from './stores/init'
-import { setupI18n } from './locales'
+import { i18n, setupI18n } from './locales'
 
 import BaseDialog from '@/components/common/BaseDialog.vue'
 
@@ -88,7 +89,7 @@ const startLoaderFade = () => {
     } catch {}
   })
   appLoader.addEventListener('transitionend', clearStartupLoader, { once: true })
-  window.setTimeout(clearStartupLoader, 600)
+  window.setTimeout(clearStartupLoader, 500)
 }
 
 async function bootstrap() {
@@ -100,54 +101,82 @@ async function bootstrap() {
 
     app.use(pinia)
 
-    await initStores().catch((e) => {
-      console.error('Failed to initialize stores:', e)
-    })
+    // Synchronously initialize theme styles immediately
+    try {
+      useThemeStore().init()
+    } catch (e) {
+      console.warn('Theme store init error:', e)
+    }
 
-    const settingStore = useSettingStore()
-    const initStore = useInitStore()
-    const startupLoaderSiteTitle = normalizeLoaderSiteTitle(
-      settingStore.SystemSetting.server_name,
-      settingStore.SystemSetting.site_title,
-    )
-    setStartupLoaderSiteTitle(startupLoaderSiteTitle)
-    cacheStartupLoaderSiteTitle(startupLoaderSiteTitle)
-    // 站点未完成初始化时跳过站点默认语言，让 navigator 检测生效，避免部署者第一次打开就被锁成 zh-CN。
-    const siteDefaultLocale = initStore.initialized
-      ? settingStore.SystemSetting.default_locale
-      : undefined
-    const i18n = await setupI18n(siteDefaultLocale).catch((e) => {
-      console.error('Failed to setup i18n:', e)
-      return undefined
+    // Register Vue runtime error handler
+    app.config.errorHandler = (err, instance, info) => {
+      console.error('[Vue Runtime Error]:', err, info)
+      if (typeof window !== 'undefined') {
+        const w = window as Window & { __ech0ReportError?: (e: unknown, ctx: string) => void }
+        w.__ech0ReportError?.(err, `Vue Error (${info})`)
+      }
+    }
+
+    // Initialize i18n
+    await setupI18n().catch((e) => {
+      console.warn('Failed to setup i18n:', e)
     })
+    app.use(i18n)
+
+    // FloatingVue plugin installation (safely wrapped)
+    try {
+      app.use(FloatingVue, {
+        themes: {
+          tooltip: {
+            triggers: ['hover'],
+            hideTriggers: ['hover', 'click', 'touch'],
+            placement: 'top',
+            delay: { show: 300, hide: 80 },
+            distance: 10,
+            container: 'body',
+            noAutoFocus: true,
+            autoHide: true,
+          },
+        },
+      })
+    } catch (e) {
+      console.warn('Failed to install FloatingVue:', e)
+    }
 
     app.use(router)
-    if (i18n) {
-      app.use(i18n)
-    }
-    app.use(FloatingVue, {
-      themes: {
-        tooltip: {
-          triggers: ['hover'],
-          hideTriggers: ['hover', 'click', 'touch'],
-          placement: 'top',
-          delay: { show: 300, hide: 80 },
-          distance: 10,
-          container: 'body',
-          noAutoFocus: true,
-          autoHide: true,
-        },
-      },
-    })
-
     app.component('BaseDialog', BaseDialog)
 
+    // Mount application
     app.mount('#app')
+
+    // Background store initialization - non-blocking
+    initStores()
+      .then(() => {
+        const settingStore = useSettingStore()
+        const initStore = useInitStore()
+        const startupLoaderSiteTitle = normalizeLoaderSiteTitle(
+          settingStore.SystemSetting.server_name,
+          settingStore.SystemSetting.site_title,
+        )
+        setStartupLoaderSiteTitle(startupLoaderSiteTitle)
+        cacheStartupLoaderSiteTitle(startupLoaderSiteTitle)
+
+        if (initStore.initialized && settingStore.SystemSetting.default_locale) {
+          setupI18n(settingStore.SystemSetting.default_locale).catch(() => undefined)
+        }
+      })
+      .catch((e) => {
+        console.warn('Background stores init failed:', e)
+      })
   } catch (err) {
     console.error('Failed to bootstrap application:', err)
+    if (typeof window !== 'undefined') {
+      const w = window as Window & { __ech0ReportError?: (e: unknown, ctx: string) => void }
+      w.__ech0ReportError?.(err, 'Bootstrap Error')
+    }
   } finally {
     const loaderTimeout = new Promise<void>((resolve) => {
-      window.setTimeout(resolve, 2000)
+      window.setTimeout(resolve, 800)
     })
     Promise.race([router.isReady().catch(() => undefined), loaderTimeout]).then(() => {
       startLoaderFade()

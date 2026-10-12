@@ -8,7 +8,7 @@ import { fetchAddEcho, fetchUpdateEcho } from '@/service/api'
 import { Mode, ExtensionType, ImageLayout, VideoLayout, AudioLayout } from '@/enums/enums'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { useEchoStore } from '@/stores'
-import { localStg } from '@/utils/storage'
+import { localStg, sessionStg } from '@/utils/storage'
 import { globalFileRegistry } from '@/lib/file'
 import { i18n } from '@/locales'
 import router from '@/router'
@@ -64,9 +64,7 @@ export const useEditorStore = defineStore('editorStore', () => {
     echoStore.searchValue = ''
     echoStore.filteredTag = null
     echoStore.isFilteringMode = false
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem(HOME_TIMELINE_SCROLL_KEY)
-    }
+    sessionStg.removeItem(HOME_TIMELINE_SCROLL_KEY)
   }
 
   const jumpToHomeTimeline = () => {
