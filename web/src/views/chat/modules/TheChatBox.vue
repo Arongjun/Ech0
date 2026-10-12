@@ -398,19 +398,13 @@ const autoGrow = () => {
 }
 
 const handleBlur = () => {
-  if (typeof window !== 'undefined') {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
-    document.documentElement.scrollTop = 0
-    document.body.scrollTop = 0
-  }
-}
-
-const handleViewportScroll = () => {
-  if (typeof window !== 'undefined' && window.scrollY !== 0) {
-    window.scrollTo(0, 0)
-    document.documentElement.scrollTop = 0
-    document.body.scrollTop = 0
-  }
+  setTimeout(() => {
+    if (typeof window !== 'undefined' && (window.scrollY !== 0 || window.scrollX !== 0)) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+    }
+  }, 120)
 }
 
 const goHome = () => router.push('/')
@@ -720,10 +714,6 @@ onMounted(async () => {
     send(q)
   }
 
-  if (typeof window !== 'undefined' && window.visualViewport) {
-    window.visualViewport.addEventListener('resize', handleViewportScroll)
-    window.visualViewport.addEventListener('scroll', handleViewportScroll)
-  }
 })
 
 watch(
@@ -738,10 +728,6 @@ watch(
 )
 
 onBeforeUnmount(() => {
-  if (typeof window !== 'undefined' && window.visualViewport) {
-    window.visualViewport.removeEventListener('resize', handleViewportScroll)
-    window.visualViewport.removeEventListener('scroll', handleViewportScroll)
-  }
   resizeObserver?.disconnect()
   resizeObserver = null
   scrollArea.value?.removeEventListener('scroll', onScroll)
@@ -761,6 +747,7 @@ onBeforeUnmount(() => {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
+  overscroll-behavior: none;
   background: var(--color-bg-canvas);
   color: var(--color-text-primary);
   display: flex;
@@ -1151,7 +1138,7 @@ onBeforeUnmount(() => {
   background: transparent;
   padding: 0.45rem 0;
   max-height: var(--composer-max);
-  font-size: 0.95rem;
+  font-size: 16px;
   line-height: 1.5;
   color: var(--color-text-primary);
   overflow-y: auto;
@@ -1355,7 +1342,7 @@ onBeforeUnmount(() => {
 
 @media (width <= 640px) {
   .chat-topbar {
-    padding: 0 0.85rem;
+    padding: env(safe-area-inset-top, 0px) 0.85rem 0;
   }
 
   .topbar-btn__label {

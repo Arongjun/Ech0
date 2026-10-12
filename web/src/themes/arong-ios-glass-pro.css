@@ -2247,6 +2247,10 @@ img.home-header__logo {
   box-shadow: none !important;
 }
 
+.composer__field {
+  font-size: 16px !important;
+}
+
 .understory__suggestion {
   border-radius: 9999px !important;
   padding: 0.35rem 0.85rem !important;
