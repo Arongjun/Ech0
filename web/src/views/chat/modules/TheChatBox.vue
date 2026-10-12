@@ -42,12 +42,7 @@
           <h1 class="chat-hero__title">{{ siteTitle }}</h1>
           <p class="chat-hero__subtitle">{{ t('chatPanel.suggestionsTitle') }}</p>
           <div class="chat-hero__suggestions">
-            <button
-              v-for="(s, i) in suggestions"
-              :key="i"
-              class="chat-hero__chip"
-              @click="send(s)"
-            >
+            <button v-for="(s, i) in suggestions" :key="i" class="chat-hero__chip" @click="send(s)">
               <span class="chat-hero__chip-sparkle">✦</span>
               <span class="chat-hero__chip-text">{{ s }}</span>
             </button>
@@ -151,12 +146,7 @@
       <!-- In-Conversation Quick Suggestion Chips -->
       <Transition name="chips-fade">
         <div v-if="!isEmpty && showSuggestions" class="chat-dock__chips">
-          <button
-            v-for="(s, i) in suggestions"
-            :key="i"
-            class="chat-dock__chip"
-            @click="send(s)"
-          >
+          <button v-for="(s, i) in suggestions" :key="i" class="chat-dock__chip" @click="send(s)">
             <span class="chat-dock__chip-sparkle">✦</span>
             <span class="chat-dock__chip-text">{{ s }}</span>
           </button>
@@ -713,7 +703,6 @@ onMounted(async () => {
     void router.replace({ query: {} })
     send(q)
   }
-
 })
 
 watch(
@@ -1094,7 +1083,9 @@ onBeforeUnmount(() => {
 
 .chips-fade-enter-active,
 .chips-fade-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .chips-fade-enter-from,
@@ -1116,13 +1107,20 @@ onBeforeUnmount(() => {
   border: 1px solid var(--ag-line, rgba(55, 48, 42, 0.1));
   border-radius: 28px;
   padding: 0.45rem 0.65rem 0.45rem 1.25rem;
-  box-shadow: 0 8px 30px rgba(40, 48, 62, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  transition: border-color 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+  box-shadow:
+    0 8px 30px rgba(40, 48, 62, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition:
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    background 0.22s ease;
 }
 
 .composer:focus-within {
   border-color: rgba(10, 132, 255, 0.45);
-  box-shadow: 0 10px 32px rgba(10, 132, 255, 0.12), 0 0 0 3px rgba(10, 132, 255, 0.14);
+  box-shadow:
+    0 10px 32px rgba(10, 132, 255, 0.12),
+    0 0 0 3px rgba(10, 132, 255, 0.14);
   background: #ffffff;
 }
 

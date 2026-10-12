@@ -188,27 +188,12 @@ const router = createRouter({
   ],
 })
 
-const withTimeout = <T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
-  ])
-}
-
 router.beforeEach(async (to) => {
   const initStore = useInitStore()
   const userStore = useUserStore()
 
-  try {
-    if (!initStore.ready) {
-      await withTimeout(
-        initStore.init().catch(() => undefined),
-        2000,
-        undefined,
-      )
-    }
-  } catch (err) {
-    console.warn('[router] initStore.init failed in beforeEach:', err)
+  if (!initStore.ready) {
+    await initStore.init().catch(() => undefined)
   }
 
   const isInitReady = initStore.initialized || initStore.ownerExists
@@ -221,16 +206,8 @@ router.beforeEach(async (to) => {
     return { name: 'auth' }
   }
 
-  try {
-    if (!userStore.initialized) {
-      await withTimeout(
-        userStore.init().catch(() => undefined),
-        2000,
-        undefined,
-      )
-    }
-  } catch (err) {
-    console.warn('[router] userStore.init failed in beforeEach:', err)
+  if (!userStore.initialized) {
+    await userStore.init().catch(() => undefined)
   }
 
   const needRedirect = localStg.getItem<boolean | string>('needLoginRedirect')
@@ -246,14 +223,6 @@ router.beforeEach(async (to) => {
   }
 
   return true
-})
-
-router.onError((error) => {
-  console.error('[router] Navigation error:', error)
-  if (typeof window !== 'undefined') {
-    const w = window as Window & { __ech0ReportError?: (e: unknown, ctx: string) => void }
-    w.__ech0ReportError?.(error, 'Router Navigation Error')
-  }
 })
 
 export default router

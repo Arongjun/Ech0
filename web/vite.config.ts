@@ -13,6 +13,18 @@ import viteCompression from 'vite-plugin-compression'
 import { fingerprintPlugin } from './src/plugins/fingerprint-plugin.ts'
 import { welcomePlugin } from './src/plugins/welcome-plugin.ts'
 
+function removeCrossoriginPlugin() {
+  return {
+    name: 'remove-crossorigin',
+    transformIndexHtml: {
+      order: 'post' as const,
+      handler(html: string) {
+        return html.replace(/ crossorigin(?:="[^"]*")?/g, '')
+      },
+    },
+  }
+}
+
 export default defineConfig(({ command }) => ({
   plugins: [
     vue({
@@ -31,6 +43,7 @@ export default defineConfig(({ command }) => ({
     }),
     fingerprintPlugin(),
     welcomePlugin(),
+    removeCrossoriginPlugin(),
   ],
   resolve: {
     alias: {

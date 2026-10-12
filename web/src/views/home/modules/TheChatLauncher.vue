@@ -38,11 +38,7 @@
           </div>
 
           <div class="chat-launcher__actions">
-            <button
-              type="button"
-              class="chat-launcher__history-btn"
-              @click="goToHistory"
-            >
+            <button type="button" class="chat-launcher__history-btn" @click="goToHistory">
               <svg
                 class="chat-launcher__history-icon"
                 xmlns="http://www.w3.org/2000/svg"

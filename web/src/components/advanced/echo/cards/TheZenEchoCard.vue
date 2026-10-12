@@ -57,11 +57,18 @@
       </template>
     </div>
 
-    <div class="mt-2.5 flex items-center justify-between gap-2 pt-2 border-t border-[var(--color-border-subtle)]/40">
-      <div class="min-w-0 truncate whitespace-nowrap text-xs text-[var(--color-text-muted)] font-medium">
+    <div
+      class="mt-2.5 flex items-center justify-between gap-2 pt-2 border-t border-[var(--color-border-subtle)]/40"
+    >
+      <div
+        class="min-w-0 truncate whitespace-nowrap text-xs text-[var(--color-text-muted)] font-medium"
+      >
         {{ formatDate(echo.created_at) }}
       </div>
-      <div v-if="echo.tags && echo.tags.length > 0" class="flex items-center gap-1.5 flex-wrap justify-end">
+      <div
+        v-if="echo.tags && echo.tags.length > 0"
+        class="flex items-center gap-1.5 flex-wrap justify-end"
+      >
         <span
           v-for="tag in echo.tags.slice(0, 3)"
           :key="tag.id"

@@ -70,11 +70,12 @@ func (webHandler *WebHandler) renderIndexHTML(subFS fs.FS, ctx *gin.Context) boo
 		htmlStr = strings.Replace(htmlStr, `<meta property="og:title" content="Ech0" />`, `<meta property="og:title" content="`+escaped+`" />`, 1)
 		htmlStr = strings.Replace(htmlStr, `<meta property="og:site_name" content="Ech0" />`, `<meta property="og:site_name" content="`+escaped+`" />`, 1)
 		htmlStr = strings.Replace(htmlStr, `<meta name="twitter:title" content="Ech0" />`, `<meta name="twitter:title" content="`+escaped+`" />`, 1)
-		htmlStr = strings.Replace(htmlStr, `<h1 id="app-loader-brand" class="loader-brand">Ech0</h1>`, `<h1 id="app-loader-brand" class="loader-brand">`+escaped+`</h1>`, 1)
+		htmlStr = strings.Replace(htmlStr, `<h1 class="loader-brand">Ech0</h1>`, `<h1 class="loader-brand">`+escaped+`</h1>`, 1)
 	}
 	webHandler.visitorTracker.Record(ctx.Request, ctx.ClientIP())
 	ctx.Header("Content-Type", "text/html; charset=utf-8")
 	setNoStoreHeaders(ctx)
+	setStaticCorsHeaders(ctx)
 	ctx.Data(http.StatusOK, "text/html; charset=utf-8", []byte(htmlStr))
 	return true
 }
@@ -92,6 +93,7 @@ func (webHandler *WebHandler) renderManifest(subFS fs.FS, ctx *gin.Context) bool
 		manifestStr = strings.Replace(manifestStr, `"short_name": "Ech0"`, `"short_name": `+string(titleBytes), 1)
 	}
 	setNoStoreHeaders(ctx)
+	setStaticCorsHeaders(ctx)
 	ctx.Data(http.StatusOK, "application/manifest+json", []byte(manifestStr))
 	return true
 }
@@ -104,6 +106,12 @@ func (webHandler *WebHandler) Templates() gin.HandlerFunc {
 		requestPath := ctx.Request.URL.Path
 		if shouldBypassSPAFallback(requestPath) {
 			ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "not found"})
+			return
+		}
+
+		if ctx.Request.Method == http.MethodOptions {
+			setStaticCorsHeaders(ctx)
+			ctx.Status(http.StatusNoContent)
 			return
 		}
 
@@ -129,6 +137,7 @@ func (webHandler *WebHandler) Templates() gin.HandlerFunc {
 		f, err := fileServer.Open(fullPath)
 		if err != nil {
 			if isStaticAsset(requestPath) {
+				setStaticCorsHeaders(ctx)
 				ctx.Status(http.StatusNotFound)
 				return
 			}
@@ -144,7 +153,8 @@ func (webHandler *WebHandler) Templates() gin.HandlerFunc {
 			fallbackStat, _ := fallback.Stat()
 			webHandler.visitorTracker.Record(ctx.Request, ctx.ClientIP())
 			ctx.Header("Content-Type", "text/html; charset=utf-8")
-			setCacheControlHeader(ctx, "/index.html")
+			setNoStoreHeaders(ctx)
+			setStaticCorsHeaders(ctx)
 			http.ServeContent(
 				ctx.Writer,
 				ctx.Request,
@@ -168,6 +178,7 @@ func (webHandler *WebHandler) Templates() gin.HandlerFunc {
 				ctx.Header("Content-Encoding", "gzip")
 				ctx.Header("Content-Type", getMimeType(fullPath))
 				setCacheControlHeader(ctx, requestPath)
+				setStaticCorsHeaders(ctx)
 				http.ServeContent(ctx.Writer, ctx.Request, gzPath, stat.ModTime(), gzFile)
 				return
 			}
@@ -175,11 +186,18 @@ func (webHandler *WebHandler) Templates() gin.HandlerFunc {
 
 		ctx.Header("Content-Type", getMimeType(fullPath))
 		setCacheControlHeader(ctx, requestPath)
+		setStaticCorsHeaders(ctx)
 		if requestPath == "/index.html" {
 			webHandler.visitorTracker.Record(ctx.Request, ctx.ClientIP())
 		}
 		http.ServeContent(ctx.Writer, ctx.Request, fullPath, stat.ModTime(), f)
 	}
+}
+
+func setStaticCorsHeaders(ctx *gin.Context) {
+	ctx.Header("Access-Control-Allow-Origin", "*")
+	ctx.Header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
+	ctx.Header("Access-Control-Allow-Headers", "*")
 }
 
 func setCacheControlHeader(ctx *gin.Context, requestPath string) {
@@ -218,7 +236,37 @@ func isStaticAsset(requestPath string) bool {
 }
 
 func getMimeType(path string) string {
-	ext := filepath.Ext(path)
+	ext := strings.ToLower(filepath.Ext(path))
+	switch ext {
+	case ".js", ".mjs":
+		return "text/javascript; charset=utf-8"
+	case ".css":
+		return "text/css; charset=utf-8"
+	case ".json", ".map":
+		return "application/json; charset=utf-8"
+	case ".webmanifest":
+		return "application/manifest+json"
+	case ".svg":
+		return "image/svg+xml"
+	case ".woff2":
+		return "font/woff2"
+	case ".woff":
+		return "font/woff"
+	case ".ttf":
+		return "font/ttf"
+	case ".ico":
+		return "image/x-icon"
+	case ".png":
+		return "image/png"
+	case ".jpg", ".jpeg":
+		return "image/jpeg"
+	case ".webp":
+		return "image/webp"
+	case ".gif":
+		return "image/gif"
+	case ".html", ".htm":
+		return "text/html; charset=utf-8"
+	}
 	mimeType := mime.TypeByExtension(ext)
 	if mimeType == "" {
 		mimeType = "application/octet-stream"

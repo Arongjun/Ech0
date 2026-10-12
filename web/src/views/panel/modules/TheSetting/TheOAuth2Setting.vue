@@ -588,10 +588,7 @@ const handleAutoFillBoundary = () => {
     // ignore
   }
 
-  const defaultUrls = [
-    `${currentOrigin}/auth`,
-    `${currentOrigin}/panel`,
-  ]
+  const defaultUrls = [`${currentOrigin}/auth`, `${currentOrigin}/panel`]
   const defaultCors = [currentOrigin]
 
   if (altOrigin) {
@@ -600,16 +597,10 @@ const handleAutoFillBoundary = () => {
   }
 
   OAuth2Setting.value.auth_redirect_allowed_return_urls = Array.from(
-    new Set([
-      ...(OAuth2Setting.value.auth_redirect_allowed_return_urls || []),
-      ...defaultUrls,
-    ]),
+    new Set([...(OAuth2Setting.value.auth_redirect_allowed_return_urls || []), ...defaultUrls]),
   )
   OAuth2Setting.value.cors_allowed_origins = Array.from(
-    new Set([
-      ...(OAuth2Setting.value.cors_allowed_origins || []),
-      ...defaultCors,
-    ]),
+    new Set([...(OAuth2Setting.value.cors_allowed_origins || []), ...defaultCors]),
   )
 
   redirectAllowlistString.value = OAuth2Setting.value.auth_redirect_allowed_return_urls.join(', ')

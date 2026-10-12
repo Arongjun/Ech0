@@ -358,7 +358,7 @@ watch(showSearchTrigger, (visible) => {
     transform: scale(1.06);
   }
 
-  .home-sidebar-nav__search-trigger[aria-expanded="true"] {
+  .home-sidebar-nav__search-trigger[aria-expanded='true'] {
     background: #ffffff;
     color: var(--ag-blue, #007aff);
     border-color: rgba(0, 122, 255, 0.35);

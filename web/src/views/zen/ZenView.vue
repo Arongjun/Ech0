@@ -245,7 +245,9 @@ onBeforeUnmount(() => {
   border: 1px solid var(--ag-line);
   border-radius: 9999px;
   box-shadow: var(--ag-shadow);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .zen-view__pill-logo {

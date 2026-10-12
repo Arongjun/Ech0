@@ -9,6 +9,7 @@ const SOURCE_EXTENSIONS = new Set(['.vue', '.ts', '.tsx', '.js', '.jsx', '.mjs',
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'coverage', '.git'])
 const DYNAMIC_KEY_FIELDS = ['labelKey', 'titleKey', 'textKey', 'i18nKey', 'tooltipKey']
 const ALLOW_UNUSED_PREFIXES = [
+  'about.',
 ]
 const ALLOW_UNUSED_KEYS = new Set([
 ])

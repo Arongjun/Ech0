@@ -8,7 +8,9 @@
       </h1>
 
       <div class="flex flex-row items-center justify-between gap-2 mb-5">
-        <div class="inline-flex gap-1 p-1 bg-[var(--color-bg-muted)] rounded-xl border border-[var(--color-border-subtle)]/60">
+        <div
+          class="inline-flex gap-1 p-1 bg-[var(--color-bg-muted)] rounded-xl border border-[var(--color-border-subtle)]/60"
+        >
           <button
             type="button"
             class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all"
