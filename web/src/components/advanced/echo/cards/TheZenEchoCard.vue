@@ -17,7 +17,7 @@
           <h2
             class="text-[var(--color-text-primary)] font-bold overflow-hidden whitespace-nowrap truncate"
           >
-            {{ siteName }}
+            {{ authorName }}
           </h2>
         </div>
       </div>
@@ -115,6 +115,9 @@ const settingStore = useSettingStore()
 const { SystemSetting } = storeToRefs(settingStore)
 
 const siteName = computed(() => String(SystemSetting.value?.server_name ?? 'Ech0'))
+const authorName = computed(() => {
+  return props.echo.user?.username || props.echo.username || siteName.value
+})
 const avatarUrl = computed(() => {
   if (props.echo.user?.avatar) {
     return resolveAvatarUrl(props.echo.user.avatar)

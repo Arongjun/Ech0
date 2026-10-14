@@ -11,30 +11,14 @@
         class="w-10 h-10 sm:w-12 sm:h-12 rounded-full ring-1 ring-[var(--color-border-subtle)] shadow-[var(--shadow-sm)] object-cover"
         @error="handleAvatarError"
       />
-      <div class="flex flex-col min-w-0">
-        <div class="flex items-center gap-1 min-w-0">
-          <h2
-            class="text-[var(--color-text-primary)] font-bold overflow-hidden whitespace-nowrap text-ellipsis"
-            :title="displayAuthorName"
-          >
-            {{ displayAuthorName }}
-          </h2>
-          <Verified class="text-sky-500 w-5 h-5 flex-shrink-0" />
-        </div>
-        <div
-          class="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] min-w-0 truncate"
+      <div class="flex items-center gap-1 min-w-0">
+        <h2
+          class="text-[var(--color-text-primary)] font-bold overflow-hidden whitespace-nowrap text-ellipsis"
+          :title="displayAuthorName"
         >
-          <span v-if="echo.username" class="echo-username">@ {{ echo.username }}</span>
-          <span v-if="echo.username && SystemSetting.server_name" class="opacity-40">·</span>
-          <span
-            v-if="SystemSetting.server_name"
-            class="echo-site-tag font-serif flex items-center gap-0.5 truncate"
-            :title="SystemSetting.server_name"
-          >
-            <span>🌐</span>
-            <span>{{ SystemSetting.server_name }}</span>
-          </span>
-        </div>
+          {{ displayAuthorName }}
+        </h2>
+        <Verified class="text-sky-500 w-5 h-5 flex-shrink-0" />
       </div>
       <button
         type="button"
@@ -189,9 +173,5 @@ const goBack = () => {
 
 .echo-detail-body :deep(.image-gallery-container > div) {
   width: 100%;
-}
-
-.echo-username {
-  font-family: var(--font-family-display);
 }
 </style>
