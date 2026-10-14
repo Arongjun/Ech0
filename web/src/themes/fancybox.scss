@@ -125,14 +125,32 @@
 }
 
 /* Thumbs container & slides */
-.fancybox__thumbs {
+.fancybox__thumbs,
+.f-thumbs {
+  flex: 0 0 auto !important;
+  width: 100%;
+  max-height: calc(var(--f-thumb-height, 64px) + var(--f-thumbs-padding-y, 12px) * 2 + 16px);
   background: linear-gradient(to top, rgb(0 0 0 / 55%) 0%, rgb(0 0 0 / 0%) 100%);
   padding-bottom: max(12px, env(safe-area-inset-bottom));
   z-index: 30;
+  transition:
+    max-height 0.3s ease,
+    padding 0.3s ease,
+    opacity 0.3s ease;
 }
 
-.fancybox__container[theme='light'] .fancybox__thumbs {
+.fancybox__container[theme='light'] .fancybox__thumbs,
+.fancybox__container[theme='light'] .f-thumbs {
   background: linear-gradient(to top, rgb(255 255 255 / 65%) 0%, rgb(255 255 255 / 0%) 100%);
+}
+
+.fancybox__thumbs.is-hidden,
+.f-thumbs.is-hidden {
+  max-height: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 .f-thumbs__slide {
@@ -150,11 +168,16 @@
 }
 
 .f-thumbs__slide button {
+  width: 100%;
+  height: 100%;
   border-radius: 8px;
   overflow: hidden;
 }
 
 .f-thumbs__slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   border-radius: 8px;
 }
 

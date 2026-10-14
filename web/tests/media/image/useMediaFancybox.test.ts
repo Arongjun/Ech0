@@ -53,6 +53,7 @@ describe('useMediaFancybox', () => {
     expect(slides[0]).toMatchObject({
       src: 'https://example.com/1.jpg',
       thumb: 'https://example.com/1-thumb.jpg',
+      thumbSrc: 'https://example.com/1-thumb.jpg',
       alt: 'Pic 1',
       type: 'image',
     })
@@ -76,6 +77,7 @@ describe('useMediaFancybox', () => {
     ])
     expect(options.Carousel?.Thumbs?.type).toBe('classic')
     expect(options.Carousel?.Thumbs?.showOnStart).toBe(true)
+    expect(options.Carousel?.Thumbs?.minCount).toBe(1)
     expect(options.dragToClose).toBe(true)
     expect(options.hideScrollbar).toBe(false)
   })
@@ -179,6 +181,7 @@ describe('useMediaFancybox', () => {
     const [slides] = mockFancyboxShow.mock.calls[0] as [Array<Record<string, unknown>>]
     expect(slides[0].type).toBe('html')
     expect(slides[0].class).toBe('has-livephoto')
+    expect(slides[0].thumbSrc).toBe('https://example.com/live-thumb.png')
     expect(String(slides[0].html)).toContain('fancybox-livephoto-container')
     expect(String(slides[0].html)).toContain('https://example.com/live.mov')
     expect(String(slides[0].html)).toContain('https://example.com/live.png')

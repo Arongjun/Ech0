@@ -58,7 +58,7 @@
   grid-area: media-stack;
   display: block;
   max-width: 100%;
-  max-height: 80vh;
+  max-height: min(75vh, calc(100vh - 180px));
   width: auto;
   height: auto;
   object-fit: contain;

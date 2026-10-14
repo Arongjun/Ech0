@@ -11,6 +11,8 @@ import {
 } from '@fancyapps/ui'
 import { i18n } from '@/locales'
 import '@fancyapps/ui/dist/fancybox/fancybox.css'
+import '@fancyapps/ui/dist/carousel/carousel.css'
+import '@fancyapps/ui/dist/carousel/carousel.thumbs.css'
 import '@/styles/fancybox-livephoto.css'
 
 export interface MediaGalleryItem {
@@ -395,6 +397,7 @@ export function useMediaFancybox(
         const slide: Partial<CarouselSlide> = {
           src,
           thumb,
+          thumbSrc: thumb,
           caption,
           alt,
           width: item.width,
@@ -412,6 +415,7 @@ export function useMediaFancybox(
       const slide: Partial<CarouselSlide> = {
         src,
         thumb,
+        thumbSrc: thumb,
         caption,
         alt,
         width: item.width,
@@ -434,7 +438,7 @@ export function useMediaFancybox(
 
     const thumbsType = options?.thumbsType || 'classic'
     const showThumbs = options?.showThumbsOnStart ?? true
-    const minThumbsCount = options?.minThumbsCount ?? (slides.length > 1 ? 1 : 2)
+    const minThumbsCount = options?.minThumbsCount ?? 1
 
     try {
       const fancyboxOptions: Partial<FancyboxOptions> = {
