@@ -39,7 +39,18 @@ export async function detectEmbeddedMotionPhoto(file: File): Promise<{
   uint8Array?: Uint8Array
 }> {
   try {
-    if (!file.type.startsWith('image/jpeg') && !file.name.toLowerCase().endsWith('.jpg')) {
+    const lowerName = file.name.toLowerCase()
+    const isJpeg =
+      file.type.startsWith('image/jpeg') ||
+      lowerName.endsWith('.jpg') ||
+      lowerName.endsWith('.jpeg')
+    const isHeic =
+      file.type === 'image/heic' ||
+      file.type === 'image/heif' ||
+      lowerName.endsWith('.heic') ||
+      lowerName.endsWith('.heif')
+
+    if (!isJpeg && !isHeic) {
       return { isEmbedded: false }
     }
 
@@ -92,14 +103,22 @@ export async function separateEmbeddedMotionPhoto(
 
     const videoStartPos = ftypPos - MP4_BOX_HEADER_SIZE
     const imageData = fileData.slice(0, videoStartPos)
-    const imageBlob = new Blob([imageData], { type: 'image/jpeg' })
+    const lowerName = file.name.toLowerCase()
+    const isHeic =
+      file.type === 'image/heic' ||
+      file.type === 'image/heif' ||
+      lowerName.endsWith('.heic') ||
+      lowerName.endsWith('.heif')
+    const imageType = isHeic ? 'image/heic' : 'image/jpeg'
+    const imageExt = isHeic ? 'heic' : 'jpg'
 
+    const imageBlob = new Blob([imageData], { type: imageType })
     const videoData = fileData.slice(videoStartPos)
     const videoBlob = new Blob([videoData], { type: 'video/mp4' })
 
     const originalName = file.name.replace(/\.[^/.]+$/, '')
-    const imageFile = new File([imageBlob], `${originalName}.jpg`, {
-      type: 'image/jpeg',
+    const imageFile = new File([imageBlob], `${originalName}.${imageExt}`, {
+      type: imageType,
       lastModified: file.lastModified,
     })
     const videoFile = new File([videoBlob], `${originalName}.mp4`, {

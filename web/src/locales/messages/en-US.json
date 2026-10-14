@@ -133,6 +133,7 @@
     "convertingHeic": "Converting HEIC photo...",
     "convertHeicSuccess": "HEIC photo converted successfully",
     "convertHeicFailed": "Failed to convert HEIC, uploading original",
+    "embeddedMotionSeparated": "Motion photo detected, live video extracted automatically",
     "restoreDraftTitle": "Restore local draft",
     "restoreDraftDesc": "An unpublished local draft was detected. Restore it?",
     "restoreDraftRecovered": "Local draft restored",

@@ -11,6 +11,12 @@ import { formatBytes } from '@/utils/file'
 import { getImageSize } from '@/utils/image'
 import { compressImage, inferFileExtFromType } from './compress'
 import { convertHeicFilesIfNeeded } from './heic'
+import {
+  detectEmbeddedMotionPhoto,
+  separateEmbeddedMotionPhoto,
+  detectLivePhotoPairs,
+  generatePairId,
+} from '@/utils/livephoto'
 import { getPresign, updateFileMeta } from './api/adapter'
 import { globalFileRegistry } from './registry/file-registry'
 import { httpUpload, UPLOAD_KIND } from './upload'
@@ -44,6 +50,25 @@ function pickField(obj: Record<string, unknown>, keys: readonly string[]): strin
   return ''
 }
 
+export function resolveItemCategory(
+  file: File,
+  fallbackCategory: App.Api.File.Category,
+): App.Api.File.Category {
+  if (file.type.startsWith('video/')) return FILE_CATEGORY.VIDEO
+  const lower = file.name.toLowerCase()
+  if (
+    lower.endsWith('.mov') ||
+    lower.endsWith('.mp4') ||
+    lower.endsWith('.webm') ||
+    lower.endsWith('.ogg')
+  ) {
+    return FILE_CATEGORY.VIDEO
+  }
+  if (file.type.startsWith('audio/')) return FILE_CATEGORY.AUDIO
+  if (file.type.startsWith('image/')) return FILE_CATEGORY.IMAGE
+  return fallbackCategory
+}
+
 export interface QueueItem {
   id: string
   file: File
@@ -57,6 +82,7 @@ export interface QueueItem {
   result?: App.Api.Ech0.FileToAdd
   abort?: AbortController
   delivered?: boolean
+  livePairId?: string
 }
 
 export interface UseUploadOptions {
@@ -116,8 +142,11 @@ export function useUpload(opts: UseUploadOptions) {
       if (
         lower.endsWith('.heic') ||
         lower.endsWith('.heif') ||
+        lower.endsWith('.mov') ||
+        lower.endsWith('.mp4') ||
         file.type === 'image/heic' ||
-        file.type === 'image/heif'
+        file.type === 'image/heif' ||
+        file.type.startsWith('video/')
       ) {
         return true
       }
@@ -137,28 +166,90 @@ export function useUpload(opts: UseUploadOptions) {
       return
     }
 
-    const processedFiles = await convertHeicFilesIfNeeded(
-      files,
+    // 1. Detect and separate embedded motion photos (e.g. from mobile devices)
+    const separatedFiles: { file: File; livePairId?: string }[] = []
+    let detectedEmbeddedCount = 0
+    for (const file of files) {
+      if (category === FILE_CATEGORY.IMAGE) {
+        const detection = await detectEmbeddedMotionPhoto(file)
+        if (detection.isEmbedded) {
+          const result = await separateEmbeddedMotionPhoto(
+            file,
+            detection.ftypPosition,
+            detection.uint8Array,
+          )
+          if (result) {
+            detectedEmbeddedCount++
+            const pairId = generatePairId()
+            separatedFiles.push({ file: result.imageFile, livePairId: pairId })
+            separatedFiles.push({ file: result.videoFile, livePairId: pairId })
+            continue
+          }
+        }
+      }
+      separatedFiles.push({ file })
+    }
+
+    if (detectedEmbeddedCount > 0) {
+      theToast.info(String(t('editor.embeddedMotionSeparated')))
+    }
+
+    // 2. Convert HEIC images if needed, preserving pair mapping
+    const rawFilesToConvert = separatedFiles.map((s) => s.file)
+    const convertedFiles = await convertHeicFilesIfNeeded(
+      rawFilesToConvert,
       () => theToast.info(String(t('editor.convertingHeic'))),
       () => theToast.success(String(t('editor.convertHeicSuccess'))),
       () => theToast.warning(String(t('editor.convertHeicFailed'))),
     )
+    const readyFiles: { file: File; livePairId?: string }[] = convertedFiles.map((f, idx) => ({
+      file: f,
+      livePairId: separatedFiles[idx]?.livePairId,
+    }))
 
+    // 3. Detect pairs for dual-selected files (e.g. IMG_0001.jpg/heic and IMG_0001.mov)
+    if (category === FILE_CATEGORY.IMAGE) {
+      const unassigned = readyFiles.filter((item) => !item.livePairId)
+      if (unassigned.length >= 2) {
+        const pairs = detectLivePhotoPairs(unassigned.map((u) => u.file))
+        for (const pair of pairs) {
+          const imgItem = unassigned[pair.imageIndex]
+          const vidItem = unassigned[pair.videoIndex]
+          if (imgItem && vidItem) {
+            imgItem.livePairId = pair.pairId
+            vidItem.livePairId = pair.pairId
+          }
+        }
+      }
+    }
+
+    // 4. Enqueue files
     const existingIds = new Set(items.value.map((i) => i.id))
     let remaining = Math.max(0, maxFiles - liveCount())
     let rejected = false
     const oversized: string[] = []
 
-    for (const file of processedFiles) {
-      if (remaining <= 0) {
-        rejected = true
-        break
-      }
+    for (const { file, livePairId } of readyFiles) {
       if (!isAllowed(file)) continue
       if (maxFileSize != null && file.size > maxFileSize) {
         oversized.push(file.name)
         continue
       }
+
+      const isCompanionVideo =
+        Boolean(livePairId) &&
+        (file.type.startsWith('video/') ||
+          file.name.toLowerCase().endsWith('.mov') ||
+          file.name.toLowerCase().endsWith('.mp4'))
+
+      if (!isCompanionVideo) {
+        if (remaining <= 0) {
+          rejected = true
+          break
+        }
+        remaining--
+      }
+
       const id = genId(file)
       if (existingIds.has(id)) continue
       existingIds.add(id)
@@ -171,8 +262,8 @@ export function useUpload(opts: UseUploadOptions) {
         status: UPLOAD_STATUS.PENDING,
         progress: 0,
         preview: URL.createObjectURL(file),
+        livePairId,
       })
-      remaining--
     }
 
     if (rejected) {
@@ -279,6 +370,7 @@ export function useUpload(opts: UseUploadOptions) {
     item: QueueItem,
     signal: AbortSignal,
   ): Promise<App.Api.Ech0.FileToAdd> {
+    const itemCategory = resolveItemCategory(file, category)
     const res = await httpUpload(
       file,
       {
@@ -286,7 +378,7 @@ export function useUpload(opts: UseUploadOptions) {
         endpoint: `${backendURL}/api/files/upload`,
         authHeader: authStore.authHeader,
         fields: {
-          category,
+          category: itemCategory,
           storage_type: FILE_STORAGE_TYPE.LOCAL,
         },
       },
@@ -314,7 +406,8 @@ export function useUpload(opts: UseUploadOptions) {
       size: typeof payload.size === 'number' ? payload.size : file.size,
       width: typeof payload.width === 'number' ? payload.width : undefined,
       height: typeof payload.height === 'number' ? payload.height : undefined,
-      category,
+      category: itemCategory,
+      live_pair_id: item.livePairId,
     }
   }
 
@@ -323,6 +416,7 @@ export function useUpload(opts: UseUploadOptions) {
     item: QueueItem,
     signal: AbortSignal,
   ): Promise<App.Api.Ech0.FileToAdd> {
+    const itemCategory = resolveItemCategory(file, category)
     const contentType = file.type || 'application/octet-stream'
     const rawName = String(file.name || '').trim()
     const fileName = rawName || `upload_${Date.now()}${inferFileExtFromType(contentType)}`
@@ -352,7 +446,7 @@ export function useUpload(opts: UseUploadOptions) {
 
     let width: number | undefined
     let height: number | undefined
-    if (category === FILE_CATEGORY.IMAGE) {
+    if (itemCategory === FILE_CATEGORY.IMAGE) {
       try {
         const dim = await getImageSize(item.preview)
         width = dim.width
@@ -390,7 +484,8 @@ export function useUpload(opts: UseUploadOptions) {
       size: resolvedSize,
       width: resolvedWidth,
       height: resolvedHeight,
-      category,
+      category: itemCategory,
+      live_pair_id: item.livePairId,
     }
   }
 

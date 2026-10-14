@@ -220,9 +220,9 @@ const acceptedTypes = computed<string[]>(() => {
     case FILE_CATEGORY.AUDIO:
       return ['audio/*']
     case FILE_CATEGORY.VIDEO:
-      return ['video/mp4']
+      return ['video/mp4', 'video/quicktime', '.mov', '.mp4']
     default:
-      return ['image/*']
+      return ['image/*', 'video/*', '.heic', '.heif', '.mov', '.mp4']
   }
 })
 const maxFileSize = computed<number>(() => {
@@ -232,7 +232,7 @@ const maxFileSize = computed<number>(() => {
     case FILE_CATEGORY.VIDEO:
       return VIDEO_MAX_FILE_SIZE
     default:
-      return IMAGE_MAX_FILE_SIZE
+      return Math.max(IMAGE_MAX_FILE_SIZE, VIDEO_MAX_FILE_SIZE)
   }
 })
 

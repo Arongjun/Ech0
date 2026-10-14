@@ -162,6 +162,7 @@ export const useEditorStore = defineStore('editorStore', () => {
         is_live_photo: file.is_live_photo,
         live_video_id: file.live_video_id,
         live_video_url: file.live_video_url,
+        live_pair_id: file.live_pair_id,
       }
       await files.handleAddMoreFile()
     }

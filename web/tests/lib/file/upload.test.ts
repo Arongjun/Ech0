@@ -176,3 +176,20 @@ describe('httpUpload — abort', () => {
     ).rejects.toMatchObject({ name: 'AbortError' })
   })
 })
+
+describe('resolveItemCategory', () => {
+  it('detects video category for video files and extensions', async () => {
+    const { resolveItemCategory } = await import('../../../src/lib/file/useUpload')
+    const movFile = new File(['mov'], 'IMG_0001.MOV', { type: '' })
+    const mp4File = new File(['mp4'], 'clip.mp4', { type: 'video/mp4' })
+    const webmFile = new File(['webm'], 'video.webm', { type: '' })
+    const imgFile = new File(['img'], 'IMG_0001.jpg', { type: 'image/jpeg' })
+    const audioFile = new File(['audio'], 'music.mp3', { type: 'audio/mpeg' })
+
+    expect(resolveItemCategory(movFile, 'image')).toBe('video')
+    expect(resolveItemCategory(mp4File, 'image')).toBe('video')
+    expect(resolveItemCategory(webmFile, 'image')).toBe('video')
+    expect(resolveItemCategory(imgFile, 'video')).toBe('image')
+    expect(resolveItemCategory(audioFile, 'image')).toBe('audio')
+  })
+})

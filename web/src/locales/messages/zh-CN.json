@@ -133,6 +133,7 @@
     "convertingHeic": "正在转换 HEIC 图片格式...",
     "convertHeicSuccess": "HEIC 图片转换完成",
     "convertHeicFailed": "HEIC 格式转换失败，将尝试上传原图",
+    "embeddedMotionSeparated": "检测到动态照片，已自动分离实况视频",
     "restoreDraftTitle": "恢复本地草稿",
     "restoreDraftDesc": "检测到你有未发布的本地草稿，是否恢复？",
     "restoreDraftRecovered": "已恢复本地草稿",

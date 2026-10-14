@@ -73,5 +73,43 @@ describe('livephoto', () => {
     const regularPhoto = imageFiles.find((f) => f.id === 'p2')
     expect(regularPhoto?.is_live_photo).toBe(false)
   })
+
+  it('detects and separates embedded motion photo files', async () => {
+    const totalSize = 1024 * 1024 + 1000
+    const buffer = new Uint8Array(totalSize)
+    const ftypPos = Math.floor(totalSize * 0.4)
+
+    // Put MP4 box header: 4-byte box size (0x00, 0x00, 0x00, 0x20) + 'ftyp'
+    buffer[ftypPos - 4] = 0x00
+    buffer[ftypPos - 3] = 0x00
+    buffer[ftypPos - 2] = 0x00
+    buffer[ftypPos - 1] = 0x20
+    buffer[ftypPos] = 0x66
+    buffer[ftypPos + 1] = 0x74
+    buffer[ftypPos + 2] = 0x79
+    buffer[ftypPos + 3] = 0x70
+
+    const motionFile = new File([buffer], 'motion_shot.jpg', { type: 'image/jpeg' })
+    const { detectEmbeddedMotionPhoto, separateEmbeddedMotionPhoto } = await import(
+      '@/utils/livephoto'
+    )
+
+    const detection = await detectEmbeddedMotionPhoto(motionFile)
+    expect(detection.isEmbedded).toBe(true)
+    expect(detection.ftypPosition).toBe(ftypPos)
+
+    const result = await separateEmbeddedMotionPhoto(
+      motionFile,
+      detection.ftypPosition,
+      detection.uint8Array,
+    )
+    expect(result).not.toBeNull()
+    expect(result?.imageFile.name).toBe('motion_shot.jpg')
+    expect(result?.videoFile.name).toBe('motion_shot.mp4')
+    expect(result?.imageFile.type).toBe('image/jpeg')
+    expect(result?.videoFile.type).toBe('video/mp4')
+    expect(result?.imageFile.size).toBe(ftypPos - 4)
+    expect(result?.videoFile.size).toBe(totalSize - (ftypPos - 4))
+  })
 })
 

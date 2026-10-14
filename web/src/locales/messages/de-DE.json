@@ -133,6 +133,7 @@
     "convertingHeic": "HEIC-Foto wird konvertiert...",
     "convertHeicSuccess": "HEIC-Foto erfolgreich konvertiert",
     "convertHeicFailed": "HEIC-Konvertierung fehlgeschlagen, Original wird hochgeladen",
+    "embeddedMotionSeparated": "Bewegtes Foto erkannt, Live-Video automatisch extrahiert",
     "restoreDraftTitle": "Lokalen Entwurf wiederherstellen",
     "restoreDraftDesc": "Es wurde ein unveröffentlichter Entwurf gefunden. Wiederherstellen?",
     "restoreDraftRecovered": "Lokaler Entwurf wiederhergestellt",

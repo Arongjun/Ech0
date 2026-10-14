@@ -133,6 +133,7 @@
     "convertingHeic": "HEIC画像を変換中...",
     "convertHeicSuccess": "HEIC変換が完了しました",
     "convertHeicFailed": "HEIC変換に失敗したため、元の画像をアップロードします",
+    "embeddedMotionSeparated": "モーションフォトを検出し、ライブビデオを自動抽出しました",
     "restoreDraftTitle": "ローカル下書きを復元",
     "restoreDraftDesc": "未公開のローカル下書きが見つかりました。復元しますか？",
     "restoreDraftRecovered": "ローカル下書きを復元しました",

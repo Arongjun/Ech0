@@ -205,7 +205,18 @@ const allowedTypes = computed(() => {
     props.fileCategory === FILE_CATEGORY.IMAGE ||
     (!props.fileCategory && base.some((t) => t.startsWith('image/')))
   ) {
-    return [...base, '.heic', '.heif', 'image/heic', 'image/heif']
+    return [
+      ...base,
+      '.heic',
+      '.heif',
+      'image/heic',
+      'image/heif',
+      'video/*',
+      '.mov',
+      '.mp4',
+      'video/quicktime',
+      'video/mp4',
+    ]
   }
   return base
 })
