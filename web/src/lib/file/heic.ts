@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2025-2026 lin-snow
 
-const HEIC_EXTENSIONS = ['.heic', '.heif']
-const HEIC_MIME_TYPES = ['image/heic', 'image/heif']
+const HEIC_EXTENSIONS = ['.heic', '.heif', '.hif']
+const HEIC_MIME_TYPES = [
+  'image/heic',
+  'image/heif',
+  'image/heic-sequence',
+  'image/heif-sequence',
+]
 
 export function isHeicFile(file: File): boolean {
   const type = (file.type || '').toLowerCase()
@@ -14,7 +19,7 @@ export function isHeicFile(file: File): boolean {
 }
 
 export function replaceHeicExtension(filename: string): string {
-  return filename.replace(/\.(heic|heif)$/i, '.jpg')
+  return filename.replace(/\.(heic|heif|hif)$/i, '.jpg')
 }
 
 export interface ConvertHeicOptions {

@@ -8,23 +8,157 @@ export interface LivePhotoPair {
 }
 
 const FTYP_SIGNATURE = [0x66, 0x74, 0x79, 0x70] as const
-const MIN_EMBEDDED_FILE_SIZE = 1024 * 1024
-const SEARCH_START_PERCENTAGE = 0.05
+const WIDE_SIGNATURE = [0x77, 0x69, 0x64, 0x65] as const
+const MOOV_SIGNATURE = [0x6d, 0x6f, 0x6f, 0x76] as const
+const MIN_EMBEDDED_FILE_SIZE = 512 * 1024
 const MP4_BOX_HEADER_SIZE = 4
 
-function findFtypPosition(uint8Array: Uint8Array, ftypSignature: readonly number[]): number {
-  const searchStart = Math.floor(uint8Array.length * SEARCH_START_PERCENTAGE)
+export interface VideoFormatInfo {
+  mimeType: 'video/quicktime' | 'video/mp4'
+  ext: 'mov' | 'mp4'
+}
+
+function isValidVideoBox(data: Uint8Array, pos: number): boolean {
+  if (pos < 0 || pos >= data.length - 8) return false
+  const b0 = data[pos + 4]
+  const b1 = data[pos + 5]
+  const b2 = data[pos + 6]
+  const b3 = data[pos + 7]
+
+  if (b0 === 0x66 && b1 === 0x74 && b2 === 0x79 && b3 === 0x70) return true
+  if (b0 === 0x77 && b1 === 0x69 && b2 === 0x64 && b3 === 0x65) return true
+  if (b0 === 0x6d && b1 === 0x6f && b2 === 0x6f && b3 === 0x76) return true
+
+  return false
+}
+
+function findVideoOffsetFromXmp(data: Uint8Array): number | null {
+  try {
+    const scanLen = Math.min(data.length, 512 * 1024)
+    const text = new TextDecoder('utf-8', { fatal: false }).decode(data.subarray(0, scanLen))
+
+    const mvo =
+      text.match(/(?:GCamera:)?MicroVideoOffset\s*=\s*["']?(\d+)["']?/i) ||
+      text.match(/<(?:GCamera:)?MicroVideoOffset>(\d+)<\/(?:GCamera:)?MicroVideoOffset>/i)
+    if (mvo) {
+      const offset = parseInt(mvo[1], 10)
+      if (offset > 0 && offset < data.length) {
+        const candidate = data.length - offset
+        if (isValidVideoBox(data, candidate)) return candidate
+        if (isValidVideoBox(data, candidate - MP4_BOX_HEADER_SIZE)) return candidate - MP4_BOX_HEADER_SIZE
+        return candidate
+      }
+    }
+
+    const itemLen =
+      text.match(/(?:Item:)?Length\s*=\s*["']?(\d+)["']?/i) ||
+      text.match(/<(?:[a-zA-Z0-9]+:)?Length>(\d+)<\/(?:[a-zA-Z0-9]+:)?Length>/i)
+    if (itemLen) {
+      const offset = parseInt(itemLen[1], 10)
+      if (offset > 0 && offset < data.length) {
+        const candidate = data.length - offset
+        if (isValidVideoBox(data, candidate)) return candidate
+        if (isValidVideoBox(data, candidate - MP4_BOX_HEADER_SIZE)) return candidate - MP4_BOX_HEADER_SIZE
+        return candidate
+      }
+    }
+
+    const mpl =
+      text.match(/MotionPhotoLength\s*=\s*["']?(\d+)["']?/i) ||
+      text.match(/MotionPhoto_Data\s*=\s*["']?(\d+)["']?/i) ||
+      text.match(/DataLength\s*=\s*["']?(\d+)["']?/i)
+    if (mpl) {
+      const offset = parseInt(mpl[1], 10)
+      if (offset > 0 && offset < data.length) {
+        const candidate = data.length - offset
+        if (isValidVideoBox(data, candidate)) return candidate
+        if (isValidVideoBox(data, candidate - MP4_BOX_HEADER_SIZE)) return candidate - MP4_BOX_HEADER_SIZE
+        return candidate
+      }
+    }
+  } catch {
+    // Ignore XMP decode errors
+  }
+  return null
+}
+
+function findEmbeddedVideoStart(uint8Array: Uint8Array, isHeic: boolean): number {
+  const xmpPos = findVideoOffsetFromXmp(uint8Array)
+  if (xmpPos !== null && xmpPos >= 32 && xmpPos < uint8Array.length - 8) {
+    return xmpPos
+  }
+
+  let searchStart = 2
+  if (isHeic) {
+    if (uint8Array.length >= 8) {
+      const firstBoxSize =
+        ((uint8Array[0] << 24) |
+          (uint8Array[1] << 16) |
+          (uint8Array[2] << 8) |
+          uint8Array[3]) >>>
+        0
+      searchStart = Math.max(32, Math.min(firstBoxSize, 256))
+    } else {
+      searchStart = 32
+    }
+  }
+
   const searchEnd = uint8Array.length - 8
 
   for (let i = searchStart; i < searchEnd; i++) {
     if (
-      uint8Array[i] === ftypSignature[0] &&
-      uint8Array[i + 1] === ftypSignature[1] &&
-      uint8Array[i + 2] === ftypSignature[2] &&
-      uint8Array[i + 3] === ftypSignature[3]
+      uint8Array[i] === FTYP_SIGNATURE[0] &&
+      uint8Array[i + 1] === FTYP_SIGNATURE[1] &&
+      uint8Array[i + 2] === FTYP_SIGNATURE[2] &&
+      uint8Array[i + 3] === FTYP_SIGNATURE[3]
     ) {
       if (i >= MP4_BOX_HEADER_SIZE) {
-        return i
+        const boxSize =
+          ((uint8Array[i - 4] << 24) |
+            (uint8Array[i - 3] << 16) |
+            (uint8Array[i - 2] << 8) |
+            uint8Array[i - 1]) >>>
+          0
+        if (boxSize >= 8 && boxSize <= 1024) {
+          return i - MP4_BOX_HEADER_SIZE
+        }
+      }
+    }
+
+    if (
+      uint8Array[i] === WIDE_SIGNATURE[0] &&
+      uint8Array[i + 1] === WIDE_SIGNATURE[1] &&
+      uint8Array[i + 2] === WIDE_SIGNATURE[2] &&
+      uint8Array[i + 3] === WIDE_SIGNATURE[3]
+    ) {
+      if (i >= MP4_BOX_HEADER_SIZE) {
+        if (
+          uint8Array[i - 4] === 0x00 &&
+          uint8Array[i - 3] === 0x00 &&
+          uint8Array[i - 2] === 0x00 &&
+          uint8Array[i - 1] === 0x08
+        ) {
+          return i - MP4_BOX_HEADER_SIZE
+        }
+      }
+    }
+
+    if (
+      uint8Array[i] === MOOV_SIGNATURE[0] &&
+      uint8Array[i + 1] === MOOV_SIGNATURE[1] &&
+      uint8Array[i + 2] === MOOV_SIGNATURE[2] &&
+      uint8Array[i + 3] === MOOV_SIGNATURE[3]
+    ) {
+      if (i >= MP4_BOX_HEADER_SIZE) {
+        const boxSize =
+          ((uint8Array[i - 4] << 24) |
+            (uint8Array[i - 3] << 16) |
+            (uint8Array[i - 2] << 8) |
+            uint8Array[i - 1]) >>>
+          0
+        if (boxSize >= 8) {
+          return i - MP4_BOX_HEADER_SIZE
+        }
       }
     }
   }
@@ -32,9 +166,48 @@ function findFtypPosition(uint8Array: Uint8Array, ftypSignature: readonly number
   return -1
 }
 
+export function detectVideoFormat(
+  uint8Array: Uint8Array,
+  videoStartPos: number,
+  isHeicOrigin: boolean,
+): VideoFormatInfo {
+  const ftypPos = videoStartPos + MP4_BOX_HEADER_SIZE
+  if (ftypPos + 8 <= uint8Array.length) {
+    if (
+      uint8Array[ftypPos] === WIDE_SIGNATURE[0] &&
+      uint8Array[ftypPos + 1] === WIDE_SIGNATURE[1] &&
+      uint8Array[ftypPos + 2] === WIDE_SIGNATURE[2] &&
+      uint8Array[ftypPos + 3] === WIDE_SIGNATURE[3]
+    ) {
+      return { mimeType: 'video/quicktime', ext: 'mov' }
+    }
+
+    if (
+      uint8Array[ftypPos] === FTYP_SIGNATURE[0] &&
+      uint8Array[ftypPos + 1] === FTYP_SIGNATURE[1] &&
+      uint8Array[ftypPos + 2] === FTYP_SIGNATURE[2] &&
+      uint8Array[ftypPos + 3] === FTYP_SIGNATURE[3]
+    ) {
+      const b0 = uint8Array[ftypPos + 4]
+      const b1 = uint8Array[ftypPos + 5]
+      if (b0 === 0x71 && b1 === 0x74) {
+        return { mimeType: 'video/quicktime', ext: 'mov' }
+      }
+    }
+  }
+
+  if (isHeicOrigin) {
+    return { mimeType: 'video/quicktime', ext: 'mov' }
+  }
+
+  return { mimeType: 'video/mp4', ext: 'mp4' }
+}
+
 export async function detectEmbeddedMotionPhoto(file: File): Promise<{
   isEmbedded: boolean
+  videoStartPos?: number
   ftypPosition?: number
+  videoType?: VideoFormatInfo
   uint8Array?: Uint8Array
 }> {
   try {
@@ -46,8 +219,11 @@ export async function detectEmbeddedMotionPhoto(file: File): Promise<{
     const isHeic =
       file.type === 'image/heic' ||
       file.type === 'image/heif' ||
+      file.type === 'image/heic-sequence' ||
+      file.type === 'image/heif-sequence' ||
       lowerName.endsWith('.heic') ||
-      lowerName.endsWith('.heif')
+      lowerName.endsWith('.heif') ||
+      lowerName.endsWith('.hif')
 
     if (!isJpeg && !isHeic) {
       return { isEmbedded: false }
@@ -59,12 +235,16 @@ export async function detectEmbeddedMotionPhoto(file: File): Promise<{
 
     const arrayBuffer = await file.arrayBuffer()
     const uint8Array = new Uint8Array(arrayBuffer)
-    const ftypPosition = findFtypPosition(uint8Array, FTYP_SIGNATURE)
+    const videoStartPos = findEmbeddedVideoStart(uint8Array, isHeic)
 
-    if (ftypPosition !== -1) {
+    if (videoStartPos !== -1) {
+      const ftypPosition = videoStartPos + MP4_BOX_HEADER_SIZE
+      const videoType = detectVideoFormat(uint8Array, videoStartPos, isHeic)
       return {
         isEmbedded: true,
+        videoStartPos,
         ftypPosition,
+        videoType,
         uint8Array,
       }
     }
@@ -82,8 +262,9 @@ export async function isEmbeddedMotionPhoto(file: File): Promise<boolean> {
 
 export async function separateEmbeddedMotionPhoto(
   file: File,
-  ftypPosition?: number,
+  startOrFtypPos?: number,
   uint8Array?: Uint8Array,
+  videoFormat?: VideoFormatInfo,
 ): Promise<{ imageFile: File; videoFile: File } | null> {
   try {
     let fileData = uint8Array
@@ -92,36 +273,63 @@ export async function separateEmbeddedMotionPhoto(
       fileData = new Uint8Array(arrayBuffer)
     }
 
-    let ftypPos = ftypPosition
-    if (ftypPos === undefined) {
-      ftypPos = findFtypPosition(fileData, FTYP_SIGNATURE)
-      if (ftypPos === -1) {
-        return null
-      }
-    }
-
-    const videoStartPos = ftypPos - MP4_BOX_HEADER_SIZE
-    const imageData = fileData.slice(0, videoStartPos)
     const lowerName = file.name.toLowerCase()
     const isHeic =
       file.type === 'image/heic' ||
       file.type === 'image/heif' ||
+      file.type === 'image/heic-sequence' ||
+      file.type === 'image/heif-sequence' ||
       lowerName.endsWith('.heic') ||
-      lowerName.endsWith('.heif')
-    const imageType = isHeic ? 'image/heic' : 'image/jpeg'
-    const imageExt = isHeic ? 'heic' : 'jpg'
+      lowerName.endsWith('.heif') ||
+      lowerName.endsWith('.hif')
+
+    let videoStartPos: number
+    if (startOrFtypPos === undefined) {
+      videoStartPos = findEmbeddedVideoStart(fileData, isHeic)
+      if (videoStartPos === -1) {
+        return null
+      }
+    } else {
+      if (
+        startOrFtypPos >= MP4_BOX_HEADER_SIZE &&
+        startOrFtypPos + 3 < fileData.length &&
+        fileData[startOrFtypPos] === FTYP_SIGNATURE[0] &&
+        fileData[startOrFtypPos + 1] === FTYP_SIGNATURE[1] &&
+        fileData[startOrFtypPos + 2] === FTYP_SIGNATURE[2] &&
+        fileData[startOrFtypPos + 3] === FTYP_SIGNATURE[3]
+      ) {
+        videoStartPos = startOrFtypPos - MP4_BOX_HEADER_SIZE
+      } else {
+        videoStartPos = startOrFtypPos
+      }
+    }
+
+    if (videoStartPos <= 0 || videoStartPos >= fileData.length) {
+      return null
+    }
+
+    const imageData = fileData.slice(0, videoStartPos)
+    const videoData = fileData.slice(videoStartPos)
+
+    const imageType = isHeic ? (file.type || 'image/heic') : 'image/jpeg'
+    let imageExt = 'jpg'
+    if (lowerName.endsWith('.heic')) imageExt = 'heic'
+    else if (lowerName.endsWith('.heif')) imageExt = 'heif'
+    else if (lowerName.endsWith('.hif')) imageExt = 'hif'
+    else if (isHeic) imageExt = 'heic'
+
+    const vFormat = videoFormat || detectVideoFormat(fileData, videoStartPos, isHeic)
 
     const imageBlob = new Blob([imageData], { type: imageType })
-    const videoData = fileData.slice(videoStartPos)
-    const videoBlob = new Blob([videoData], { type: 'video/mp4' })
+    const videoBlob = new Blob([videoData], { type: vFormat.mimeType })
 
     const originalName = file.name.replace(/\.[^/.]+$/, '')
     const imageFile = new File([imageBlob], `${originalName}.${imageExt}`, {
       type: imageType,
       lastModified: file.lastModified,
     })
-    const videoFile = new File([videoBlob], `${originalName}.mp4`, {
-      type: 'video/mp4',
+    const videoFile = new File([videoBlob], `${originalName}.${vFormat.ext}`, {
+      type: vFormat.mimeType,
       lastModified: file.lastModified,
     })
 
@@ -173,6 +381,7 @@ export function detectLivePhotoPairs(files: File[]): LivePhotoPair[] {
         lowerName.endsWith('.png') ||
         lowerName.endsWith('.heic') ||
         lowerName.endsWith('.heif') ||
+        lowerName.endsWith('.hif') ||
         lowerName.endsWith('.webp'))
 
     if (isImage) {
@@ -267,7 +476,8 @@ export function isImageMediaItem(item: LivePhotoMediaItem): boolean {
     clean.endsWith('.webp') ||
     clean.endsWith('.gif') ||
     clean.endsWith('.heic') ||
-    clean.endsWith('.heif')
+    clean.endsWith('.heif') ||
+    clean.endsWith('.hif')
   ) {
     return true
   }

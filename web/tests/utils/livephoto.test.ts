@@ -111,5 +111,109 @@ describe('livephoto', () => {
     expect(result?.imageFile.size).toBe(ftypPos - 4)
     expect(result?.videoFile.size).toBe(totalSize - (ftypPos - 4))
   })
+
+  it('detects and separates HEIF dynamic photo into .heic and .mov companion video', async () => {
+    const totalSize = 1024 * 1024 * 2
+    const buffer = new Uint8Array(totalSize)
+
+    // HEIC initial ftyp box at byte 0
+    buffer[0] = 0x00
+    buffer[1] = 0x00
+    buffer[2] = 0x00
+    buffer[3] = 0x18
+    buffer[4] = 0x66
+    buffer[5] = 0x74
+    buffer[6] = 0x79
+    buffer[7] = 0x70 // 'ftyp'
+    // Brand 'heic'
+    buffer[8] = 0x68
+    buffer[9] = 0x65
+    buffer[10] = 0x69
+    buffer[11] = 0x63
+
+    // Embedded video starts at 400KB (small image header, well before 5% of large file)
+    const videoStart = 400 * 1024
+    // QuickTime MOV brand 'qt  '
+    buffer[videoStart] = 0x00
+    buffer[videoStart + 1] = 0x00
+    buffer[videoStart + 2] = 0x00
+    buffer[videoStart + 3] = 0x20
+    buffer[videoStart + 4] = 0x66
+    buffer[videoStart + 5] = 0x74
+    buffer[videoStart + 6] = 0x79
+    buffer[videoStart + 7] = 0x70 // 'ftyp'
+    buffer[videoStart + 8] = 0x71 // 'q'
+    buffer[videoStart + 9] = 0x74 // 't'
+    buffer[videoStart + 10] = 0x20 // ' '
+    buffer[videoStart + 11] = 0x20 // ' '
+
+    const heicFile = new File([buffer], 'IMG_2026.HEIC', { type: 'image/heic' })
+    const { detectEmbeddedMotionPhoto, separateEmbeddedMotionPhoto } = await import(
+      '@/utils/livephoto'
+    )
+
+    const detection = await detectEmbeddedMotionPhoto(heicFile)
+    expect(detection.isEmbedded).toBe(true)
+    expect(detection.videoStartPos).toBe(videoStart)
+    expect(detection.videoType?.ext).toBe('mov')
+    expect(detection.videoType?.mimeType).toBe('video/quicktime')
+
+    const result = await separateEmbeddedMotionPhoto(
+      heicFile,
+      detection.videoStartPos,
+      detection.uint8Array,
+      detection.videoType,
+    )
+    expect(result).not.toBeNull()
+    expect(result?.imageFile.name).toBe('IMG_2026.heic')
+    expect(result?.videoFile.name).toBe('IMG_2026.mov')
+    expect(result?.imageFile.type).toBe('image/heic')
+    expect(result?.videoFile.type).toBe('video/quicktime')
+    expect(result?.imageFile.size).toBe(videoStart)
+    expect(result?.videoFile.size).toBe(totalSize - videoStart)
+  })
+
+  it('detects embedded motion photo via XMP metadata MicroVideoOffset', async () => {
+    const totalSize = 1024 * 1024 * 3
+    const buffer = new Uint8Array(totalSize)
+    const videoLen = 1024 * 1024
+    const videoStart = totalSize - videoLen
+
+    // Put XMP XML text in header
+    const xmpText = `<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF><rdf:Description GCamera:MicroVideo="1" GCamera:MicroVideoOffset="${videoLen}"/></rdf:RDF></x:xmpmeta>`
+    const enc = new TextEncoder().encode(xmpText)
+    buffer.set(enc, 100)
+
+    // Put video ftyp at videoStart
+    buffer[videoStart] = 0x00
+    buffer[videoStart + 1] = 0x00
+    buffer[videoStart + 2] = 0x00
+    buffer[videoStart + 3] = 0x20
+    buffer[videoStart + 4] = 0x66
+    buffer[videoStart + 5] = 0x74
+    buffer[videoStart + 6] = 0x79
+    buffer[videoStart + 7] = 0x70 // 'ftyp'
+
+    const shotFile = new File([buffer], 'MVIMG_001.jpg', { type: 'image/jpeg' })
+    const { detectEmbeddedMotionPhoto, separateEmbeddedMotionPhoto } = await import(
+      '@/utils/livephoto'
+    )
+
+    const detection = await detectEmbeddedMotionPhoto(shotFile)
+    expect(detection.isEmbedded).toBe(true)
+    expect(detection.videoStartPos).toBe(videoStart)
+
+    const result = await separateEmbeddedMotionPhoto(
+      shotFile,
+      detection.videoStartPos,
+      detection.uint8Array,
+      detection.videoType,
+    )
+    expect(result).not.toBeNull()
+    expect(result?.imageFile.name).toBe('MVIMG_001.jpg')
+    expect(result?.videoFile.name).toBe('MVIMG_001.mp4')
+    expect(result?.imageFile.size).toBe(videoStart)
+    expect(result?.videoFile.size).toBe(videoLen)
+  })
 })
 

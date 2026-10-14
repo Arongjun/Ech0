@@ -153,10 +153,13 @@ export function useUpload(opts: UseUploadOptions) {
       if (
         lower.endsWith('.heic') ||
         lower.endsWith('.heif') ||
+        lower.endsWith('.hif') ||
         lower.endsWith('.mov') ||
         lower.endsWith('.mp4') ||
         file.type === 'image/heic' ||
         file.type === 'image/heif' ||
+        file.type === 'image/heic-sequence' ||
+        file.type === 'image/heif-sequence' ||
         file.type.startsWith('video/')
       ) {
         return true
@@ -186,8 +189,9 @@ export function useUpload(opts: UseUploadOptions) {
         if (detection.isEmbedded) {
           const result = await separateEmbeddedMotionPhoto(
             file,
-            detection.ftypPosition,
+            detection.videoStartPos ?? detection.ftypPosition,
             detection.uint8Array,
+            detection.videoType,
           )
           if (result) {
             detectedEmbeddedCount++
