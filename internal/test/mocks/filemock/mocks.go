@@ -284,7 +284,6 @@ func (_mock *MockService) DeleteFileByPath(ctx context.Context, storageType stri
 	} else {
 		r0 = ret.Error(0)
 	}
-
 	return r0
 }
 
