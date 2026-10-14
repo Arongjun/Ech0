@@ -81,5 +81,7 @@ func TestEchoUserIDReconcileMigrator_ReconcilesOrphansAndMarksDone(t *testing.T)
 
 	var marker commonModel.KeyValue
 	if err := db.Where("key = ?", commonModel.EchoUserIDReconciledKey).First(&marker).Error; err != nil {
+		t.Fatalf("expected migrator marker, got err: %v", err)
+	}
 }
 

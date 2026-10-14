@@ -94,6 +94,7 @@ func (f *fakeAuthService) UpdatePasskeyDeviceName(context.Context, string, strin
 }
 
 func (f *fakeAuthService) PasskeyBoundary(context.Context) (string, []string) { return "", nil }
+func (f *fakeAuthService) UnbindOAuth(context.Context, string) error           { panic("not called") }
 
 type fakeUserService struct {
 	getUserByIDFn func(id string) (userModel.User, error)
@@ -119,6 +120,10 @@ func (f *fakeUserService) GetOwner() (userModel.User, error) { panic("not called
 func (f *fakeUserService) DeleteUser(context.Context, string) error {
 	panic("not called")
 }
+func (f *fakeUserService) AdminResetPassword(context.Context, string, string) error {
+	panic("not called")
+}
+
 
 var testUser = userModel.User{
 	ID:       "test-user-id-001",

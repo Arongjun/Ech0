@@ -170,6 +170,7 @@ func TestFetchGoogleUserInfo_Errors(t *testing.T) {
 }
 
 func TestExchangeQQCodeForToken(t *testing.T) {
+	mux := http.NewServeMux()
 	mux.HandleFunc("/json-string-expires", func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = io.WriteString(w, `{"access_token":"qq-tok-str","expires_in":"5184000","openid":"qq-open-str","refresh_token":"rt-str"}`)
 	})
