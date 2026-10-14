@@ -10,11 +10,10 @@
           :class="{ 'home-main--unclipped': activeTab === 'tags' }"
         >
           <div class="home-main-track">
-            <HomeHeader class="mb-3 mx-1" />
+            <HomeHeader class="mb-3" />
             <aside class="home-aside home-aside--mobile">
               <HomeSidebarNav
                 v-model:mobile-search-open="mobileSearchOpen"
-                class="mx-1"
                 @open-palette="paletteOpen = true"
                 @open-chat="chatLauncherOpen = true"
               />
@@ -290,6 +289,12 @@ onBeforeUnmount(() => {
   max-width: var(--home-main-max);
   margin-left: auto;
   margin-right: auto;
+}
+
+@media (width <= 819.98px) {
+  .home-main-track {
+    max-width: 100%;
+  }
 }
 
 .home-main {

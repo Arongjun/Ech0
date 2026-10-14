@@ -1081,7 +1081,6 @@
   "videoPlayer": {
     "unsupported": "お使いのブラウザは動画再生に対応していません",
     "play": "動画を再生",
-    "close": "閉じる",
     "label": "動画",
     "fullscreen": "全画面",
     "paused": "一時停止中"

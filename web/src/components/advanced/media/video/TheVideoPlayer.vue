@@ -41,7 +41,9 @@
         @pause="onPause(idx)"
         @ended="onPause(idx)"
         @timeupdate="onTimeUpdate(idx, $event)"
-      ></video>
+      >
+        {{ t('videoPlayer.unsupported') }}
+      </video>
       <span class="video-media__tag" :class="{ 'is-hidden': tagHidden(idx) }">
         <Pause v-if="pausedByIndex[idx]" color="currentColor" />
         <Video v-else color="currentColor" />

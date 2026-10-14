@@ -214,7 +214,9 @@ body {
   position: relative !important;
   z-index: 40 !important;
   min-height: 4.55rem !important;
-  margin: 0 0.08rem 1rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 0 1rem !important;
   padding: 0.58rem 0.76rem !important;
   border-radius: 999px !important;
   overflow: visible !important;
@@ -500,11 +502,24 @@ img.home-header__logo {
 .echo-header-sticky {
   background: transparent !important;
   overflow: visible !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding-inline: 0.15rem !important;
+}
+
+.timeline-marker {
+  margin-left: 0.15rem !important;
 }
 
 .timeline-marker > div {
   background: var(--ag-blue) !important;
   box-shadow: 0 0 0 5px rgb(10 132 255 / 12%) !important;
+}
+
+.timeline-content {
+  margin-left: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .timeline-content::before {
@@ -514,7 +529,9 @@ img.home-header__logo {
 
 .timeline-content > div {
   position: relative !important;
-  margin: 0 0.08rem 0.88rem !important;
+  margin: 0 0 0.88rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
   border-radius: 26px !important;
   overflow: hidden !important;
   box-shadow:
@@ -978,11 +995,14 @@ body:has(.panel-page-wrap) {
   }
 
   .home-shell {
-    padding-inline: 0.72rem !important;
+    padding-inline: 0.75rem !important;
   }
 
   .home-header {
     min-height: 4.25rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 0 0.85rem !important;
     padding: 0.5rem 0.62rem !important;
   }
 
@@ -1003,7 +1023,9 @@ body:has(.panel-page-wrap) {
 
   .home-banner {
     min-height: 6.2rem !important;
-    margin-inline: 0.05rem !important;
+    margin-inline: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .home-aside--rail .home-sidebar-nav__link {
@@ -1315,6 +1337,8 @@ body::after {
 
 .home-header {
   min-height: 4.15rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
   margin: 0 0 1rem !important;
   padding: 0.55rem 0.64rem !important;
   border-radius: 22px !important;
@@ -1446,10 +1470,14 @@ img.home-header__logo {
     display: flex !important;
     width: 100% !important;
     margin: 0.15rem 0 0.65rem !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
   }
 
   .home-aside--mobile .home-sidebar-nav {
     width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
     gap: 0.5rem !important;
   }
 
@@ -1458,6 +1486,7 @@ img.home-header__logo {
     align-items: center !important;
     justify-content: space-between !important;
     width: 100% !important;
+    margin: 0 !important;
     padding: 0.24rem 0.32rem !important;
     border-radius: 9999px !important;
     background: rgb(255 255 255 / 72%) !important;

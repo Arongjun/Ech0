@@ -3,7 +3,7 @@
 <template>
   <div
     class="mx-auto mt-1 sm:mt-0 mb-4 sm:mb-5 md:mb-6"
-    :class="compact ? 'pl-1 pr-0 max-w-full' : 'px-2 sm:px-4 md:px-6 max-w-full'"
+    :class="compact ? 'px-0 max-w-full' : 'px-2 sm:px-4 md:px-6 max-w-full'"
   >
     <TransitionGroup
       v-if="echoStore.echoList"

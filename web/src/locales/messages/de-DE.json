@@ -1081,7 +1081,6 @@
   "videoPlayer": {
     "unsupported": "Ihr Browser unterstützt keine Videowiedergabe",
     "play": "Video abspielen",
-    "close": "Schließen",
     "label": "Video",
     "fullscreen": "Vollbild",
     "paused": "Pausiert"
