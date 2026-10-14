@@ -170,18 +170,173 @@ export interface LivePhotoMediaItem {
   media_url?: string
   media_type?: string
   category?: string
+  name?: string
+  key?: string
+  content_type?: string
   live_video_id?: number | string
   live_pair_id?: string
+  live_video_url?: string
+  is_live_photo?: boolean
+  width?: number
+  height?: number
+  size?: number
+  storage_type?: string
+  echo_id?: string
+  [key: string]: unknown
+}
+
+export function getStorageKeyPrefix(str?: string): string {
+  if (!str) return ''
+  const filename = str.split('?')[0].split('#')[0].split('/').pop() || ''
+  const match = filename.match(/^([a-zA-Z0-9]+_\d{8,12}_)/i)
+  return match ? match[1].toLowerCase() : ''
+}
+
+export function parseKeyTimestampAndUID(str?: string): { uid: string; timestamp: number } | null {
+  if (!str) return null
+  const filename = str.split('?')[0].split('#')[0].split('/').pop() || ''
+  const match = filename.match(/^([a-zA-Z0-9]+)_(\d{8,12})_/i)
+  if (!match) return null
+  const timestamp = parseInt(match[2], 10)
+  if (Number.isNaN(timestamp)) return null
+  return { uid: match[1].toLowerCase(), timestamp }
+}
+
+export function isVideoMediaItem(item: LivePhotoMediaItem): boolean {
+  if (item.category === 'video' || item.media_type === 'video') return true
+  const urlOrKey = String(item.url || item.key || item.name || '').toLowerCase()
+  const clean = urlOrKey.split('?')[0].split('#')[0]
+  if (
+    clean.endsWith('.mp4') ||
+    clean.endsWith('.mov') ||
+    clean.endsWith('.webm') ||
+    clean.endsWith('.ogg')
+  ) {
+    return true
+  }
+  if (typeof item.content_type === 'string' && item.content_type.startsWith('video/')) {
+    return true
+  }
+  return false
+}
+
+export function isImageMediaItem(item: LivePhotoMediaItem): boolean {
+  if (isVideoMediaItem(item)) return false
+  if (item.category === 'image' || item.media_type === 'image') return true
+  const urlOrKey = String(item.url || item.key || item.name || '').toLowerCase()
+  const clean = urlOrKey.split('?')[0].split('#')[0]
+  if (
+    clean.endsWith('.jpg') ||
+    clean.endsWith('.jpeg') ||
+    clean.endsWith('.png') ||
+    clean.endsWith('.webp') ||
+    clean.endsWith('.gif') ||
+    clean.endsWith('.heic') ||
+    clean.endsWith('.heif')
+  ) {
+    return true
+  }
+  if (typeof item.content_type === 'string' && item.content_type.startsWith('image/')) {
+    return true
+  }
+  return true
+}
+
+export function findCompanionVideo<T extends LivePhotoMediaItem = LivePhotoMediaItem>(
+  image: T,
+  videos: T[],
+  allMedia?: T[],
+): T | null {
+  if (!videos || videos.length === 0) return null
+
+  // 1. Explicit ID association
+  if (image.live_video_id) {
+    const found = videos.find((v) => String(v.id) === String(image.live_video_id))
+    if (found) return found
+  }
+
+  // 2. Explicit Pair ID association
+  if (image.live_pair_id) {
+    const found = videos.find((v) => v.live_pair_id === image.live_pair_id)
+    if (found) return found
+  }
+
+  // Only consider videos that are not bound to a different live_pair_id
+  const eligibleVideos = videos.filter((v) => {
+    if (v.live_pair_id && v.live_pair_id !== image.live_pair_id) return false
+    return true
+  })
+  if (eligibleVideos.length === 0) return null
+
+  const imgBase = getBaseName(String(image.name || image.key || image.url || ''))
+  const imgPrefix = getStorageKeyPrefix(String(image.key || image.url || image.name || ''))
+  const imgKeyInfo = parseKeyTimestampAndUID(String(image.key || image.url || image.name || ''))
+
+  // 3. Basename match (e.g. IMG_1234.HEIC and IMG_1234.MOV)
+  if (imgBase) {
+    const found = eligibleVideos.find((v) => {
+      const vidBase = getBaseName(String(v.name || v.key || v.url || ''))
+      return vidBase && vidBase === imgBase
+    })
+    if (found) return found
+  }
+
+  // 4. Storage key timestamp prefix match (e.g. "1_1765048483_7bea62.PNG" and "1_1765048483_4df192.MOV")
+  if (imgPrefix) {
+    const found = eligibleVideos.find((v) => {
+      const vidPrefix = getStorageKeyPrefix(String(v.key || v.url || v.name || ''))
+      return vidPrefix && vidPrefix === imgPrefix
+    })
+    if (found) return found
+  }
+
+  // 5. Storage key timestamp proximity match (same user, within 3 seconds)
+  if (imgKeyInfo) {
+    const found = eligibleVideos.find((v) => {
+      const vidKeyInfo = parseKeyTimestampAndUID(String(v.key || v.url || v.name || ''))
+      if (!vidKeyInfo) return false
+      return (
+        vidKeyInfo.uid === imgKeyInfo.uid &&
+        Math.abs(vidKeyInfo.timestamp - imgKeyInfo.timestamp) <= 3
+      )
+    })
+    if (found) return found
+  }
+
+  // 6. 1:1 Fallback when there is only 1 video and 1 image in total
+  if (allMedia) {
+    const totalImages = allMedia.filter(isImageMediaItem)
+    const totalVideos = allMedia.filter(isVideoMediaItem)
+    if (totalImages.length === 1 && totalVideos.length === 1 && eligibleVideos.length === 1) {
+      return eligibleVideos[0]
+    }
+  }
+
+  return null
 }
 
 export function isLivePhoto(item: LivePhotoMediaItem, allMedia?: LivePhotoMediaItem[]): boolean {
-  if (item.live_video_id) return true
+  if (item.is_live_photo) return true
+  if (item.live_video_url) return true
+  if (
+    item.live_video_id !== undefined &&
+    item.live_video_id !== '' &&
+    item.live_video_id !== 0 &&
+    item.live_video_id !== '0'
+  ) {
+    return true
+  }
   if (item.live_pair_id && allMedia) {
-    return allMedia.some(
-      (m) =>
-        (m.category === 'video' || m.media_type === 'video') &&
-        m.live_pair_id === item.live_pair_id,
+    const hasPair = allMedia.some(
+      (m) => isVideoMediaItem(m) && m.live_pair_id === item.live_pair_id,
     )
+    if (hasPair) return true
+  }
+  if (allMedia && isImageMediaItem(item)) {
+    const videos = allMedia.filter(isVideoMediaItem)
+    if (videos.length > 0 && findCompanionVideo(item, videos, allMedia)) {
+      return true
+    }
   }
   return false
 }
@@ -190,20 +345,100 @@ export function isLivePhotoVideo(
   item: LivePhotoMediaItem,
   allMedia?: LivePhotoMediaItem[],
 ): boolean {
-  if (!allMedia) return false
-  if (item.category !== 'video' && item.media_type !== 'video') return false
+  if (!allMedia || allMedia.length === 0) return false
+  if (!isVideoMediaItem(item)) return false
 
   if (item.live_pair_id) {
-    return allMedia.some(
-      (m) =>
-        (m.category === 'image' || m.media_type === 'image') &&
-        m.live_pair_id === item.live_pair_id,
-    )
+    return allMedia.some((m) => isImageMediaItem(m) && m.live_pair_id === item.live_pair_id)
   }
 
   if (item.id) {
-    return allMedia.some((m) => String(m.live_video_id) === String(item.id))
+    const hasLinkedImage = allMedia.some(
+      (m) => isImageMediaItem(m) && String(m.live_video_id) === String(item.id),
+    )
+    if (hasLinkedImage) return true
+  }
+
+  const images = allMedia.filter(isImageMediaItem)
+  const videos = allMedia.filter(isVideoMediaItem)
+  for (const img of images) {
+    const companion = findCompanionVideo(img, videos)
+    if (companion && (companion === item || (companion.id && companion.id === item.id))) {
+      return true
+    }
   }
 
   return false
+}
+
+export interface PairedEchoFiles<T extends LivePhotoMediaItem = LivePhotoMediaItem> {
+  imageFiles: T[]
+  videoFiles: T[]
+  audioFiles: T[]
+  hasLivePhoto: boolean
+}
+
+export function pairEchoFiles<T extends LivePhotoMediaItem = LivePhotoMediaItem>(
+  allFiles: T[],
+  resolveUrlFn?: (item: T) => string,
+): PairedEchoFiles<T> {
+  const audioFiles: T[] = []
+  const candidatesImages: T[] = []
+  const candidatesVideos: T[] = []
+
+  for (const f of allFiles) {
+    if (
+      f.category === 'audio' ||
+      (typeof f.content_type === 'string' && f.content_type.startsWith('audio/'))
+    ) {
+      audioFiles.push(f)
+    } else if (isVideoMediaItem(f)) {
+      candidatesVideos.push(f)
+    } else {
+      candidatesImages.push(f)
+    }
+  }
+
+  const pairedVideoIds = new Set<string | number>()
+  const imageFiles: T[] = []
+  const availableVideos = [...candidatesVideos]
+
+  for (const img of candidatesImages) {
+    const companion = findCompanionVideo(img, availableVideos)
+    if (companion) {
+      const companionKey = companion.id || companion.url || companion.key || ''
+      pairedVideoIds.add(companionKey)
+      const idx = availableVideos.indexOf(companion)
+      if (idx !== -1) {
+        availableVideos.splice(idx, 1)
+      }
+
+      const companionUrl = resolveUrlFn
+        ? resolveUrlFn(companion)
+        : String(companion.url || companion.media_url || companion.image_url || '')
+
+      imageFiles.push({
+        ...img,
+        is_live_photo: true,
+        live_video_id: companion.id,
+        live_video_url: companionUrl,
+      })
+    } else {
+      imageFiles.push({
+        ...img,
+        is_live_photo: Boolean(img.is_live_photo || img.live_video_url),
+      })
+    }
+  }
+
+  const standaloneVideos = candidatesVideos.filter(
+    (v) => !pairedVideoIds.has(v.id || v.url || v.key || ''),
+  )
+
+  return {
+    imageFiles,
+    videoFiles: standaloneVideos,
+    audioFiles,
+    hasLivePhoto: pairedVideoIds.size > 0,
+  }
 }

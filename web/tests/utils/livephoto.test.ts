@@ -7,6 +7,7 @@ import {
   detectLivePhotoPairs,
   isLivePhoto,
   isLivePhotoVideo,
+  pairEchoFiles,
 } from '@/utils/livephoto'
 
 describe('livephoto', () => {
@@ -39,4 +40,38 @@ describe('livephoto', () => {
     expect(isLivePhotoVideo(video, all)).toBe(true)
     expect(isLivePhotoVideo(photo, all)).toBe(false)
   })
+
+  it('matches pairs by storage key prefix (timestamp match)', () => {
+    const photo = {
+      id: 'p1',
+      key: '1_1765048483_7bea62.PNG',
+      category: 'image',
+      url: 'https://cos.example.com/1_1765048483_7bea62.PNG',
+    }
+    const video = {
+      id: 'v1',
+      key: '1_1765048483_4df192.MOV',
+      category: 'video',
+      url: 'https://cos.example.com/1_1765048483_4df192.MOV',
+    }
+    const otherPhoto = {
+      id: 'p2',
+      key: '1_1765049999_abcdef.PNG',
+      category: 'image',
+      url: 'https://cos.example.com/1_1765049999_abcdef.PNG',
+    }
+
+    const { imageFiles, videoFiles, hasLivePhoto } = pairEchoFiles([photo, otherPhoto, video])
+    expect(hasLivePhoto).toBe(true)
+    expect(videoFiles).toHaveLength(0)
+    expect(imageFiles).toHaveLength(2)
+
+    const livePhoto = imageFiles.find((f) => f.id === 'p1')
+    expect(livePhoto?.is_live_photo).toBe(true)
+    expect(livePhoto?.live_video_url).toBe('https://cos.example.com/1_1765048483_4df192.MOV')
+
+    const regularPhoto = imageFiles.find((f) => f.id === 'p2')
+    expect(regularPhoto?.is_live_photo).toBe(false)
+  })
 })
+

@@ -111,6 +111,11 @@ export function useFilesModule({ t }: FilesModuleDeps) {
       size: fileToAdd.value.size,
       width,
       height,
+      name: fileToAdd.value.name,
+      is_live_photo: fileToAdd.value.is_live_photo,
+      live_video_id: fileToAdd.value.live_video_id,
+      live_video_url: fileToAdd.value.live_video_url,
+      live_pair_id: fileToAdd.value.live_pair_id,
     })
 
     fileToAdd.value = {
@@ -135,6 +140,11 @@ export function useFilesModule({ t }: FilesModuleDeps) {
         size: file.size,
         width: file.width,
         height: file.height,
+        name: file.name,
+        is_live_photo: file.is_live_photo,
+        live_video_id: file.live_video_id,
+        live_video_url: file.live_video_url,
+        live_pair_id: file.live_pair_id,
       })),
     )
   }

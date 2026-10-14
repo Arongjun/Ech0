@@ -114,6 +114,8 @@ const galleryItems = computed(() =>
     width: image.width,
     height: image.height,
     alt: getAlt(idx),
+    isLivePhoto: Boolean(image.is_live_photo || image.live_video_url),
+    videoSrc: image.live_video_url || '',
   })),
 )
 

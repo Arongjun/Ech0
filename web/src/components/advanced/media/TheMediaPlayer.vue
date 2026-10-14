@@ -14,7 +14,9 @@
 
 <script setup lang="ts">
 import { computed, defineAsyncComponent } from 'vue'
-import { getEchoFilesBy } from '@/utils/echo'
+import { getEchoFiles } from '@/utils/echo'
+import { pairEchoFiles } from '@/utils/livephoto'
+import { getHubFileUrl, getFileUrl } from '@/utils/other'
 import TheAudioPlayer from './audio/TheAudioPlayer.vue'
 import TheVideoPlayer from './video/TheVideoPlayer.vue'
 
@@ -30,15 +32,17 @@ const props = withDefaults(
   { priority: false },
 )
 
-const imageFiles = computed(() =>
-  getEchoFilesBy(props.echo, { categories: ['image'], dedupeBy: 'id' }),
+const allFiles = computed(() => getEchoFiles(props.echo))
+
+const pairedMedia = computed(() =>
+  pairEchoFiles(allFiles.value, (video) =>
+    props.baseUrl ? getHubFileUrl(video, props.baseUrl) : getFileUrl(video),
+  ),
 )
-const audioFiles = computed(() =>
-  getEchoFilesBy(props.echo, { categories: ['audio'], dedupeBy: 'id' }),
-)
-const videoFiles = computed(() =>
-  getEchoFilesBy(props.echo, { categories: ['video'], dedupeBy: 'id' }),
-)
+
+const imageFiles = computed(() => pairedMedia.value.imageFiles)
+const audioFiles = computed(() => pairedMedia.value.audioFiles)
+const videoFiles = computed(() => pairedMedia.value.videoFiles)
 </script>
 
 <style scoped></style>

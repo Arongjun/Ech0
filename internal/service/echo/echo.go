@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -656,6 +657,42 @@ func (echoService *EchoService) validateSingleFileCategory(ctx context.Context, 
 		counts[storage.NormalizeCategory(f.Category)]++
 	}
 
+	// 1. Audio cannot be mixed with any other category and max count is 1
+	if counts[storage.CategoryAudio] > 0 {
+		if len(counts) > 1 || counts[storage.CategoryAudio] > 1 {
+			return errors.New(commonModel.ECHO_MIXED_FILE_CATEGORIES)
+		}
+		return nil
+	}
+
+	// 2. Other categories cannot be mixed
+	if counts[storage.CategoryOther] > 0 && len(counts) > 1 {
+		return errors.New(commonModel.ECHO_MIXED_FILE_CATEGORIES)
+	}
+
+	// 3. Standalone video without images: max 1 video, no mixed categories
+	if counts[storage.CategoryVideo] > 0 && counts[storage.CategoryImage] == 0 {
+		if counts[storage.CategoryVideo] > 1 || len(counts) > 1 {
+			return errors.New(commonModel.ECHO_MIXED_FILE_CATEGORIES)
+		}
+		return nil
+	}
+
+	// 4. Live Photo: images mixed with companion videos
+	if counts[storage.CategoryVideo] > 0 && counts[storage.CategoryImage] > 0 {
+		if len(counts) > 2 {
+			return errors.New(commonModel.ECHO_MIXED_FILE_CATEGORIES)
+		}
+		if counts[storage.CategoryVideo] > counts[storage.CategoryImage] {
+			return errors.New(commonModel.ECHO_MIXED_FILE_CATEGORIES)
+		}
+		if !canPairAllVideosAsLivePhotos(files) {
+			return errors.New(commonModel.ECHO_MIXED_FILE_CATEGORIES)
+		}
+		return nil
+	}
+
+	// 5. Pure images or single category
 	if len(counts) > 1 {
 		return errors.New(commonModel.ECHO_MIXED_FILE_CATEGORIES)
 	}
@@ -665,6 +702,127 @@ func (echoService *EchoService) validateSingleFileCategory(ctx context.Context, 
 		}
 	}
 	return nil
+}
+
+func getFileBaseName(filename string) string {
+	name := filepath.Base(filename)
+	if idx := strings.Index(name, "?"); idx != -1 {
+		name = name[:idx]
+	}
+	ext := filepath.Ext(name)
+	if ext != "" {
+		name = name[:len(name)-len(ext)]
+	}
+	return strings.ToLower(strings.TrimSpace(name))
+}
+
+func getStorageKeyPrefix(keyOrURL string) string {
+	name := filepath.Base(keyOrURL)
+	if idx := strings.Index(name, "?"); idx != -1 {
+		name = name[:idx]
+	}
+	parts := strings.Split(name, "_")
+	if len(parts) >= 3 && len(parts[1]) >= 8 && len(parts[1]) <= 12 {
+		return strings.ToLower(parts[0] + "_" + parts[1] + "_")
+	}
+	return ""
+}
+
+func parseKeyTimestampAndUID(keyOrURL string) (int64, string, bool) {
+	name := filepath.Base(keyOrURL)
+	if idx := strings.Index(name, "?"); idx != -1 {
+		name = name[:idx]
+	}
+	parts := strings.Split(name, "_")
+	if len(parts) >= 3 {
+		ts, err := strconv.ParseInt(parts[1], 10, 64)
+		if err == nil && len(parts[1]) >= 8 && len(parts[1]) <= 12 {
+			return ts, strings.ToLower(parts[0]), true
+		}
+	}
+	return 0, "", false
+}
+
+func absInt64(n int64) int64 {
+	if n < 0 {
+		return -n
+	}
+	return n
+}
+
+func canPairAllVideosAsLivePhotos(files []commonModel.FileDto) bool {
+	var images, videos []commonModel.FileDto
+	for _, f := range files {
+		switch storage.NormalizeCategory(f.Category) {
+		case storage.CategoryImage:
+			images = append(images, f)
+		case storage.CategoryVideo:
+			videos = append(videos, f)
+		default:
+			return false
+		}
+	}
+	if len(videos) == 0 {
+		return true
+	}
+	if len(videos) > len(images) {
+		return false
+	}
+
+	pairedImages := make(map[string]bool)
+	for _, v := range videos {
+		paired := false
+		vBase := getFileBaseName(v.Name)
+		vKeyBase := getFileBaseName(v.Key)
+		vPrefix := getStorageKeyPrefix(v.Key)
+		vTs, vUID, vHasTs := parseKeyTimestampAndUID(v.Key)
+
+		for _, img := range images {
+			if pairedImages[img.ID] {
+				continue
+			}
+			imgBase := getFileBaseName(img.Name)
+			imgKeyBase := getFileBaseName(img.Key)
+			imgPrefix := getStorageKeyPrefix(img.Key)
+			imgTs, imgUID, imgHasTs := parseKeyTimestampAndUID(img.Key)
+
+			if vBase != "" && imgBase != "" && vBase == imgBase {
+				paired = true
+				pairedImages[img.ID] = true
+				break
+			}
+			if vKeyBase != "" && imgKeyBase != "" && vKeyBase == imgKeyBase {
+				paired = true
+				pairedImages[img.ID] = true
+				break
+			}
+			if vPrefix != "" && imgPrefix != "" && vPrefix == imgPrefix {
+				paired = true
+				pairedImages[img.ID] = true
+				break
+			}
+			if vHasTs && imgHasTs && vUID == imgUID && absInt64(vTs-imgTs) <= 3 {
+				paired = true
+				pairedImages[img.ID] = true
+				break
+			}
+		}
+
+		if !paired && len(videos) == 1 && len(images) == 1 {
+			vExt := strings.ToLower(filepath.Ext(v.Name))
+			if vExt == "" {
+				vExt = strings.ToLower(filepath.Ext(v.Key))
+			}
+			if vExt == ".mov" || vExt == ".mp4" || strings.Contains(strings.ToLower(v.ContentType), "video") {
+				paired = true
+			}
+		}
+
+		if !paired {
+			return false
+		}
+	}
+	return true
 }
 
 func collectEchoFileIDs(echo *model.Echo) []string {

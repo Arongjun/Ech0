@@ -186,6 +186,8 @@ const previewItems = computed(() =>
       width: image.width,
       height: image.height,
       alt: t('imageGallery.previewImage', { index: idx + 1 }),
+      isLivePhoto: Boolean(image.is_live_photo || image.live_video_url),
+      videoSrc: image.live_video_url || '',
     }
   }),
 )
@@ -268,6 +270,7 @@ const handleRemoveImageAt = (index: number) => {
       if (isDeleting.value) return
       const target = filesToAdd.value[index]
       const fileId = String(target?.id || '')
+      const liveVideoId = String(target?.live_video_id || '')
       const source = String(target?.storage_type || '')
       const needsRemoteDelete =
         (source === FILE_STORAGE_TYPE.LOCAL || source === FILE_STORAGE_TYPE.OBJECT) && !!fileId
@@ -277,6 +280,9 @@ const handleRemoveImageAt = (index: number) => {
         if (needsRemoteDelete) {
           try {
             await deleteFileById(fileId)
+            if (liveVideoId && liveVideoId !== fileId) {
+              await deleteFileById(liveVideoId)
+            }
           } catch {
             theToast.error(String(t('editor.removeImageRemoteFailed')))
           }

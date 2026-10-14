@@ -1069,7 +1069,10 @@
     "previewImage": "Bild {index} anzeigen",
     "prevImage": "Vorheriges Bild",
     "nextImage": "Nächstes Bild",
-    "scrollHint": "← Wischen, um mehr zu sehen →"
+    "scrollHint": "← Wischen, um mehr zu sehen →",
+    "livePhoto": "Live Photo",
+    "turnOffAutoPlay": "Autoplay deaktivieren",
+    "turnOnAutoPlay": "Autoplay aktivieren"
   },
   "audioPlayer": {
     "unsupported": "Ihr Browser unterstützt keine Audiowiedergabe",

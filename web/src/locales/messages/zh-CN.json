@@ -1069,7 +1069,10 @@
     "previewImage": "预览图片{index}",
     "prevImage": "上一张图片",
     "nextImage": "下一张图片",
-    "scrollHint": "← 左右滑动查看更多 →"
+    "scrollHint": "← 左右滑动查看更多 →",
+    "livePhoto": "实况照片",
+    "turnOffAutoPlay": "关闭自动播放",
+    "turnOnAutoPlay": "开启自动播放"
   },
   "audioPlayer": {
     "unsupported": "您的浏览器不支持音频播放",

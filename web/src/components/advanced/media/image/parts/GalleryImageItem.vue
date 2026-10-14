@@ -22,10 +22,16 @@
         @load="$emit('load')"
         @error="$emit('error')"
       />
-      <div v-if="isLive" class="livephoto-badge" aria-label="Live Photo">
+      <div
+        v-if="isLive"
+        class="livephoto-badge"
+        :aria-label="$t('imageGallery.livePhoto')"
+        :title="$t('imageGallery.livePhoto')"
+      >
         <LivePhotoIcon class="w-3.5 h-3.5" color="currentColor" />
         <span class="livephoto-text">LIVE</span>
       </div>
+
       <slot></slot>
     </div>
   </button>

@@ -143,3 +143,43 @@ func TestUpdateEcho_MixedFileCategoriesRejected(t *testing.T) {
 
 	require.EqualError(t, err, commonModel.ECHO_MIXED_FILE_CATEGORIES)
 }
+
+func TestValidateSingleFileCategory_LivePhotoAllowed(t *testing.T) {
+	repo := echomock.NewMockRepository(t)
+	common := commonmock.NewMockService(t)
+	file := filemock.NewMockService(t)
+	tx := txmock.NewMockTransactor(t)
+	bus := helpers.NewTestBus(t)
+
+	common.EXPECT().
+		CommonGetUserByUserId(mock.Anything, adminID).
+		Return(helpers.NewUser(helpers.AsAdmin), nil).
+		Once()
+	file.EXPECT().
+		GetFilesByIDs(mock.Anything, mock.Anything).
+		Return([]commonModel.FileDto{
+			{ID: "f1", Category: "image", Key: "1_1765048483_7bea62.PNG", Name: "IMG_0001.PNG"},
+			{ID: "f2", Category: "video", Key: "1_1765048483_4df192.MOV", Name: "IMG_0001.MOV"},
+		}, nil).
+		Once()
+
+	tx.EXPECT().Run(mock.Anything, mock.Anything).RunAndReturn(runTx).Once()
+	repo.EXPECT().GetTagsByNames(mock.Anything, mock.Anything).Return([]*echoModel.Tag{}, nil).Once()
+
+	var created echoModel.Echo
+	repo.EXPECT().
+		CreateEcho(mock.Anything, mock.Anything).
+		Run(func(_ context.Context, e *echoModel.Echo) { created = *e }).
+		Return(nil).
+		Once()
+	repo.EXPECT().InvalidateEchoCaches().Once()
+	saved := helpers.NewEcho(func(e *echoModel.Echo) { e.ID = "saved-1" })
+	repo.EXPECT().GetEchosById(mock.Anything, mock.Anything).Return(&saved, nil).Once()
+	file.EXPECT().ConfirmTempFiles(mock.Anything, mock.Anything).Return(nil).Once()
+
+	svc := echoService.NewEchoService(tx, common, file, repo, func() *busen.Bus { return bus })
+	require.NoError(t, svc.PostEcho(helpers.CtxAsUser(adminID), echoWithFileIDs("f1", "f2")))
+
+	assert.Len(t, created.EchoFiles, 2)
+}
+

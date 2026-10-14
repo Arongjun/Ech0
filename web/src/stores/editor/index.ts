@@ -10,6 +10,7 @@ import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { useEchoStore, useSettingStore } from '@/stores'
 import { localStg, sessionStg } from '@/utils/storage'
 import { globalFileRegistry } from '@/lib/file'
+import { pairEchoFiles } from '@/utils/livephoto'
 import { i18n } from '@/locales'
 import router from '@/router'
 import { useExtensionModule } from './useExtensionModule'
@@ -124,6 +125,25 @@ export const useEditorStore = defineStore('editorStore', () => {
 
   const handleUppyUploaded = async (uploadedFiles: App.Api.Ech0.FileToAdd[]) => {
     for (const file of uploadedFiles) {
+      if (file.id) {
+        globalFileRegistry.upsert({
+          id: file.id,
+          key: file.key,
+          url: file.url,
+          category: file.category,
+          contentType: file.content_type,
+          storageType: file.storage_type,
+          size: file.size,
+          width: file.width,
+          height: file.height,
+        })
+      }
+    }
+
+    const { imageFiles, videoFiles, audioFiles } = pairEchoFiles(uploadedFiles)
+    const filesToProcess = [...imageFiles, ...videoFiles, ...audioFiles]
+
+    for (const file of filesToProcess) {
       if (!file.url) {
         theToast.error(t('editor.uploadNoPreviewUrl'))
         continue
@@ -138,19 +158,10 @@ export const useEditorStore = defineStore('editorStore', () => {
         size: file.size,
         width: file.width,
         height: file.height,
-      }
-      if (file.id) {
-        globalFileRegistry.upsert({
-          id: file.id,
-          key: file.key,
-          url: file.url,
-          category: file.category,
-          contentType: file.content_type,
-          storageType: file.storage_type,
-          size: file.size,
-          width: file.width,
-          height: file.height,
-        })
+        name: file.name,
+        is_live_photo: file.is_live_photo,
+        live_video_id: file.live_video_id,
+        live_video_url: file.live_video_url,
       }
       await files.handleAddMoreFile()
     }
@@ -184,12 +195,16 @@ export const useEditorStore = defineStore('editorStore', () => {
 
       extension.checkEchoExtension()
 
-      echoToAdd.value.echo_files = files.filesToAdd.value
-        .filter((file) => file.id)
-        .map((file, index) => ({
-          file_id: String(file.id),
-          sort_order: index,
-        }))
+      const echoFiles: { file_id: string; sort_order: number }[] = []
+      let order = 0
+      for (const file of files.filesToAdd.value) {
+        if (!file.id) continue
+        echoFiles.push({ file_id: String(file.id), sort_order: order++ })
+        if (file.live_video_id && String(file.live_video_id) !== String(file.id)) {
+          echoFiles.push({ file_id: String(file.live_video_id), sort_order: order++ })
+        }
+      }
+      echoToAdd.value.echo_files = echoFiles
 
       const mediaCat = files.mediaCategory.value
       if (mediaCat === FILE_CATEGORY.VIDEO) {

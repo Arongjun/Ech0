@@ -27,6 +27,7 @@ import { useEchoStore, useEditorStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { Mode, ExtensionType, ImageLayout } from '@/enums/enums'
 import { getEchoFiles } from '@/utils/echo'
+import { pairEchoFiles } from '@/utils/livephoto'
 import { useI18n } from 'vue-i18n'
 
 const TheMdEditor = defineAsyncComponent(() => import('@/components/advanced/md/TheMdEditor.vue'))
@@ -81,8 +82,11 @@ const fillEditorFromEchoToUpdate = () => {
 
   const existingMedia = getEchoFiles(echoToUpdate.value)
   if (existingMedia.length > 0) {
+    const { imageFiles, videoFiles, audioFiles } = pairEchoFiles(existingMedia)
+    const mediaList =
+      imageFiles.length > 0 ? imageFiles : audioFiles.length > 0 ? audioFiles : videoFiles
     editorStore.setFilesToAdd(
-      existingMedia.map((f) => ({
+      mediaList.map((f) => ({
         id: String(f.id || ''),
         url: f.url || '',
         storage_type: f.storage_type || 'local',
@@ -92,6 +96,10 @@ const fillEditorFromEchoToUpdate = () => {
         size: f.size,
         width: f.width,
         height: f.height,
+        name: f.name,
+        is_live_photo: f.is_live_photo,
+        live_video_id: f.live_video_id,
+        live_video_url: f.live_video_url,
       })),
     )
   } else {

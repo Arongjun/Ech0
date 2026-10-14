@@ -20,6 +20,7 @@ type EchoLike = {
       size?: number
       width?: number
       height?: number
+      name?: string
     }
   }> | null
 }
@@ -41,6 +42,7 @@ export function getEchoFiles(echo?: EchoLike | null): App.Api.Ech0.FileObject[] 
       size: file?.size,
       width: file?.width,
       height: file?.height,
+      name: file?.name,
     }
   })
 }

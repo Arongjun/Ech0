@@ -66,6 +66,11 @@ export type FileAttachment = {
   size?: number
   width?: number
   height?: number
+  name?: string
+  live_video_url?: string
+  live_video_id?: string | number
+  live_pair_id?: string
+  is_live_photo?: boolean
 }
 
 export type FileValidationRule = {

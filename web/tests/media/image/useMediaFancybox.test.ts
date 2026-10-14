@@ -152,4 +152,36 @@ describe('useMediaFancybox', () => {
     expect(slides[0].src).toBe('https://example.com/custom.jpg')
     expect(slides[0].caption).toBe('Custom')
   })
+
+  it('renders live photo items as custom html slides with has-livephoto class', () => {
+    const wrapper = mount(
+      defineComponent({
+        setup() {
+          const { open } = useMediaFancybox()
+          return { open }
+        },
+        template: '<div />',
+      }),
+    )
+
+    const liveItems: MediaGalleryItem[] = [
+      {
+        src: 'https://example.com/live.png',
+        thumb: 'https://example.com/live-thumb.png',
+        videoSrc: 'https://example.com/live.mov',
+        isLivePhoto: true,
+      },
+    ]
+
+    wrapper.vm.open(0, null, liveItems)
+
+    expect(mockFancyboxShow).toHaveBeenCalledTimes(1)
+    const [slides] = mockFancyboxShow.mock.calls[0] as [Array<Record<string, unknown>>]
+    expect(slides[0].type).toBe('html')
+    expect(slides[0].class).toBe('has-livephoto')
+    expect(String(slides[0].html)).toContain('fancybox-livephoto-container')
+    expect(String(slides[0].html)).toContain('https://example.com/live.mov')
+    expect(String(slides[0].html)).toContain('https://example.com/live.png')
+  })
 })
+
