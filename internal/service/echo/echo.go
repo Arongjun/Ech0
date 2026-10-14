@@ -657,42 +657,14 @@ func (echoService *EchoService) validateSingleFileCategory(ctx context.Context, 
 		counts[storage.NormalizeCategory(f.Category)]++
 	}
 
-	// 1. Audio cannot be mixed with any other category and max count is 1
-	if counts[storage.CategoryAudio] > 0 {
-		if len(counts) > 1 || counts[storage.CategoryAudio] > 1 {
-			return errors.New(commonModel.ECHO_MIXED_FILE_CATEGORIES)
-		}
-		return nil
-	}
-
-	// 2. Other categories cannot be mixed
-	if counts[storage.CategoryOther] > 0 && len(counts) > 1 {
-		return errors.New(commonModel.ECHO_MIXED_FILE_CATEGORIES)
-	}
-
-	// 3. Standalone video without images: max 1 video, no mixed categories
-	if counts[storage.CategoryVideo] > 0 && counts[storage.CategoryImage] == 0 {
-		if counts[storage.CategoryVideo] > 1 || len(counts) > 1 {
-			return errors.New(commonModel.ECHO_MIXED_FILE_CATEGORIES)
-		}
-		return nil
-	}
-
-	// 4. Live Photo: images mixed with companion videos
+	// Live Photo exception: images mixed with companion videos
 	if counts[storage.CategoryVideo] > 0 && counts[storage.CategoryImage] > 0 {
-		if len(counts) > 2 {
-			return errors.New(commonModel.ECHO_MIXED_FILE_CATEGORIES)
-		}
-		if counts[storage.CategoryVideo] > counts[storage.CategoryImage] {
-			return errors.New(commonModel.ECHO_MIXED_FILE_CATEGORIES)
-		}
-		if !canPairAllVideosAsLivePhotos(files) {
+		if len(counts) > 2 || counts[storage.CategoryVideo] > counts[storage.CategoryImage] || !canPairAllVideosAsLivePhotos(files) {
 			return errors.New(commonModel.ECHO_MIXED_FILE_CATEGORIES)
 		}
 		return nil
 	}
 
-	// 5. Pure images or single category
 	if len(counts) > 1 {
 		return errors.New(commonModel.ECHO_MIXED_FILE_CATEGORIES)
 	}
