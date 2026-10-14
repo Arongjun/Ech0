@@ -49,6 +49,56 @@ const (
 	tempCleanupDryRunEnv = "ECH0_FILE_TEMP_CLEANUP_DRY_RUN"
 )
 
+type pairKeyCtxKey struct{}
+
+func WithPairKey(ctx context.Context, pairKey string) context.Context {
+	return context.WithValue(ctx, pairKeyCtxKey{}, pairKey)
+}
+
+func pairKeyFromContext(ctx context.Context) string {
+	if v, ok := ctx.Value(pairKeyCtxKey{}).(string); ok {
+		return v
+	}
+	return ""
+}
+
+func (s *FileService) derivePairKey(userID string, filename string, pairKey string) string {
+	clean := strings.TrimSpace(pairKey)
+	if clean == "" {
+		return ""
+	}
+	base := filepath.Base(clean)
+	if idx := strings.Index(base, "?"); idx != -1 {
+		base = base[:idx]
+	}
+	ext := filepath.Ext(base)
+	baseWithoutExt := strings.TrimSuffix(base, ext)
+
+	parts := strings.Split(baseWithoutExt, "_")
+	if len(parts) < 3 {
+		return ""
+	}
+	expectedUID := storage.CompactUserID(userID)
+	if strings.ToLower(parts[0]) != expectedUID {
+		return ""
+	}
+	if _, err := strconv.ParseInt(parts[1], 10, 64); err != nil {
+		return ""
+	}
+	for _, ch := range baseWithoutExt {
+		if !((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_') {
+			return ""
+		}
+	}
+
+	targetExt := strings.ToLower(filepath.Ext(strings.TrimSpace(filename)))
+	if targetExt == "" {
+		targetExt = ".bin"
+	}
+
+	return strings.ToLower(baseWithoutExt + targetExt)
+}
+
 type FileService struct {
 	transactor       transaction.Transactor
 	commonRepository CommonRepository
@@ -123,10 +173,17 @@ func (s *FileService) UploadFile(
 		return commonModel.FileDto{}, errors.New(commonModel.FILE_SIZE_EXCEED_LIMIT)
 	}
 
-	gen := s.keyGenForCategory(category, file.Filename)
-	key, err := gen.GenerateKey(category, user.ID, file.Filename)
-	if err != nil {
-		return commonModel.FileDto{}, err
+	var key string
+	if pairKey := pairKeyFromContext(ctx); pairKey != "" {
+		key = s.derivePairKey(user.ID, file.Filename, pairKey)
+	}
+	if key == "" {
+		gen := s.keyGenForCategory(category, file.Filename)
+		var err error
+		key, err = gen.GenerateKey(category, user.ID, file.Filename)
+		if err != nil {
+			return commonModel.FileDto{}, err
+		}
 	}
 
 	uploadReader, err := file.Open()
@@ -895,9 +952,16 @@ func (s *FileService) GetFilePresignURL(
 		return result, err
 	}
 
-	key, err := s.keyGen.GenerateKey(category, userid, dto.FileName)
-	if err != nil {
-		return result, err
+	var key string
+	if dto.PairKey != "" {
+		key = s.derivePairKey(userid, dto.FileName, dto.PairKey)
+	}
+	if key == "" {
+		var err error
+		key, err = s.keyGen.GenerateKey(category, userid, dto.FileName)
+		if err != nil {
+			return result, err
+		}
 	}
 
 	selector := s.getSelector()

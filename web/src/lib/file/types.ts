@@ -37,6 +37,7 @@ export type PresignInput = {
   fileName: string
   contentType?: string
   storageType?: FileStorageType
+  pairKey?: string
 }
 
 export type PresignResult = {

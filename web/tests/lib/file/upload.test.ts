@@ -193,3 +193,18 @@ describe('resolveItemCategory', () => {
     expect(resolveItemCategory(audioFile, 'image')).toBe('audio')
   })
 })
+
+describe('isCompanionVideoFile', () => {
+  it('identifies video files by mime type or extension', async () => {
+    const { isCompanionVideoFile } = await import('../../../src/lib/file/useUpload')
+    const mov = new File([''], 'IMG_0001.MOV', { type: '' })
+    const quicktime = new File([''], 'clip', { type: 'video/quicktime' })
+    const mp4 = new File([''], 'clip.mp4', { type: 'video/mp4' })
+    const jpg = new File([''], 'IMG_0001.JPG', { type: 'image/jpeg' })
+
+    expect(isCompanionVideoFile(mov)).toBe(true)
+    expect(isCompanionVideoFile(quicktime)).toBe(true)
+    expect(isCompanionVideoFile(mp4)).toBe(true)
+    expect(isCompanionVideoFile(jpg)).toBe(false)
+  })
+})

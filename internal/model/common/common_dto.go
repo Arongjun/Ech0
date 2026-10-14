@@ -52,6 +52,7 @@ type GetPresignURLDto struct {
 	FileName    string `json:"file_name" binding:"required"`
 	ContentType string `json:"content_type"`
 	StorageType string `json:"storage_type,omitempty"`
+	PairKey     string `json:"pair_key,omitempty"`
 }
 
 type CreateExternalFileDto struct {

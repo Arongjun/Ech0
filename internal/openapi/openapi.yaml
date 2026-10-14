@@ -771,6 +771,8 @@ components:
           type: string
         file_name:
           type: string
+        pair_key:
+          type: string
         storage_type:
           type: string
       type: object

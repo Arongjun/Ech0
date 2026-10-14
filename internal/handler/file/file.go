@@ -123,7 +123,12 @@ func (fileHandler *FileHandler) UploadFile() gin.HandlerFunc {
 		}
 		category := storage.NormalizeCategory(ctx.PostForm("category"))
 		storageType := storage.NormalizeStorageType(ctx.PostForm("storage_type"))
-		fileDto, err := fileHandler.fileService.UploadFile(ctx.Request.Context(), file, category, storageType)
+		pairKey := ctx.PostForm("pair_key")
+		reqCtx := ctx.Request.Context()
+		if pairKey != "" {
+			reqCtx = service.WithPairKey(reqCtx, pairKey)
+		}
+		fileDto, err := fileHandler.fileService.UploadFile(reqCtx, file, category, storageType)
 		if err != nil {
 			return res.Response{Msg: "", Err: err}
 		}

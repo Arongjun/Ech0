@@ -13,6 +13,10 @@ import (
 	"time"
 )
 
+func CompactUserID(userID string) string {
+	return compactUserID(userID)
+}
+
 func compactUserID(userID string) string {
 	uid := strings.TrimSpace(userID)
 	if uid == "" {

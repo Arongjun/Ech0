@@ -69,6 +69,17 @@ export function resolveItemCategory(
   return fallbackCategory
 }
 
+export function isCompanionVideoFile(file: File): boolean {
+  if (file.type.startsWith('video/')) return true
+  const lower = file.name.toLowerCase()
+  return (
+    lower.endsWith('.mov') ||
+    lower.endsWith('.mp4') ||
+    lower.endsWith('.webm') ||
+    lower.endsWith('.ogg')
+  )
+}
+
 export interface QueueItem {
   id: string
   file: File
@@ -223,6 +234,17 @@ export function useUpload(opts: UseUploadOptions) {
       }
     }
 
+    // Ensure images precede companion videos in queue order for pair key propagation
+    readyFiles.sort((a, b) => {
+      if (a.livePairId && b.livePairId && a.livePairId === b.livePairId) {
+        const aIsVid = isCompanionVideoFile(a.file)
+        const bIsVid = isCompanionVideoFile(b.file)
+        if (!aIsVid && bIsVid) return -1
+        if (aIsVid && !bIsVid) return 1
+      }
+      return 0
+    })
+
     // 4. Enqueue files
     const existingIds = new Set(items.value.map((i) => i.id))
     let remaining = Math.max(0, maxFiles - liveCount())
@@ -236,11 +258,7 @@ export function useUpload(opts: UseUploadOptions) {
         continue
       }
 
-      const isCompanionVideo =
-        Boolean(livePairId) &&
-        (file.type.startsWith('video/') ||
-          file.name.toLowerCase().endsWith('.mov') ||
-          file.name.toLowerCase().endsWith('.mp4'))
+      const isCompanionVideo = Boolean(livePairId) && isCompanionVideoFile(file)
 
       if (!isCompanionVideo) {
         if (remaining <= 0) {
@@ -285,7 +303,23 @@ export function useUpload(opts: UseUploadOptions) {
 
   function pump() {
     while (inFlight < concurrency) {
-      const next = items.value.find((i) => i.status === UPLOAD_STATUS.PENDING)
+      const next = items.value.find((i) => {
+        if (i.status !== UPLOAD_STATUS.PENDING) return false
+        if (i.livePairId && isCompanionVideoFile(i.file)) {
+          const pairedImage = items.value.find(
+            (other) => other.livePairId === i.livePairId && other !== i,
+          )
+          if (
+            pairedImage &&
+            (pairedImage.status === UPLOAD_STATUS.PENDING ||
+              pairedImage.status === UPLOAD_STATUS.COMPRESSING ||
+              pairedImage.status === UPLOAD_STATUS.UPLOADING)
+          ) {
+            return false
+          }
+        }
+        return true
+      })
       if (!next) break
       void processItem(next)
     }
@@ -328,10 +362,23 @@ export function useUpload(opts: UseUploadOptions) {
       item.status = UPLOAD_STATUS.UPLOADING
       item.progress = 0
 
+      let pairKey: string | undefined
+      if (item.livePairId && isCompanionVideoFile(item.file)) {
+        const pairedImage = items.value.find(
+          (i) =>
+            i.livePairId === item.livePairId &&
+            i !== item &&
+            i.status === UPLOAD_STATUS.SUCCESS,
+        )
+        if (pairedImage?.result?.key) {
+          pairKey = pairedImage.result.key
+        }
+      }
+
       const result =
         opts.storageType.value === FILE_STORAGE_TYPE.OBJECT
-          ? await uploadToS3(working, item, ctl.signal)
-          : await uploadToLocal(working, item, ctl.signal)
+          ? await uploadToS3(working, item, ctl.signal, pairKey)
+          : await uploadToLocal(working, item, ctl.signal, pairKey)
 
       item.result = result
       item.status = UPLOAD_STATUS.SUCCESS
@@ -369,18 +416,23 @@ export function useUpload(opts: UseUploadOptions) {
     file: File,
     item: QueueItem,
     signal: AbortSignal,
+    pairKey?: string,
   ): Promise<App.Api.Ech0.FileToAdd> {
     const itemCategory = resolveItemCategory(file, category)
+    const fields: Record<string, string> = {
+      category: itemCategory,
+      storage_type: FILE_STORAGE_TYPE.LOCAL,
+    }
+    if (pairKey) {
+      fields.pair_key = pairKey
+    }
     const res = await httpUpload(
       file,
       {
         kind: UPLOAD_KIND.LOCAL,
         endpoint: `${backendURL}/api/files/upload`,
         authHeader: authStore.authHeader,
-        fields: {
-          category: itemCategory,
-          storage_type: FILE_STORAGE_TYPE.LOCAL,
-        },
+        fields,
       },
       {
         signal,
@@ -415,6 +467,7 @@ export function useUpload(opts: UseUploadOptions) {
     file: File,
     item: QueueItem,
     signal: AbortSignal,
+    pairKey?: string,
   ): Promise<App.Api.Ech0.FileToAdd> {
     const itemCategory = resolveItemCategory(file, category)
     const contentType = file.type || 'application/octet-stream'
@@ -425,6 +478,7 @@ export function useUpload(opts: UseUploadOptions) {
       fileName,
       contentType,
       storageType: FILE_STORAGE_TYPE.OBJECT,
+      pairKey,
     })
 
     if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
