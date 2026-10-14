@@ -191,17 +191,20 @@ func TestRun_ManifestRoundTrips(t *testing.T) {
 	stored, err := coreSetting.System.Get(context.Background(), deps.KV)
 	require.NoError(t, err)
 	assert.Equal(t, capsule.Site{
-		SiteTitle:     stored.SiteTitle,
-		ServerLogo:    stored.ServerLogo,
-		ServerName:    stored.ServerName,
-		ServerURL:     stored.ServerURL,
-		DefaultLocale: stored.DefaultLocale,
-		ICPNumber:     stored.ICPNumber,
-		FooterContent: stored.FooterContent,
-		FooterLink:    stored.FooterLink,
-		MetingAPI:     stored.MetingAPI,
-		CustomCSS:     stored.CustomCSS,
-		CustomJS:      stored.CustomJS,
+		SiteTitle:         stored.SiteTitle,
+		ServerLogo:        stored.ServerLogo,
+		ServerName:        stored.ServerName,
+		ServerURL:         stored.ServerURL,
+		DefaultLocale:     stored.DefaultLocale,
+		ICPNumber:         stored.ICPNumber,
+		FooterContent:     stored.FooterContent,
+		FooterLink:        stored.FooterLink,
+		HomeWelcomeText:   stored.HomeWelcomeText,
+		HomeSignatureText: stored.HomeSignatureText,
+		HomeSignatureURL:  stored.HomeSignatureURL,
+		MetingAPI:         stored.MetingAPI,
+		CustomCSS:         stored.CustomCSS,
+		CustomJS:          stored.CustomJS,
 	}, manifest.Site)
 	assert.NotContains(t, string(raw), "allow_register")
 }
