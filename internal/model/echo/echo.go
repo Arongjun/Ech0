@@ -19,10 +19,21 @@ type Echo struct {
 	Layout    string         `gorm:"type:varchar(50);default:'waterfall'"          json:"layout,omitempty"`
 	Private   bool           `gorm:"default:false;index:idx_echos_private_created,priority:1" json:"private"`
 	UserID    string         `gorm:"type:char(36);not null;index"                  json:"user_id"`
+	User      *EchoUser      `gorm:"->;foreignKey:UserID;references:ID"            json:"user,omitempty"`
 	Extension *EchoExtension `gorm:"foreignKey:EchoID;constraint:OnDelete:CASCADE" json:"extension,omitempty"`
 	Tags      []Tag          `gorm:"many2many:echo_tags;"                          json:"tags,omitempty"`
 	FavCount  int            `gorm:"default:0"                                     json:"fav_count"`
 	CreatedAt int64          `gorm:"autoCreateTime;index:idx_echos_private_created,priority:2" json:"created_at"`
+}
+
+type EchoUser struct {
+	ID       string `gorm:"type:char(36);primaryKey" json:"id"`
+	Username string `gorm:"size:255;not null"        json:"username"`
+	Avatar   string `gorm:"size:255"                 json:"avatar"`
+}
+
+func (EchoUser) TableName() string {
+	return "users"
 }
 
 type EchoExtension struct {

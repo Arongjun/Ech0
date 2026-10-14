@@ -79,6 +79,13 @@ func (echoService *EchoService) PostEcho(ctx context.Context, newEcho *model.Ech
 	newEcho.Extension = normalizedExt
 
 	newEcho.Username = user.Username
+	if user.Avatar != "" {
+		newEcho.User = &model.EchoUser{
+			ID:       user.ID,
+			Username: user.Username,
+			Avatar:   user.Avatar,
+		}
+	}
 
 	if isEchoEmpty(newEcho) {
 		return errors.New(commonModel.ECHO_CAN_NOT_BE_EMPTY)

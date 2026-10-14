@@ -89,6 +89,7 @@ func (echoRepository *EchoRepository) GetEchosByPage(
 				Preload("EchoFiles.File").
 				Preload("Extension").
 				Preload("Tags").
+				Preload("User").
 				Limit(pageSize).
 				Offset(offset).
 				Order("created_at DESC").
@@ -124,6 +125,7 @@ func (echoRepository *EchoRepository) GetEchosById(ctx context.Context, id strin
 				Preload("EchoFiles.File").
 				Preload("Extension").
 				Preload("Tags").
+				Preload("User").
 				Where("id = ?", id).
 				First(&row)
 			if result.Error != nil {
@@ -140,6 +142,7 @@ func (echoRepository *EchoRepository) GetEchosById(ctx context.Context, id strin
 				Preload("EchoFiles.File").
 				Preload("Extension").
 				Preload("Tags").
+				Preload("User").
 				Where("id = ?", id).
 				First(&row)
 			if result.Error != nil {
@@ -215,6 +218,7 @@ func (echoRepository *EchoRepository) GetTodayEchos(showPrivate bool, timezone s
 				Preload("EchoFiles.File").
 				Preload("Extension").
 				Preload("Tags").
+				Preload("User").
 				Order("created_at DESC").
 				Find(&echos).Error; err != nil {
 				return nil, err
@@ -450,6 +454,7 @@ func (echoRepository *EchoRepository) QueryEchos(
 			Preload("EchoFiles.File").
 			Preload("Extension").
 			Preload("Tags").
+			Preload("User").
 			Order(orderClause).
 			Find(&echos).Error; err != nil {
 			return nil, 0, err
@@ -463,6 +468,7 @@ func (echoRepository *EchoRepository) QueryEchos(
 			Preload("EchoFiles.File").
 			Preload("Extension").
 			Preload("Tags").
+			Preload("User").
 			Limit(queryDto.PageSize).
 			Offset(offset).
 			Order(orderClause).
@@ -531,6 +537,7 @@ func (echoRepository *EchoRepository) GetEchosByTagId(
 		Preload("EchoFiles.File").
 		Preload("Extension").
 		Preload("Tags").
+		Preload("User").
 		Order("created_at DESC").
 		Find(&echos).Error; err != nil {
 		return nil, 0, err
@@ -592,6 +599,7 @@ func (echoRepository *EchoRepository) GetHotEchos(limit int, showPrivate bool) (
 		Preload("EchoFiles.File").
 		Preload("Extension").
 		Preload("Tags").
+		Preload("User").
 		Find(&echos).Error; err != nil {
 		return nil, err
 	}
@@ -627,6 +635,7 @@ func (echoRepository *EchoRepository) GetRandomEcho(showPrivate bool) (*model.Ec
 		Preload("EchoFiles.File").
 		Preload("Extension").
 		Preload("Tags").
+		Preload("User").
 		Order(randomExpr).
 		Limit(1).
 		Find(&echos).Error; err != nil {
@@ -681,6 +690,7 @@ func (echoRepository *EchoRepository) GetOnThisDayEchos(showPrivate bool, timezo
 		Preload("EchoFiles.File").
 		Preload("Extension").
 		Preload("Tags").
+		Preload("User").
 		Order("created_at DESC").
 		Find(&echos).Error; err != nil {
 		return []model.Echo{}

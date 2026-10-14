@@ -122,9 +122,6 @@ const authorAvatar = computed(() => {
   if (props.echo.user?.avatar) {
     return resolveAvatarUrl(props.echo.user.avatar)
   }
-  if (user.value?.avatar) {
-    return resolveAvatarUrl(user.value.avatar)
-  }
   return resolveAvatarUrl(SystemSetting.value?.server_logo)
 })
 
@@ -135,7 +132,6 @@ const displayAuthorName = computed(() => {
   return (
     props.echo.user?.username ||
     props.echo.username ||
-    user.value?.username ||
     SystemSetting.value?.server_name ||
     'Ech0'
   )

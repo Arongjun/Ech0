@@ -405,6 +405,8 @@ components:
           type:
             - array
             - "null"
+        user:
+          $ref: "#/components/schemas/EchoUser"
         user_id:
           type: string
         username:
@@ -452,6 +454,16 @@ components:
         sort_order:
           format: int64
           type: integer
+      type: object
+    EchoUser:
+      additionalProperties: true
+      properties:
+        avatar:
+          type: string
+        id:
+          type: string
+        username:
+          type: string
       type: object
     EchoQueryDto:
       additionalProperties: true

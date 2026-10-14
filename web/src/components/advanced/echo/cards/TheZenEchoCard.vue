@@ -115,7 +115,12 @@ const settingStore = useSettingStore()
 const { SystemSetting } = storeToRefs(settingStore)
 
 const siteName = computed(() => String(SystemSetting.value?.server_name ?? 'Ech0'))
-const avatarUrl = computed(() => resolveAvatarUrl(SystemSetting.value?.server_logo))
+const avatarUrl = computed(() => {
+  if (props.echo.user?.avatar) {
+    return resolveAvatarUrl(props.echo.user.avatar)
+  }
+  return resolveAvatarUrl(SystemSetting.value?.server_logo)
+})
 const hasMedia = computed(() => getEchoFilesBy(props.echo, { dedupeBy: 'id' }).length > 0)
 
 const goDetail = () => {
