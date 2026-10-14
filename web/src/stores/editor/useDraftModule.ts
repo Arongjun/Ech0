@@ -55,11 +55,13 @@ export function useDraftModule(deps: DraftModuleDeps) {
   const { openConfirm } = useBaseDialog()
 
   const isRestoringDraft = ref<boolean>(false)
+  const hasPromptedDraft = ref<boolean>(false)
   const hasBoundDraftFlushListeners = ref<boolean>(false)
   let draftTimer: ReturnType<typeof setTimeout> | null = null
 
   const clearLocalDraft = () => {
     localStg.removeItem(EDITOR_DRAFT_STORAGE_KEY)
+    hasPromptedDraft.value = false
   }
 
   const hasDraftContent = () => {
@@ -115,6 +117,11 @@ export function useDraftModule(deps: DraftModuleDeps) {
         size: file.size,
         width: file.width,
         height: file.height,
+        name: file.name,
+        is_live_photo: file.is_live_photo,
+        live_video_id: file.live_video_id,
+        live_video_url: file.live_video_url,
+        live_pair_id: file.live_pair_id,
       })),
       websiteToAdd: {
         title: websiteToAdd.value.title || '',
@@ -154,6 +161,9 @@ export function useDraftModule(deps: DraftModuleDeps) {
   }
 
   const restoreDraftIfNeeded = () => {
+    if (isRestoringDraft.value || isUpdateMode.value || hasPromptedDraft.value) return
+    if (hasDraftContent()) return
+
     const draft = localStg.getItem<EditorDraft>(EDITOR_DRAFT_STORAGE_KEY)
     if (!draft) return
     if (typeof draft.savedAt !== 'number' || Date.now() - draft.savedAt > EDITOR_DRAFT_TTL_MS) {
@@ -161,9 +171,21 @@ export function useDraftModule(deps: DraftModuleDeps) {
       return
     }
 
+    const rawTitle = t('editor.restoreDraftTitle')
+    const titleText =
+      rawTitle && rawTitle !== 'editor.restoreDraftTitle' ? rawTitle : '恢复本地草稿'
+
+    const rawDesc = t('editor.restoreDraftDesc')
+    const descText =
+      rawDesc && rawDesc !== 'editor.restoreDraftDesc'
+        ? rawDesc
+        : '检测到你有未发布的本地草稿，是否恢复？'
+
+    hasPromptedDraft.value = true
+
     openConfirm({
-      title: t('editor.restoreDraftTitle'),
-      description: t('editor.restoreDraftDesc'),
+      title: titleText,
+      description: descText,
       onConfirm: () => {
         isRestoringDraft.value = true
         try {
@@ -204,7 +226,13 @@ export function useDraftModule(deps: DraftModuleDeps) {
             statusId: draft.tweetToAdd?.statusId || '',
           }
           tagToAdd.value = Array.isArray(draft.tagToAdd) ? [...draft.tagToAdd] : []
-          theToast.info(t('editor.restoreDraftRecovered'))
+
+          const rawRecovered = t('editor.restoreDraftRecovered')
+          const recoveredText =
+            rawRecovered && rawRecovered !== 'editor.restoreDraftRecovered'
+              ? rawRecovered
+              : '已恢复本地草稿'
+          theToast.info(recoveredText)
         } finally {
           isRestoringDraft.value = false
         }
@@ -238,7 +266,6 @@ export function useDraftModule(deps: DraftModuleDeps) {
   }
 
   const initDraftLifecycle = () => {
-    restoreDraftIfNeeded()
     if (!hasBoundDraftFlushListeners.value) {
       window.addEventListener('pagehide', flushDraftOnPageLeave)
       window.addEventListener('beforeunload', flushDraftOnPageLeave)

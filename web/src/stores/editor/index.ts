@@ -353,5 +353,6 @@ export const useEditorStore = defineStore('editorStore', () => {
     setFilesToAdd: files.setFilesToAdd,
     reorderFilesByIds: files.reorderFilesByIds,
     removeFileAt: files.removeFileAt,
+    restoreDraftIfNeeded: draft.restoreDraftIfNeeded,
   }
 })

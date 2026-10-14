@@ -174,6 +174,8 @@ watch(
 onMounted(() => {
   if (isUpdateMode.value) {
     fillEditorFromEchoToUpdate()
+  } else {
+    editorStore.restoreDraftIfNeeded()
   }
 })
 </script>
