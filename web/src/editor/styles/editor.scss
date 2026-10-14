@@ -41,7 +41,7 @@ body.md-editor-full-open {
 }
 
 .markdown-editor:not(.is-full) {
-  z-index: 28;
+  z-index: 1;
   background-color: transparent;
   border-color: var(--md-editor-mini-border);
   box-shadow: none;

@@ -792,6 +792,8 @@ body:has(.panel-page-wrap) {
 }
 
 .editor-shell__body {
+  position: relative !important;
+  z-index: 1 !important;
   margin: 0 0 0.85rem !important;
   padding: 0 !important;
   border-radius: 24px !important;
@@ -799,6 +801,8 @@ body:has(.panel-page-wrap) {
 }
 
 .markdown-editor:not(.is-full) {
+  position: relative !important;
+  z-index: 1 !important;
   border: 0.5px solid rgba(31, 38, 50, 0.07) !important;
   border-top-color: rgba(255, 255, 255, 0.7) !important;
   border-radius: 24px !important;
@@ -838,13 +842,15 @@ body:has(.panel-page-wrap) {
 .editor-actions {
   padding: 0 !important;
   overflow: visible !important;
-  z-index: 20 !important;
+  position: relative !important;
+  z-index: 60 !important;
 }
 
 .editor-actions__right,
 .editor-actions__publish {
   overflow: visible !important;
-  z-index: 30 !important;
+  position: relative !important;
+  z-index: 70 !important;
 }
 
 .home-content-block--publish .editor-actions__info-pop,
@@ -854,6 +860,7 @@ body:has(.panel-page-wrap) {
   bottom: calc(100% + 0.55rem) !important;
   z-index: 1000 !important;
   transform-origin: right bottom !important;
+  pointer-events: auto !important;
 }
 
 .editor-actions button,

@@ -113,11 +113,11 @@
 
         <transition
           enter-active-class="transition duration-150 ease-out"
-          enter-from-class="opacity-0 -translate-y-1"
+          enter-from-class="opacity-0 translate-y-1"
           enter-to-class="opacity-100 translate-y-0"
           leave-active-class="transition duration-100 ease-in"
           leave-from-class="opacity-100 translate-y-0"
-          leave-to-class="opacity-0 -translate-y-1"
+          leave-to-class="opacity-0 translate-y-1"
         >
           <PopoverPanel v-slot="{ close }" class="editor-actions__publish-panel">
             <button
@@ -294,7 +294,7 @@ const goToTagManager = () => {
   --btn-hover-border-color: var(--md-editor-actions-hover-border);
 
   position: relative;
-  z-index: 50;
+  z-index: 60;
   display: flex;
   justify-content: space-between;
   flex-wrap: nowrap;
@@ -316,7 +316,6 @@ const goToTagManager = () => {
 .editor-actions__tag {
   position: relative;
   flex: 0 0 auto;
-  isolation: isolate;
 }
 
 .editor-actions__tag-panel {
@@ -451,14 +450,15 @@ const goToTagManager = () => {
 
 .editor-actions__publish {
   position: relative;
+  z-index: 70;
   flex: 0 0 auto;
-  isolation: isolate;
 }
 
 .editor-actions__publish-panel {
   position: absolute;
-  z-index: 100;
-  top: calc(100% + 0.4rem);
+  z-index: 1000;
+  bottom: calc(100% + 0.5rem);
+  top: auto;
   right: 0;
   display: flex;
   flex-direction: column;
@@ -469,6 +469,7 @@ const goToTagManager = () => {
   border: 1px solid var(--color-border-subtle);
   background: var(--md-editor-mini-bg);
   box-shadow: var(--md-editor-mini-shell-shadow);
+  pointer-events: auto;
 }
 
 .editor-actions__publish-option {
@@ -517,6 +518,8 @@ const goToTagManager = () => {
   }
 
   .editor-actions__publish-panel {
+    bottom: calc(100% + 0.5rem);
+    top: auto;
     right: 0.35rem;
   }
 }

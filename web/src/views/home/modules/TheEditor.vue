@@ -188,6 +188,8 @@ onMounted(() => {
 }
 
 .editor-shell__body {
+  position: relative;
+  z-index: 1;
   margin-bottom: 0.15rem;
   border-radius: var(--radius-xs);
   padding: 0.15rem;
