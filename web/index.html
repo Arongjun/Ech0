@@ -278,5 +278,21 @@
       <p>静候灵感落笔</p>
     </div>
     <script type="module" src="/src/main.ts"></script>
+    <script>
+      setTimeout(function () {
+        var loader = document.getElementById('app-loader');
+        if (loader && !loader.classList.contains('fade-out')) {
+          loader.classList.add('fade-out');
+          setTimeout(function () {
+            try {
+              loader.remove();
+            } catch (e) {
+              if (loader.parentNode) loader.parentNode.removeChild(loader);
+            }
+            document.documentElement.classList.remove('app-loading');
+          }, 400);
+        }
+      }, 3500);
+    </script>
   </body>
 </html>
