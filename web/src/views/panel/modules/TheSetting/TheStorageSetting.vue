@@ -274,7 +274,7 @@ const handleUpdateS3Setting = async () => {
     })
     .finally(() => {
       storageEditMode.value = false
-      getS3Setting()
+      getS3Setting(true)
     })
 }
 

@@ -7,8 +7,8 @@ import { theToast } from '@/utils/toast'
 import { fetchAddEcho, fetchUpdateEcho } from '@/service/api'
 import { Mode, ExtensionType, ImageLayout, VideoLayout, AudioLayout } from '@/enums/enums'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
-import { useEchoStore } from '@/stores'
-import { localStg, sessionStg } from '@/utils/storage'
+import { useEchoStore, useSettingStore } from '@/stores'
+import { sessionStg } from '@/utils/storage'
 import { globalFileRegistry } from '@/lib/file'
 import { i18n } from '@/locales'
 import router from '@/router'
@@ -21,6 +21,7 @@ const HOME_TIMELINE_SCROLL_KEY = 'home:timeline:scrollTop'
 
 export const useEditorStore = defineStore('editorStore', () => {
   const echoStore = useEchoStore()
+  const settingStore = useSettingStore()
   const t: Translate = (key, params) => String(i18n.global.t(key, params || {}))
 
   const ShowEditor = ref<boolean>(true)
@@ -88,8 +89,9 @@ export const useEditorStore = defineStore('editorStore', () => {
   }
 
   const clearEditor = () => {
-    const rememberedStorageType =
-      localStg.getItem<App.Api.File.StorageType>('file_storage_type') ?? FILE_STORAGE_TYPE.LOCAL
+    const defaultStorageType = settingStore.S3Setting.enable
+      ? FILE_STORAGE_TYPE.OBJECT
+      : FILE_STORAGE_TYPE.LOCAL
 
     echoToAdd.value = {
       content: '',
@@ -102,7 +104,7 @@ export const useEditorStore = defineStore('editorStore', () => {
     files.fileToAdd.value = {
       id: undefined,
       url: '',
-      storage_type: rememberedStorageType,
+      storage_type: defaultStorageType,
       key: '',
     }
     files.resetFilesState()

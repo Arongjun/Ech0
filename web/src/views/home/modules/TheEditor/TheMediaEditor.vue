@@ -23,20 +23,32 @@
         <span class="text-[var(--color-text-secondary)]">{{ t('editor.imageAddMethod') }}</span>
         <BaseButton
           :icon="Url"
-          class="w-7 h-7 sm:w-7 sm:h-7 rounded-md"
+          :class="`w-7 h-7 sm:w-7 sm:h-7 rounded-md ${
+            fileToAdd.storage_type === FILE_STORAGE_TYPE.EXTERNAL
+              ? '!ring-2 !ring-[var(--color-accent)] !text-[var(--color-accent)] !bg-[var(--color-accent-soft)]'
+              : ''
+          }`"
           @click="handleSetFileSource(FILE_STORAGE_TYPE.EXTERNAL)"
           :tooltip="t('editor.imageSourceExternal')"
         />
         <BaseButton
           :icon="Upload"
-          class="w-7 h-7 sm:w-7 sm:h-7 rounded-md"
+          :class="`w-7 h-7 sm:w-7 sm:h-7 rounded-md ${
+            fileToAdd.storage_type === FILE_STORAGE_TYPE.LOCAL
+              ? '!ring-2 !ring-[var(--color-accent)] !text-[var(--color-accent)] !bg-[var(--color-accent-soft)]'
+              : ''
+          }`"
           @click="handleSetFileSource(FILE_STORAGE_TYPE.LOCAL)"
           :tooltip="t('editor.imageSourceLocal')"
         />
         <BaseButton
           v-if="S3Setting.enable"
           :icon="Bucket"
-          class="w-7 h-7 sm:w-7 sm:h-7 rounded-md"
+          :class="`w-7 h-7 sm:w-7 sm:h-7 rounded-md ${
+            fileToAdd.storage_type === FILE_STORAGE_TYPE.OBJECT
+              ? '!ring-2 !ring-[var(--color-accent)] !text-[var(--color-accent)] !bg-[var(--color-accent-soft)]'
+              : ''
+          }`"
           @click="handleSetFileSource(FILE_STORAGE_TYPE.OBJECT)"
           :tooltip="t('editor.imageSourceObject')"
         />
@@ -119,8 +131,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useEditorStore, useSettingStore } from '@/stores'
+import { computed, ref, onMounted, watch } from 'vue'
+import { useEditorStore, useSettingStore, useUserStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { ImageLayout } from '@/enums/enums'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE, type FileCategory } from '@/constants/file'
@@ -151,10 +163,35 @@ const singleClipFull = computed(
       effectiveCategory.value === FILE_CATEGORY.VIDEO) &&
     filesToAdd.value.length > 0,
 )
+const userStore = useUserStore()
 const settingStore = useSettingStore()
 const { S3Setting } = storeToRefs(settingStore)
 const enableCompressor = ref<boolean>(false)
 const { t } = useI18n()
+
+const applyInitialStorageType = () => {
+  if (S3Setting.value.enable) {
+    if (fileToAdd.value.storage_type !== FILE_STORAGE_TYPE.EXTERNAL) {
+      fileToAdd.value.storage_type = FILE_STORAGE_TYPE.OBJECT
+    }
+  } else if (fileToAdd.value.storage_type === FILE_STORAGE_TYPE.OBJECT) {
+    fileToAdd.value.storage_type = FILE_STORAGE_TYPE.LOCAL
+  }
+}
+
+onMounted(async () => {
+  if (userStore.user?.is_admin && !S3Setting.value.enable) {
+    await settingStore.getS3Setting()
+  }
+  applyInitialStorageType()
+})
+
+watch(
+  () => S3Setting.value.enable,
+  () => {
+    applyInitialStorageType()
+  },
+)
 
 const handleSetFileSource = (source: App.Api.File.StorageType) => {
   fileToAdd.value.storage_type = source

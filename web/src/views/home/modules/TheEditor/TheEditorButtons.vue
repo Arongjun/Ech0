@@ -167,13 +167,13 @@ import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
 import { Mode, ExtensionType } from '@/enums/enums'
 import { FILE_STORAGE_TYPE } from '@/constants/file'
 import { storeToRefs } from 'pinia'
-import { useEditorStore, useEchoStore } from '@/stores'
+import { useEditorStore, useEchoStore, useSettingStore } from '@/stores'
 import { theToast } from '@/utils/toast'
-import { localStg } from '@/utils/storage'
 import { computed, onMounted, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const editorStore = useEditorStore()
+const settingStore = useSettingStore()
 const {
   currentMode,
   isUpdateMode,
@@ -241,11 +241,14 @@ const handleChangeMode = () => {
 }
 
 const handleAddMediaMode = () => {
-  fileToAdd.value.storage_type = FILE_STORAGE_TYPE.LOCAL
-
-  const rememberedSource = localStg.getItem<App.Api.File.StorageType>('file_storage_type')
-  if (rememberedSource) {
-    fileToAdd.value.storage_type = rememberedSource
+  if (settingStore.S3Setting.enable) {
+    if (fileToAdd.value.storage_type !== FILE_STORAGE_TYPE.EXTERNAL) {
+      fileToAdd.value.storage_type = FILE_STORAGE_TYPE.OBJECT
+    }
+  } else if (fileToAdd.value.storage_type === FILE_STORAGE_TYPE.OBJECT) {
+    fileToAdd.value.storage_type = FILE_STORAGE_TYPE.LOCAL
+  } else if (!fileToAdd.value.storage_type) {
+    fileToAdd.value.storage_type = FILE_STORAGE_TYPE.LOCAL
   }
 
   editorStore.setMode(Mode.Media)

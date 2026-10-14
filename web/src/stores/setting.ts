@@ -2,7 +2,7 @@
 // Copyright (C) 2025-2026 lin-snow
 
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import {
   fetchGetSettings,
   fetchGetS3Settings,
@@ -116,13 +116,41 @@ export const useSettingStore = defineStore('settingStore', () => {
     })
   }
 
-  const getS3Setting = async () => {
-    fetchGetS3Settings().then((res) => {
-      if (res.code === 1) {
-        S3Setting.value = res.data
-      }
-    })
+  let s3SettingLoaded = false
+  let s3FetchPromise: Promise<App.Api.Setting.S3Setting> | null = null
+
+  const getS3Setting = async (force: boolean = false) => {
+    if (!force && s3SettingLoaded) return S3Setting.value
+    if (s3FetchPromise) return s3FetchPromise
+
+    s3FetchPromise = fetchGetS3Settings()
+      .then((res) => {
+        if (res.code === 1) {
+          S3Setting.value = res.data
+          s3SettingLoaded = true
+        }
+        return S3Setting.value
+      })
+      .catch(() => S3Setting.value)
+      .finally(() => {
+        s3FetchPromise = null
+      })
+
+    return s3FetchPromise
   }
+
+  watch(
+    () => userStore.user?.is_admin,
+    (isAdmin) => {
+      if (isAdmin) {
+        void getS3Setting()
+      } else {
+        s3SettingLoaded = false
+        S3Setting.value.enable = false
+      }
+    },
+    { immediate: true },
+  )
 
   const getOAuth2Setting = async () => {
     const res = await fetchGetOAuth2Settings()
@@ -265,7 +293,7 @@ export const useSettingStore = defineStore('settingStore', () => {
   const init = async () => {
     await getSystemSetting()
     if (userStore.isLogin && userStore.user?.is_admin) {
-      getS3Setting()
+      void getS3Setting()
     }
     getAgentInfo()
     getHelloEch0()
