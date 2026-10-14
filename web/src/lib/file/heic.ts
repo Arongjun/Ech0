@@ -26,16 +26,90 @@ export interface ConvertHeicOptions {
   quality?: number
 }
 
+async function convertHeicViaCanvas(file: File, quality = 0.88): Promise<File> {
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const bitmap = await createImageBitmap(file)
+      const canvas = document.createElement('canvas')
+      canvas.width = bitmap.width
+      canvas.height = bitmap.height
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.drawImage(bitmap, 0, 0)
+        const blob = await new Promise<Blob | null>((resolve) =>
+          canvas.toBlob((b) => resolve(b), 'image/jpeg', quality),
+        )
+        if (blob) {
+          return new File([blob], replaceHeicExtension(file.name), {
+            type: 'image/jpeg',
+            lastModified: file.lastModified,
+          })
+        }
+      }
+    } catch {
+      // Fall through to Image element
+    }
+  }
+
+  return new Promise<File>((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const canvas = document.createElement('canvas')
+      canvas.width = img.naturalWidth
+      canvas.height = img.naturalHeight
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        reject(new Error('Canvas 2D context not available'))
+        return
+      }
+      ctx.drawImage(img, 0, 0)
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(
+              new File([blob], replaceHeicExtension(file.name), {
+                type: 'image/jpeg',
+                lastModified: file.lastModified,
+              }),
+            )
+          } else {
+            reject(new Error('Canvas toBlob failed'))
+          }
+        },
+        'image/jpeg',
+        quality,
+      )
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('Image failed to decode HEIC natively'))
+    }
+    img.src = url
+  })
+}
+
 export async function convertHeicFile(file: File, options?: ConvertHeicOptions): Promise<File> {
   if (!isHeicFile(file)) {
     return file
   }
 
+  const quality = options?.quality ?? 0.88
+
+  // 1. First try native browser decoding (Safari / iOS WebKit natively supports HEIC fast and cleanly)
+  try {
+    return await convertHeicViaCanvas(file, quality)
+  } catch {
+    // Native decoding not supported (e.g. Chrome/Firefox on Windows), continue to heic2any
+  }
+
+  // 2. Fallback to heic2any WebAssembly decoder
   const { default: heic2any } = await import('heic2any')
   const converted = await heic2any({
     blob: file,
     toType: 'image/jpeg',
-    quality: options?.quality ?? 0.88,
+    quality,
   })
 
   const blob = Array.isArray(converted) ? converted[0] : converted

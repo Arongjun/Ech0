@@ -937,8 +937,12 @@ func (s *FileService) GetFilePresignURL(
 	}
 
 	contentType := dto.ContentType
-	if contentType == "" {
-		contentType = "application/octet-stream"
+	if contentType == "" || contentType == "application/octet-stream" {
+		if canonical := canonicalMIMEForExt(dto.FileName); canonical != "" {
+			contentType = canonical
+		} else {
+			contentType = "application/octet-stream"
+		}
 	}
 
 	category := storage.CategoryImage
@@ -1152,12 +1156,17 @@ var safeExtMIME = map[string][]string{
 	".gif":  {"image/gif"},
 	".webp": {"image/webp"},
 	".avif": {"image/avif"},
+	".heic": {"image/heic", "image/heic-sequence"},
+	".heif": {"image/heif", "image/heif-sequence", "image/heic"},
+	".hif":  {"image/heic", "image/heif"},
 	".mp3":  {"audio/mpeg"},
 	".flac": {"audio/flac"},
 	".wav":  {"audio/wav", "audio/x-wav"},
 	".m4a":  {"audio/mp4", "audio/x-m4a"},
 	".ogg":  {"audio/ogg"},
 	".mp4":  {"video/mp4"},
+	".mov":  {"video/quicktime", "video/mp4"},
+	".webm": {"video/webm"},
 }
 
 var executableMIMEs = map[string]struct{}{
