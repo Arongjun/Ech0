@@ -193,6 +193,15 @@ watch(
   },
 )
 
+watch(
+  () => echoToAdd.value.layout,
+  (newLayout) => {
+    if (newLayout && (Object.values(ImageLayout) as string[]).includes(newLayout as string)) {
+      localStg.setItem('ech0_image_layout', newLayout)
+    }
+  },
+)
+
 const handleSetFileSource = (source: App.Api.File.StorageType) => {
   fileToAdd.value.storage_type = source
 

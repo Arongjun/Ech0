@@ -32,6 +32,9 @@ importers:
       floating-vue:
         specifier: ^5.4.0
         version: 5.4.0(vue@3.5.43(typescript@6.0.3))
+      heic2any:
+        specifier: ^0.0.4
+        version: 0.0.4
       highlight.js:
         specifier: ^11.12.0
         version: 11.12.0
@@ -1893,6 +1896,9 @@ packages:
   hashery@1.5.1:
     resolution: {integrity: sha512-iZyKG96/JwPz1N55vj2Ie2vXbhu440zfUfJvSwEqEbeLluk7NnapfGqa7LH0mOsnDxTF85Mx8/dyR6HfqcbmbQ==}
     engines: {node: '>=20'}
+
+  heic2any@0.0.4:
+    resolution: {integrity: sha512-3lLnZiDELfabVH87htnRolZ2iehX9zwpRyGNz22GKXIu0fznlblf0/ftppXKNqS26dqFSeqfIBhAmAj/uSp0cA==}
 
   highlight.js@11.12.0:
     resolution: {integrity: sha512-nbfWpyRMcMrPMmDwJB+dhX/eiaPKtc2RB+0QZskqJ3WjRA/FDS0e9hZrx8EC/lbEv8gXy98FcDbNa/dspAaJMg==}
@@ -4924,6 +4930,8 @@ snapshots:
   hashery@1.5.1:
     dependencies:
       hookified: 1.15.1
+
+  heic2any@0.0.4: {}
 
   highlight.js@11.12.0: {}
 

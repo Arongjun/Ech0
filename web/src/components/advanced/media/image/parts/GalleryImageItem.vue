@@ -22,6 +22,10 @@
         @load="$emit('load')"
         @error="$emit('error')"
       />
+      <div v-if="isLive" class="livephoto-badge" aria-label="Live Photo">
+        <LivePhotoIcon class="w-3.5 h-3.5" color="currentColor" />
+        <span class="livephoto-text">LIVE</span>
+      </div>
       <slot></slot>
     </div>
   </button>
@@ -29,6 +33,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import LivePhotoIcon from '@/components/icons/livephoto.vue'
+import { isLivePhoto } from '@/utils/livephoto'
 
 const emit = defineEmits<{
   (e: 'click', sourceElement: HTMLElement | null): void
@@ -60,6 +66,7 @@ const props = withDefaults(
 )
 
 const effectiveLoading = computed(() => (props.priority ? 'eager' : props.loading))
+const isLive = computed(() => isLivePhoto(props.image))
 
 const handleClick = (event: MouseEvent) => {
   const sourceElement = event.currentTarget
@@ -68,6 +75,34 @@ const handleClick = (event: MouseEvent) => {
 </script>
 
 <style scoped>
+.livephoto-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  background: rgb(0 0 0 / 55%);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  pointer-events: none;
+  z-index: 2;
+  transition:
+    opacity 0.2s ease,
+    background 0.2s ease;
+}
+
+.livephoto-text {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+}
+
 .echoimg {
   border-radius: 8px;
   box-shadow:

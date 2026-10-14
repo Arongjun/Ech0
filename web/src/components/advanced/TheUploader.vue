@@ -199,9 +199,16 @@ const { t } = useI18n()
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const isDropOverZone = ref(false)
 
-const allowedTypes = computed(() =>
-  props.allowedFileTypes?.length ? props.allowedFileTypes : ['image/*'],
-)
+const allowedTypes = computed(() => {
+  const base = props.allowedFileTypes?.length ? props.allowedFileTypes : ['image/*']
+  if (
+    props.fileCategory === FILE_CATEGORY.IMAGE ||
+    (!props.fileCategory && base.some((t) => t.startsWith('image/')))
+  ) {
+    return [...base, '.heic', '.heif', 'image/heic', 'image/heif']
+  }
+  return base
+})
 const acceptAttr = computed(() => allowedTypes.value.join(','))
 
 const maxFiles = computed(() => props.maxFiles)

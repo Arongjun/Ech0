@@ -7,9 +7,17 @@
     </div>
 
     <div class="echo-meta-line">
-      <time class="echo-meta-item" :datetime="String(props.echo.created_at)">
-        {{ formatDateTime(props.echo.created_at) }}
-      </time>
+      <button
+        type="button"
+        class="echo-meta-item cursor-pointer hover:underline bg-transparent border-0 p-0 text-inherit focus:outline-none"
+        @click.stop="toggleTimeDisplay"
+        v-tooltip="t('echoCard.toggleTimeFormat')"
+        :aria-label="t('echoCard.toggleTimeFormat')"
+      >
+        <time :datetime="String(props.echo.created_at)">
+          {{ formatDisplayTime(props.echo.created_at) }}
+        </time>
+      </button>
       <span class="echo-meta-dot" aria-hidden="true">·</span>
       <span class="echo-meta-item">
         {{ t('echoDetail.metaWordCountValue', { count: wordCount }) }}
@@ -50,7 +58,7 @@ import { useI18n } from 'vue-i18n'
 import Lock from '@/components/icons/lock.vue'
 import GrayLike from '@/components/icons/graylike.vue'
 import TheShareEchoPanel from '@/components/advanced/echo/cards/TheShareEchoPanel.vue'
-import { formatDateTime } from '@/utils/other'
+import { useTimeDisplay } from '@/composables/useTimeDisplay'
 import { countWords } from '@/utils/echo'
 import { fetchLikeEcho } from '@/service/api'
 import { theToast } from '@/utils/toast'
@@ -58,6 +66,7 @@ import { localStg } from '@/utils/storage'
 import { isStaticMode } from '@/service/request/shared'
 
 const { t } = useI18n()
+const { toggleTimeDisplay, formatDisplayTime } = useTimeDisplay()
 
 const props = defineProps<{
   echo: App.Api.Ech0.Echo

@@ -129,6 +129,10 @@
     "invalidImageIndex": "Invalid current attachment index; cannot remove",
     "removeImageConfirmTitle": "Remove this attachment?",
     "removeImageRemoteFailed": "Attachment removed from the editor, but the server delete failed; the file may remain on the backend",
+    "dragToReorder": "Drag to reorder",
+    "convertingHeic": "Converting HEIC photo...",
+    "convertHeicSuccess": "HEIC photo converted successfully",
+    "convertHeicFailed": "Failed to convert HEIC, uploading original",
     "restoreDraftTitle": "Restore local draft",
     "restoreDraftDesc": "An unpublished local draft was detected. Restore it?",
     "restoreDraftRecovered": "Local draft restored",
@@ -529,7 +533,8 @@
     "exitUpdateModeFirst": "Please exit update mode first",
     "openDetail": "Open detail",
     "expand": "Show more",
-    "collapse": "Show less"
+    "collapse": "Show less",
+    "toggleTimeFormat": "Click to toggle time format"
   },
   "userSetting": {
     "title": "User Center",

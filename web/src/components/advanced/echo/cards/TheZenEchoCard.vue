@@ -60,11 +60,15 @@
     <div
       class="mt-2.5 flex items-center justify-between gap-2 pt-2 border-t border-[var(--color-border-subtle)]/40"
     >
-      <div
-        class="min-w-0 truncate whitespace-nowrap text-xs text-[var(--color-text-muted)] font-medium"
+      <button
+        type="button"
+        class="min-w-0 truncate whitespace-nowrap text-xs text-[var(--color-text-muted)] font-medium cursor-pointer hover:underline bg-transparent border-0 p-0 focus:outline-none"
+        @click.stop="toggleTimeDisplay"
+        v-tooltip="t('echoCard.toggleTimeFormat')"
+        :aria-label="t('echoCard.toggleTimeFormat')"
       >
-        {{ formatDate(echo.created_at) }}
-      </div>
+        {{ formatDisplayTime(echo.created_at) }}
+      </button>
       <div
         v-if="echo.tags && echo.tags.length > 0"
         class="flex items-center gap-1.5 flex-wrap justify-end"
@@ -91,10 +95,11 @@ import Lock from '@/components/icons/lock.vue'
 import Linkto from '@/components/icons/linkto.vue'
 import { useSettingStore } from '@/stores'
 import { resolveAvatarUrl } from '@/service/request/shared'
-import { formatDate } from '@/utils/other'
 import { getEchoFilesBy, isContentLeadingEcho } from '@/utils/echo'
+import { useTimeDisplay } from '@/composables/useTimeDisplay'
 
 const { t } = useI18n()
+const { toggleTimeDisplay, formatDisplayTime } = useTimeDisplay()
 
 const TheMediaPlayer = defineAsyncComponent(
   () => import('@/components/advanced/media/TheMediaPlayer.vue'),

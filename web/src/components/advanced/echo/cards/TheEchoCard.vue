@@ -8,12 +8,15 @@
           <div class="timeline-marker" :class="{ 'is-first': props.index === 0 }">
             <div class="w-2 h-2 rounded-full bg-[var(--color-accent)]"></div>
           </div>
-          <div
-            @click="handleExpandEcho(echo.id)"
-            class="flex items-center h-full justify-start leading-none text-sm font-semibold text-nowrap text-[var(--color-accent)] cursor-pointer hover:underline hover:decoration-offset-3 hover:decoration-1 mr-1"
+          <button
+            type="button"
+            @click.stop="toggleTimeDisplay"
+            class="flex items-center h-full justify-start leading-none text-sm font-semibold text-nowrap text-[var(--color-accent)] cursor-pointer hover:underline hover:decoration-offset-3 hover:decoration-1 mr-1 bg-transparent border-0 p-0 focus:outline-none"
+            v-tooltip="t('echoCard.toggleTimeFormat')"
+            :aria-label="t('echoCard.toggleTimeFormat')"
           >
-            {{ formatDate(props.echo.created_at) }}
-          </div>
+            {{ formatDisplayTime(props.echo.created_at) }}
+          </button>
           <button
             type="button"
             class="echo-open-btn flex items-center justify-center w-6 h-6 rounded-sm text-[var(--color-text-muted)] opacity-0 transition-opacity duration-150 hover:text-[var(--color-text-primary)] focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-border-subtle)]"
@@ -167,8 +170,8 @@ import EditEcho from '@/components/icons/editecho.vue'
 import Open from '@/components/icons/open.vue'
 import { useRouter } from 'vue-router'
 import { getEchoFilesBy, isContentLeadingEcho } from '@/utils/echo'
-import { formatDate } from '@/utils/other'
 import { useBaseDialog } from '@/composables/useBaseDialog'
+import { useTimeDisplay } from '@/composables/useTimeDisplay'
 import { useI18n } from 'vue-i18n'
 
 const TheMediaPlayer = defineAsyncComponent(
@@ -180,6 +183,7 @@ const TheExtensionRenderer = defineAsyncComponent(
 
 const { openConfirm } = useBaseDialog()
 const { t } = useI18n()
+const { toggleTimeDisplay, formatDisplayTime } = useTimeDisplay()
 
 const emit = defineEmits(['refresh'])
 

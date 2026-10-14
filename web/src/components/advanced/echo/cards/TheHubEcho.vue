@@ -68,9 +68,15 @@
     </div>
 
     <div class="mt-1 flex items-center justify-between gap-2">
-      <div class="min-w-0 truncate whitespace-nowrap text-xs text-[var(--color-text-muted)]">
-        {{ formatDate(props.echo.createdTs) }}
-      </div>
+      <button
+        type="button"
+        class="min-w-0 truncate whitespace-nowrap text-xs text-[var(--color-text-muted)] cursor-pointer hover:underline bg-transparent border-0 p-0 focus:outline-none"
+        @click.stop="toggleTimeDisplay"
+        v-tooltip="t('echoCard.toggleTimeFormat')"
+        :aria-label="t('echoCard.toggleTimeFormat')"
+      >
+        {{ formatDisplayTime(props.echo.createdTs) }}
+      </button>
 
       <div class="flex flex-none items-center gap-1" v-tooltip="t('hubEcho.like')">
         <button
@@ -97,7 +103,7 @@ import GrayLike from '@/components/icons/graylike.vue'
 import { TheMdPreview } from '@/components/advanced/md'
 import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { isContentLeadingEcho } from '@/utils/echo'
-import { formatDate } from '@/utils/other'
+import { useTimeDisplay } from '@/composables/useTimeDisplay'
 import { useFetch } from '@vueuse/core'
 import { theToast } from '@/utils/toast'
 import { localStg } from '@/utils/storage'
@@ -116,6 +122,7 @@ const props = defineProps<{
   echo: Echo
 }>()
 const { t } = useI18n()
+const { toggleTimeDisplay, formatDisplayTime } = useTimeDisplay()
 
 const fav_count = ref<number>(props.echo.fav_count)
 const server_url = computed(() => props.echo.server_url)

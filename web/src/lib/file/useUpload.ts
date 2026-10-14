@@ -10,6 +10,7 @@ import { theToast } from '@/utils/toast'
 import { formatBytes } from '@/utils/file'
 import { getImageSize } from '@/utils/image'
 import { compressImage, inferFileExtFromType } from './compress'
+import { convertHeicFilesIfNeeded } from './heic'
 import { getPresign, updateFileMeta } from './api/adapter'
 import { globalFileRegistry } from './registry/file-registry'
 import { httpUpload, UPLOAD_KIND } from './upload'
@@ -110,6 +111,17 @@ export function useUpload(opts: UseUploadOptions) {
   }
 
   function isAllowed(file: File): boolean {
+    if (category === FILE_CATEGORY.IMAGE) {
+      const lower = file.name.toLowerCase()
+      if (
+        lower.endsWith('.heic') ||
+        lower.endsWith('.heif') ||
+        file.type === 'image/heic' ||
+        file.type === 'image/heif'
+      ) {
+        return true
+      }
+    }
     return allowedTypes.some((rule) => mimeMatches(rule, file.type))
   }
 
@@ -119,18 +131,25 @@ export function useUpload(opts: UseUploadOptions) {
     ).length
   }
 
-  function addFiles(files: File[]) {
+  async function addFiles(files: File[]) {
     if (!userStore.isLogin) {
       theToast.error(String(t('uploader.loginRequired')))
       return
     }
+
+    const processedFiles = await convertHeicFilesIfNeeded(
+      files,
+      () => theToast.info(String(t('editor.convertingHeic'))),
+      () => theToast.success(String(t('editor.convertHeicSuccess'))),
+      () => theToast.warning(String(t('editor.convertHeicFailed'))),
+    )
 
     const existingIds = new Set(items.value.map((i) => i.id))
     let remaining = Math.max(0, maxFiles - liveCount())
     let rejected = false
     const oversized: string[] = []
 
-    for (const file of files) {
+    for (const file of processedFiles) {
       if (remaining <= 0) {
         rejected = true
         break

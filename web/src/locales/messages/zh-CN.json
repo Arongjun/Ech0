@@ -129,6 +129,10 @@
     "invalidImageIndex": "当前附件索引无效，无法删除！",
     "removeImageConfirmTitle": "确定要移除附件吗？",
     "removeImageRemoteFailed": "附件已从编辑器移除，但服务器删除失败，可能存在残留文件",
+    "dragToReorder": "拖拽调整顺序",
+    "convertingHeic": "正在转换 HEIC 图片格式...",
+    "convertHeicSuccess": "HEIC 图片转换完成",
+    "convertHeicFailed": "HEIC 格式转换失败，将尝试上传原图",
     "restoreDraftTitle": "恢复本地草稿",
     "restoreDraftDesc": "检测到你有未发布的本地草稿，是否恢复？",
     "restoreDraftRecovered": "已恢复本地草稿",
@@ -529,7 +533,8 @@
     "exitUpdateModeFirst": "请先退出更新模式！",
     "openDetail": "查看详情",
     "expand": "展开全文",
-    "collapse": "收起"
+    "collapse": "收起",
+    "toggleTimeFormat": "点击切换时间格式"
   },
   "userSetting": {
     "title": "用户中心",

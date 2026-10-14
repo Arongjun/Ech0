@@ -129,6 +129,10 @@
     "invalidImageIndex": "Ungültiger Anhang-Index – Entfernen nicht möglich",
     "removeImageConfirmTitle": "Diesen Anhang entfernen?",
     "removeImageRemoteFailed": "Anhang aus dem Editor entfernt, aber serverseitiges Löschen fehlgeschlagen – die Datei könnte auf dem Backend zurückbleiben",
+    "dragToReorder": "Ziehen zum Neuanordnen",
+    "convertingHeic": "HEIC-Foto wird konvertiert...",
+    "convertHeicSuccess": "HEIC-Foto erfolgreich konvertiert",
+    "convertHeicFailed": "HEIC-Konvertierung fehlgeschlagen, Original wird hochgeladen",
     "restoreDraftTitle": "Lokalen Entwurf wiederherstellen",
     "restoreDraftDesc": "Es wurde ein unveröffentlichter Entwurf gefunden. Wiederherstellen?",
     "restoreDraftRecovered": "Lokaler Entwurf wiederhergestellt",
@@ -529,7 +533,8 @@
     "exitUpdateModeFirst": "Bitte zuerst den Bearbeitungsmodus verlassen",
     "openDetail": "Detail öffnen",
     "expand": "Mehr anzeigen",
-    "collapse": "Weniger anzeigen"
+    "collapse": "Weniger anzeigen",
+    "toggleTimeFormat": "Klicken, um das Zeitformat umzuschalten"
   },
   "userSetting": {
     "title": "Benutzerverwaltung",

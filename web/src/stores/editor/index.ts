@@ -8,7 +8,7 @@ import { fetchAddEcho, fetchUpdateEcho } from '@/service/api'
 import { Mode, ExtensionType, ImageLayout, VideoLayout, AudioLayout } from '@/enums/enums'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { useEchoStore, useSettingStore } from '@/stores'
-import { sessionStg } from '@/utils/storage'
+import { localStg, sessionStg } from '@/utils/storage'
 import { globalFileRegistry } from '@/lib/file'
 import { i18n } from '@/locales'
 import router from '@/router'
@@ -18,6 +18,15 @@ import { useDraftModule } from './useDraftModule'
 import type { Translate } from './types'
 
 const HOME_TIMELINE_SCROLL_KEY = 'home:timeline:scrollTop'
+const REMEMBERED_IMAGE_LAYOUT_KEY = 'ech0_image_layout'
+
+const getRememberedImageLayout = (): ImageLayout => {
+  const saved = localStg.getItem<string>(REMEMBERED_IMAGE_LAYOUT_KEY)
+  if (saved && (Object.values(ImageLayout) as string[]).includes(saved)) {
+    return saved as ImageLayout
+  }
+  return ImageLayout.WATERFALL
+}
 
 export const useEditorStore = defineStore('editorStore', () => {
   const echoStore = useEchoStore()
@@ -34,7 +43,7 @@ export const useEditorStore = defineStore('editorStore', () => {
     content: '',
     echo_files: [],
     private: false,
-    layout: ImageLayout.WATERFALL,
+    layout: getRememberedImageLayout(),
     extension: null,
   })
   const tagToAdd = ref<string[]>([])
@@ -97,7 +106,7 @@ export const useEditorStore = defineStore('editorStore', () => {
       content: '',
       echo_files: [],
       private: false,
-      layout: ImageLayout.WATERFALL,
+      layout: getRememberedImageLayout(),
       extension: null,
       tags: [],
     }
