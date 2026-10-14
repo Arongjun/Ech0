@@ -30,9 +30,12 @@ type Site struct {
 	ServerURL     string `yaml:"server_url,omitempty"`
 	DefaultLocale string `yaml:"default_locale,omitempty"`
 	ICPNumber     string `yaml:"ICP_number,omitempty"`
-	FooterContent string `yaml:"footer_content,omitempty"`
-	FooterLink    string `yaml:"footer_link,omitempty"`
-	MetingAPI     string `yaml:"meting_api,omitempty"`
+	FooterContent     string `yaml:"footer_content,omitempty"`
+	FooterLink        string `yaml:"footer_link,omitempty"`
+	HomeWelcomeText   string `yaml:"home_welcome_text,omitempty"`
+	HomeSignatureText string `yaml:"home_signature_text,omitempty"`
+	HomeSignatureURL  string `yaml:"home_signature_url,omitempty"`
+	MetingAPI         string `yaml:"meting_api,omitempty"`
 	CustomCSS     string `yaml:"custom_css,omitempty"`
 	CustomJS      string `yaml:"custom_js,omitempty"`
 }
