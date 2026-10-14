@@ -11,9 +11,10 @@ const INIT_ALREADY_DONE = 'INIT_ALREADY_DONE'
 const INIT_OWNER_EXISTS = 'INIT_OWNER_EXISTS'
 
 export const useInitStore = defineStore('initStore', () => {
-  const initialized = ref<boolean>(false)
-  const ownerExists = ref<boolean>(false)
-  const ready = ref<boolean>(false)
+  const cached = localStg.getItem<boolean>('initialized')
+  const initialized = ref<boolean>(cached === true)
+  const ownerExists = ref<boolean>(cached === true)
+  const ready = ref<boolean>(cached === true)
 
   const saveCache = () => {
     localStg.setItem('initialized', initialized.value)
@@ -24,17 +25,24 @@ export const useInitStore = defineStore('initStore', () => {
   }
 
   const getStatus = async () => {
-    const res = await fetchGetInitStatus()
-    if (res.code === 1) {
-      initialized.value = res.data.initialized
-      ownerExists.value = res.data.owner_exists
-      ready.value = true
-      saveCache()
-    } else {
-      ready.value = false
-      clearCache()
+    try {
+      const res = await fetchGetInitStatus()
+      if (res.code === 1) {
+        initialized.value = res.data.initialized
+        ownerExists.value = res.data.owner_exists
+        ready.value = true
+        saveCache()
+      } else if (!ready.value) {
+        ready.value = false
+        clearCache()
+      }
+      return res
+    } catch (e) {
+      if (!ready.value) {
+        ready.value = false
+      }
+      throw e
     }
-    return res
   }
 
   const initOwner = async (payload: App.Api.Auth.SignupParams) => {
@@ -60,9 +68,10 @@ export const useInitStore = defineStore('initStore', () => {
   }
 
   const init = async () => {
-    const cached = localStg.getItem<boolean>('initialized')
-    if (cached !== null) {
-      initialized.value = cached
+    const cachedInit = localStg.getItem<boolean>('initialized')
+    if (cachedInit !== null) {
+      initialized.value = cachedInit
+      ready.value = cachedInit
     }
     await getStatus()
   }

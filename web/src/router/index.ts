@@ -5,7 +5,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useInitStore } from '@/stores/init'
 import { useUserStore } from '@/stores/user'
 import { useEchoStore } from '@/stores/echo'
-import { localStg } from '@/utils/storage'
+import { localStg, sessionStg } from '@/utils/storage'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -188,15 +188,27 @@ const router = createRouter({
   ],
 })
 
+const withTimeout = <T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => {
+      window.setTimeout(() => resolve(fallback), ms)
+    }),
+  ])
+}
+
 router.beforeEach(async (to) => {
   const initStore = useInitStore()
   const userStore = useUserStore()
 
   if (!initStore.ready) {
-    await initStore.init().catch(() => undefined)
+    await withTimeout(initStore.init().catch(() => undefined), 1500, undefined)
   }
 
-  const isInitReady = initStore.initialized || initStore.ownerExists
+  const isInitReady =
+    initStore.initialized ||
+    initStore.ownerExists ||
+    localStg.getItem<boolean>('initialized') === true
 
   if (!isInitReady && to.name !== 'init') {
     return { name: 'init' }
@@ -206,23 +218,47 @@ router.beforeEach(async (to) => {
     return { name: 'auth' }
   }
 
-  if (!userStore.initialized) {
-    await userStore.init().catch(() => undefined)
+  if (to.meta.requiresAuth) {
+    if (!userStore.initialized) {
+      await withTimeout(userStore.init().catch(() => undefined), 2000, undefined)
+    }
+    if (!userStore.isLogin) {
+      return { name: 'auth' }
+    }
+  } else {
+    if (!userStore.initialized) {
+      userStore.init().catch(() => undefined)
+    }
   }
 
   const needRedirect = localStg.getItem<boolean | string>('needLoginRedirect')
 
   if (
-    (to.meta.requiresAuth && !userStore.isLogin) ||
-    (to.meta.optionalAuth &&
-      !userStore.isLogin &&
-      (needRedirect === true || needRedirect === 'true'))
+    to.meta.optionalAuth &&
+    !userStore.isLogin &&
+    (needRedirect === true || needRedirect === 'true')
   ) {
     localStg.removeItem('needLoginRedirect')
     return { name: 'auth' }
   }
 
   return true
+})
+
+router.onError((error) => {
+  console.warn('[Router Error]', error)
+  const isChunkError =
+    error?.message &&
+    (/Loading chunk/i.test(error.message) ||
+      /Failed to fetch dynamically imported module/i.test(error.message) ||
+      /error loading dynamically imported module/i.test(error.message))
+  if (isChunkError && typeof window !== 'undefined') {
+    const retryKey = 'ech0:chunk_reload_retry'
+    if (!sessionStg.getItem(retryKey)) {
+      sessionStg.setItem(retryKey, 'true')
+      window.location.reload()
+    }
+  }
 })
 
 export default router

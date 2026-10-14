@@ -18,12 +18,14 @@ export const LOCALE_ENDONYMS: Record<AppLocale, string> = {
   'ja-JP': '日本語',
 }
 
+import zhCNMessages from './messages/zh-CN.json'
+
 export const LOCALE_OPTIONS = SUPPORTED_LOCALES.map((value) => ({
   value,
   label: LOCALE_ENDONYMS[value],
 }))
 
-const loadedLocales = new Set<string>()
+const loadedLocales = new Set<string>(['zh-CN'])
 
 const toSupported = (raw?: string | null): AppLocale | null => {
   const value = String(raw || '').trim()
@@ -57,6 +59,8 @@ export const i18n = createI18n({
   fallbackLocale: DEFAULT_LOCALE,
   messages: {},
 })
+
+i18n.global.setLocaleMessage('zh-CN', zhCNMessages)
 
 async function loadLocaleMessages(locale: AppLocale) {
   if (loadedLocales.has(locale)) return

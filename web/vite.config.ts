@@ -59,6 +59,7 @@ export default defineConfig(({ command }) => ({
     restoreMocks: true,
   },
   build: {
+    target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'],
     outDir: '../template/dist',
     emptyOutDir: true,
     reportCompressedSize: false,

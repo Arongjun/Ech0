@@ -89,6 +89,20 @@ async function bootstrap() {
     console.error('Failed to mount application:', err)
   }
 
+  router
+    .isReady()
+    .then(() => {
+      window.requestAnimationFrame(() => {
+        startLoaderFade()
+      })
+    })
+    .catch((err) => {
+      console.warn('Router isReady error:', err)
+      startLoaderFade()
+    })
+
+  window.setTimeout(startLoaderFade, 3000)
+
   initStores()
     .then(() => {
       const settingStore = useSettingStore()
@@ -102,15 +116,7 @@ async function bootstrap() {
     })
 }
 
-bootstrap()
-  .catch((err) => {
-    console.error('Failed to bootstrap application:', err)
-  })
-  .finally(() => {
-    const loaderTimeout = new Promise<void>((resolve) => {
-      window.setTimeout(resolve, 1500)
-    })
-    Promise.race([router.isReady().catch(() => undefined), loaderTimeout]).then(() => {
-      startLoaderFade()
-    })
-  })
+bootstrap().catch((err) => {
+  console.error('Failed to bootstrap application:', err)
+  startLoaderFade()
+})

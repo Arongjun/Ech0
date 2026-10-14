@@ -6,14 +6,25 @@ import { useAuthStore } from '@/stores/auth'
 import { i18n } from '@/locales'
 
 export function buildCommonHeaders(): Record<string, string> {
+  let timeZone = 'UTC'
+  try {
+    timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  } catch {}
+  let locale = 'zh-CN'
+  try {
+    locale = String(i18n.global.locale.value || 'zh-CN')
+  } catch {}
+
   const headers: Record<string, string> = {
-    'X-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-    'X-Locale': i18n.global.locale.value,
+    'X-Timezone': timeZone,
+    'X-Locale': locale,
   }
-  const authHeader = useAuthStore().authHeader
-  if (authHeader) {
-    headers['Authorization'] = authHeader
-  }
+  try {
+    const authHeader = useAuthStore().authHeader
+    if (authHeader) {
+      headers['Authorization'] = authHeader
+    }
+  } catch {}
   return headers
 }
 

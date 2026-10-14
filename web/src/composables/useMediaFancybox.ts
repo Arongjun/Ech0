@@ -10,6 +10,7 @@ import {
   type CarouselInstance,
 } from '@fancyapps/ui'
 import { i18n } from '@/locales'
+import { localStg } from '@/utils/storage'
 import '@fancyapps/ui/dist/fancybox/fancybox.css'
 import '@fancyapps/ui/dist/carousel/carousel.css'
 import '@fancyapps/ui/dist/carousel/carousel.thumbs.css'
@@ -52,16 +53,12 @@ const isVideoUrl = (url: string) => {
 }
 
 const livePhotoAutoPlay = ref<boolean>(
-  typeof localStorage !== 'undefined'
-    ? localStorage.getItem('livePhotoAutoPlay') !== 'false'
-    : true,
+  localStg.getItem<string>('livePhotoAutoPlay') !== 'false',
 )
 
 export const toggleLivePhotoAutoPlay = () => {
   livePhotoAutoPlay.value = !livePhotoAutoPlay.value
-  if (typeof localStorage !== 'undefined') {
-    localStorage.setItem('livePhotoAutoPlay', String(livePhotoAutoPlay.value))
-  }
+  localStg.setItem('livePhotoAutoPlay', String(livePhotoAutoPlay.value))
 }
 
 export const getLivePhotoAutoPlay = () => livePhotoAutoPlay.value

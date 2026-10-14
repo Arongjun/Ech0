@@ -2,6 +2,7 @@
 // Copyright (C) 2025-2026 lin-snow
 
 import { onBeforeUnmount, shallowRef, type Ref } from 'vue'
+import { localStg } from '@/utils/storage'
 import PhotoSwipe from 'photoswipe'
 import 'photoswipe/style.css'
 import '@/styles/photoswipe-livephoto.css'
@@ -24,13 +25,11 @@ type ResolvedDimensions = {
 const LIVEPHOTO_AUTOPLAY_STORAGE_KEY = 'livePhotoAutoPlay'
 
 export const getLivePhotoAutoPlay = (): boolean => {
-  if (typeof localStorage === 'undefined') return true
-  return localStorage.getItem(LIVEPHOTO_AUTOPLAY_STORAGE_KEY) !== 'false'
+  return localStg.getItem<string>(LIVEPHOTO_AUTOPLAY_STORAGE_KEY) !== 'false'
 }
 
 export const setLivePhotoAutoPlay = (enabled: boolean): void => {
-  if (typeof localStorage === 'undefined') return
-  localStorage.setItem(LIVEPHOTO_AUTOPLAY_STORAGE_KEY, String(enabled))
+  localStg.setItem(LIVEPHOTO_AUTOPLAY_STORAGE_KEY, String(enabled))
 }
 
 export const toggleLivePhotoAutoPlay = (): boolean => {
