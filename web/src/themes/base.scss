@@ -1,5 +1,6 @@
 html,
 body {
+  overflow-x: clip;
   font-family: var(--font-family-sans);
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;

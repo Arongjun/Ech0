@@ -28,9 +28,6 @@ const { t } = useI18n()
 const echoId = route.params.echoId as string
 
 const echoStore = useEchoStore()
-const isLoading = ref(true)
-const echo = ref<App.Api.Ech0.Echo | null>(null)
-
 const getEchoFromStore = (): App.Api.Ech0.Echo | null => {
   const idx = echoStore.echoIndexMap.get(echoId)
   if (idx !== undefined) {
@@ -39,6 +36,9 @@ const getEchoFromStore = (): App.Api.Ech0.Echo | null => {
   return null
 }
 
+const echo = ref<App.Api.Ech0.Echo | null>(getEchoFromStore())
+const isLoading = ref(!echo.value)
+
 const handleUpdateLikeCount = () => {
   if (echo.value) {
     echo.value.fav_count += 1
@@ -46,8 +46,6 @@ const handleUpdateLikeCount = () => {
 }
 
 onMounted(async () => {
-  echo.value = getEchoFromStore()
-
   if (!echo.value) {
     echo.value = await echoStore.prefetchEcho(echoId)
   }

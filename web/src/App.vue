@@ -40,26 +40,7 @@ router.afterEach((to, from) => {
     return
   }
 
-  const routeDepth: Record<string, number> = {
-    home: 0,
-    echo: 1,
-    panel: 1,
-    auth: 1,
-    hub: 1,
-    widget: 1,
-    'not-found': 2,
-  }
-
-  const toDepth = routeDepth[toName] ?? 1
-  const fromDepth = routeDepth[fromName] ?? 1
-
-  if (toDepth > fromDepth) {
-    transitionName.value = 'slide-left'
-  } else if (toDepth < fromDepth) {
-    transitionName.value = 'slide-right'
-  } else {
-    transitionName.value = 'fade'
-  }
+  transitionName.value = 'fade'
 })
 
 const settingStore = useSettingStore()
@@ -239,51 +220,21 @@ onMounted(() => {
   z-index: 2;
   min-height: 100%;
   isolation: isolate;
+  overflow-x: clip;
+  width: 100%;
+  max-width: 100vw;
 }
 
-.fade-enter-active,
+.fade-enter-active {
+  transition: opacity 0.14s ease-out;
+}
+
 .fade-leave-active {
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
+  transition: opacity 0.08s ease-in;
 }
 
-.fade-enter-from {
-  opacity: 0;
-  transform: translateY(8px);
-}
-
+.fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
-}
-
-.slide-left-enter-active,
-.slide-left-leave-active,
-.slide-right-enter-active,
-.slide-right-leave-active {
-  transition:
-    opacity 0.25s ease,
-    transform 0.25s ease;
-}
-
-.slide-left-enter-from {
-  opacity: 0;
-  transform: translateX(20px);
-}
-
-.slide-left-leave-to {
-  opacity: 0;
-  transform: translateX(-20px);
-}
-
-.slide-right-enter-from {
-  opacity: 0;
-  transform: translateX(-20px);
-}
-
-.slide-right-leave-to {
-  opacity: 0;
-  transform: translateX(20px);
 }
 </style>

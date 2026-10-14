@@ -10,10 +10,10 @@
           </div>
           <button
             type="button"
-            @click.stop="toggleTimeDisplay"
+            @click="handleExpandEcho(echo.id)"
             class="flex items-center h-full justify-start leading-none text-sm font-semibold text-nowrap text-[var(--color-accent)] cursor-pointer hover:underline hover:decoration-offset-3 hover:decoration-1 mr-1 bg-transparent border-0 p-0 focus:outline-none"
-            v-tooltip="t('echoCard.toggleTimeFormat')"
-            :aria-label="t('echoCard.toggleTimeFormat')"
+            v-tooltip="t('echoCard.openDetail')"
+            :aria-label="t('echoCard.openDetail')"
           >
             {{ formatDisplayTime(props.echo.created_at) }}
           </button>
@@ -183,7 +183,7 @@ const TheExtensionRenderer = defineAsyncComponent(
 
 const { openConfirm } = useBaseDialog()
 const { t } = useI18n()
-const { toggleTimeDisplay, formatDisplayTime } = useTimeDisplay()
+const { formatDisplayTime } = useTimeDisplay()
 
 const emit = defineEmits(['refresh'])
 
