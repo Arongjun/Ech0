@@ -3,12 +3,19 @@
 <script setup lang="ts">
 import PanelCard from '@/layout/PanelCard.vue'
 import { FILE_STORAGE_TYPE } from '@/constants/file'
-import { fetchDownloadFileById, fetchDownloadFileByPath, fetchFileTree } from '@/service/api'
+import {
+  fetchDownloadFileById,
+  fetchDownloadFileByPath,
+  fetchFileTree,
+  fetchDeleteFileByPath,
+} from '@/service/api'
 import { nextTick, reactive, ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { theToast } from '@/utils/toast'
 import DownloadIcon from '@/components/icons/download.vue'
 import ViewIcon from '@/components/icons/view.vue'
+import Trashbin from '@/components/icons/trashbin.vue'
+import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 
@@ -93,8 +100,10 @@ const sections = reactive<Record<RootStorageType, FileSectionState>>({
 
 const downloadingId = ref('')
 const previewingId = ref('')
+const deletingId = ref('')
 const refreshingRoot = ref<RootStorageType | ''>('')
 const selectedNodeKey = ref('')
+const { openConfirm } = useBaseDialog()
 const settingStore = useSettingStore()
 const { S3Setting } = storeToRefs(settingStore)
 const rootStorageTypes = computed<RootStorageType[]>(() =>
@@ -363,6 +372,72 @@ const isErrorLikeBlob = async (blob: Blob) => {
   return text.includes('文件不存在') || text.includes('error') || text.includes('not found')
 }
 
+const isActionBusy = (storageType: RootStorageType, node: TreeNode) => {
+  const actionKey = actionKeyOf(storageType, node)
+  return (
+    downloadingId.value === actionKey ||
+    previewingId.value === actionKey ||
+    deletingId.value === actionKey
+  )
+}
+
+const removeNodeFromTree = (storageType: RootStorageType, targetPath: string) => {
+  const removeFromList = (list: TreeNode[]): boolean => {
+    const idx = list.findIndex((n) => n.path === targetPath)
+    if (idx !== -1) {
+      list.splice(idx, 1)
+      return true
+    }
+    for (const item of list) {
+      if (item.children && item.children.length > 0) {
+        if (removeFromList(item.children)) return true
+      }
+    }
+    return false
+  }
+
+  removeFromList(sections[storageType].nodes)
+
+  const prefix = `${storageType}:`
+  for (const [cacheKey, items] of Object.entries(nodeCache)) {
+    if (cacheKey.startsWith(prefix)) {
+      const idx = items.findIndex((n) => n.path === targetPath)
+      if (idx !== -1) {
+        items.splice(idx, 1)
+      }
+    }
+  }
+
+  if (selectedNodeKey.value === buildNodeKey(storageType, targetPath)) {
+    selectedNodeKey.value = ''
+  }
+}
+
+const triggerDelete = (storageType: RootStorageType, node: TreeNode) => {
+  openConfirm({
+    title: String(t('storageFileList.deleteConfirmTitle')),
+    description: String(t('storageFileList.deleteConfirmDesc', { name: node.name })),
+    onConfirm: async () => {
+      const actionKey = actionKeyOf(storageType, node)
+      deletingId.value = actionKey
+      try {
+        const res = await fetchDeleteFileByPath({
+          storage_type: storageType,
+          path: node.path,
+        })
+        if (res.code === 1) {
+          theToast.success(res.msg || String(t('storageFileList.deleteSuccess')))
+          removeNodeFromTree(storageType, node.path)
+        }
+      } catch {
+        theToast.error(String(t('storageFileList.deleteFailed')))
+      } finally {
+        deletingId.value = ''
+      }
+    },
+  })
+}
+
 const onBeforeEnter = (el: Element) => {
   const element = el as HTMLElement
   cancelAnim(element)
@@ -556,17 +631,12 @@ onMounted(() => {
                           v-else-if="row.node.node_type === 'file'"
                           class="file-actions"
                           :class="{
-                            'is-busy':
-                              downloadingId === actionKeyOf(storageType, row.node) ||
-                              previewingId === actionKeyOf(storageType, row.node),
+                            'is-busy': isActionBusy(storageType, row.node),
                           }"
                         >
                           <button
                             class="download-btn icon-btn"
-                            :disabled="
-                              downloadingId === actionKeyOf(storageType, row.node) ||
-                              previewingId === actionKeyOf(storageType, row.node)
-                            "
+                            :disabled="isActionBusy(storageType, row.node)"
                             v-tooltip="
                               previewingId === actionKeyOf(storageType, row.node)
                                 ? t('storageFileList.previewing')
@@ -581,10 +651,7 @@ onMounted(() => {
                           </button>
                           <button
                             class="download-btn icon-btn"
-                            :disabled="
-                              downloadingId === actionKeyOf(storageType, row.node) ||
-                              previewingId === actionKeyOf(storageType, row.node)
-                            "
+                            :disabled="isActionBusy(storageType, row.node)"
                             v-tooltip="
                               downloadingId === actionKeyOf(storageType, row.node)
                                 ? t('storageFileList.downloading')
@@ -596,6 +663,19 @@ onMounted(() => {
                               >◌</span
                             >
                             <DownloadIcon v-else class="download-icon" />
+                          </button>
+                          <button
+                            class="delete-btn icon-btn"
+                            :disabled="isActionBusy(storageType, row.node)"
+                            v-tooltip="
+                              deletingId === actionKeyOf(storageType, row.node)
+                                ? t('storageFileList.deleting')
+                                : t('storageFileList.delete')
+                            "
+                            @click.stop="triggerDelete(storageType, row.node)"
+                          >
+                            <span v-if="deletingId === actionKeyOf(storageType, row.node)">◌</span>
+                            <Trashbin v-else class="delete-icon" />
                           </button>
                         </div>
                       </div>
@@ -631,7 +711,8 @@ onMounted(() => {
 }
 
 .retry-btn,
-.download-btn {
+.download-btn,
+.delete-btn {
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-sm);
   padding: 0.2rem 0.65rem;
@@ -655,12 +736,14 @@ onMounted(() => {
   border-color: var(--color-border-strong);
 }
 
-.refresh-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.7;
+.delete-btn:hover:not(:disabled) {
+  color: var(--color-error, #ef4444);
+  border-color: var(--color-error, #ef4444);
 }
 
-.download-btn:disabled {
+.refresh-btn:disabled,
+.download-btn:disabled,
+.delete-btn:disabled {
   cursor: not-allowed;
   opacity: 0.7;
 }
@@ -762,7 +845,7 @@ onMounted(() => {
 }
 
 .tree-right {
-  min-width: 7rem;
+  min-width: 8rem;
   display: inline-flex;
   justify-content: flex-end;
   align-items: center;
@@ -808,7 +891,8 @@ onMounted(() => {
   font-size: 1rem;
 }
 
-.preview-icon {
+.preview-icon,
+.delete-icon {
   font-size: 0.96rem;
 }
 

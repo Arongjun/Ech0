@@ -229,7 +229,7 @@ onBeforeUnmount(() => {
 
   background: var(--ag-glass-strong, color-mix(in srgb, var(--color-bg-canvas) 85%, transparent));
   backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid var(--ag-line);
   isolation: isolate;
 }
@@ -241,7 +241,7 @@ onBeforeUnmount(() => {
   padding: 0.25rem 0.6rem 0.25rem 0.25rem;
   background: var(--color-bg-surface);
   backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   border: 1px solid var(--ag-line);
   border-radius: 9999px;
   box-shadow: var(--ag-shadow);
@@ -302,7 +302,7 @@ onBeforeUnmount(() => {
   border: 1px solid var(--ag-line);
   background: var(--color-bg-surface);
   backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   color: var(--color-text-secondary);
   border-radius: 9999px;
   box-shadow: var(--ag-shadow);

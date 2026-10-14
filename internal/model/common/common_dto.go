@@ -105,6 +105,11 @@ type FilePathStreamQueryDto struct {
 	ContentType string `json:"content_type" form:"content_type"`
 }
 
+type FilePathDeleteQueryDto struct {
+	StorageType string `json:"storage_type" form:"storage_type" binding:"required"`
+	Path        string `json:"path" form:"path" binding:"required"`
+}
+
 type FileTreeNodeDto struct {
 	Name        string `json:"name"`
 	Path        string `json:"path"`

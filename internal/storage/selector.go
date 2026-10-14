@@ -111,6 +111,14 @@ func (r *StorageSelector) Delete(ctx context.Context, storageType StorageType, k
 	return fs.Delete(ctx, key)
 }
 
+type StoragePathGetter interface {
+	GetByStoragePath(ctx context.Context, storagePath string) (io.ReadCloser, error)
+}
+
+type StoragePathDeleter interface {
+	DeleteByStoragePath(ctx context.Context, storagePath string) error
+}
+
 func (r *StorageSelector) GetByStoragePath(
 	ctx context.Context,
 	storageType StorageType,
@@ -128,15 +136,56 @@ func (r *StorageSelector) GetByStoragePath(
 		if !r.ObjectEnabled() {
 			return nil, errors.New("object storage is not enabled")
 		}
+		if getter, ok := r.objectFS.(StoragePathGetter); ok {
+			return getter.GetByStoragePath(ctx, cleanPath)
+		}
 		return r.objectFS.Get(ctx, cleanPath)
 	case StorageTypeExternal:
 		return nil, errors.New("external storage does not support filesystem operations")
 	default:
+		if getter, ok := r.localFS.(StoragePathGetter); ok {
+			return getter.GetByStoragePath(ctx, cleanPath)
+		}
 		cleanRel := filepath.Clean(filepath.FromSlash(cleanPath))
 		if cleanRel == "." || cleanRel == "" || strings.HasPrefix(cleanRel, "..") || filepath.IsAbs(cleanRel) {
 			return nil, errors.New("invalid file path")
 		}
 		return os.Open(filepath.Join(r.localRoot, cleanRel))
+	}
+}
+
+func (r *StorageSelector) DeleteByStoragePath(
+	ctx context.Context,
+	storageType StorageType,
+	filePath string,
+) error {
+	if r == nil {
+		return errors.New("storage selector is not initialized")
+	}
+	cleanPath := strings.Trim(strings.TrimSpace(filePath), "/")
+	if cleanPath == "" {
+		return errors.New("file path is empty")
+	}
+	switch NormalizeStorageType(string(storageType)) {
+	case StorageTypeObject:
+		if !r.ObjectEnabled() {
+			return errors.New("object storage is not enabled")
+		}
+		if deleter, ok := r.objectFS.(StoragePathDeleter); ok {
+			return deleter.DeleteByStoragePath(ctx, cleanPath)
+		}
+		return r.objectFS.Delete(ctx, cleanPath)
+	case StorageTypeExternal:
+		return errors.New("external storage does not support filesystem operations")
+	default:
+		if deleter, ok := r.localFS.(StoragePathDeleter); ok {
+			return deleter.DeleteByStoragePath(ctx, cleanPath)
+		}
+		cleanRel := filepath.Clean(filepath.FromSlash(cleanPath))
+		if cleanRel == "." || cleanRel == "" || strings.HasPrefix(cleanRel, "..") || filepath.IsAbs(cleanRel) {
+			return errors.New("invalid file path")
+		}
+		return os.Remove(filepath.Join(r.localRoot, cleanRel))
 	}
 }
 

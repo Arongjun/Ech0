@@ -251,7 +251,13 @@
     "download": "Herunterladen",
     "downloading": "Wird heruntergeladen",
     "downloadFailed": "Download fehlgeschlagen",
-    "downloadFailedResponse": "Download fehlgeschlagen: unerwartete Serverantwort"
+    "downloadFailedResponse": "Download fehlgeschlagen: unerwartete Serverantwort",
+    "delete": "Löschen",
+    "deleting": "Wird gelöscht",
+    "deleteSuccess": "Datei erfolgreich gelöscht",
+    "deleteFailed": "Datei konnte nicht gelöscht werden",
+    "deleteConfirmTitle": "Datei löschen bestätigen",
+    "deleteConfirmDesc": "Sind Sie sicher, dass Sie die Datei \"{name}\" löschen möchten? Dieser Vorgang kann nicht rückgängig gemacht werden."
   },
   "staticSite": {
     "likeUnavailable": "Dies ist ein statisches Archiv; Liken ist nicht möglich."

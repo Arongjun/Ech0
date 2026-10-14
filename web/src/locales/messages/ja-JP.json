@@ -251,7 +251,13 @@
     "download": "ダウンロード",
     "downloading": "ダウンロード中",
     "downloadFailed": "ダウンロードに失敗しました",
-    "downloadFailedResponse": "ダウンロード失敗：サーバーから不正な応答が返されました"
+    "downloadFailedResponse": "ダウンロード失敗：サーバーから不正な応答が返されました",
+    "delete": "削除",
+    "deleting": "削除中",
+    "deleteSuccess": "ファイルを削除しました",
+    "deleteFailed": "ファイルの削除に失敗しました",
+    "deleteConfirmTitle": "ファイルの削除確認",
+    "deleteConfirmDesc": "ファイル「{name}」を削除してもよろしいですか？この操作は取り消せません。"
   },
   "staticSite": {
     "likeUnavailable": "これは静的アーカイブのため、いいねはできません。"

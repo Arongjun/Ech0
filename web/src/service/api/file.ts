@@ -36,6 +36,17 @@ export function fetchDeleteFile(file: App.Api.File.FileDeleteDto) {
   })
 }
 
+export function fetchDeleteFileByPath(query: { storage_type: string; path: string }) {
+  const searchParams = new URLSearchParams({
+    storage_type: query.storage_type,
+    path: query.path,
+  })
+  return request({
+    url: `/file/storage?${searchParams.toString()}`,
+    method: 'DELETE',
+  })
+}
+
 export function fetchGetFileById(id: string) {
   return request<App.Api.File.FileDto>({
     url: `/file/${id}`,

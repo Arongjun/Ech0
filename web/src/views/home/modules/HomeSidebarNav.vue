@@ -248,16 +248,16 @@ watch(showSearchTrigger, (visible) => {
 
 @media (width <= 819.98px) {
   .home-sidebar-nav__mobile-row {
-    background: var(--ag-glass-strong, rgba(255, 255, 255, 0.72));
+    background: var(--ag-glass-strong, rgb(255 255 255 / 72%));
     backdrop-filter: blur(24px) saturate(190%);
-    -webkit-backdrop-filter: blur(24px) saturate(190%);
-    border: 1px solid var(--ag-line-soft, rgba(255, 255, 255, 0.8));
+    backdrop-filter: blur(24px) saturate(190%);
+    border: 1px solid var(--ag-line-soft, rgb(255 255 255 / 80%));
     border-radius: 9999px;
     padding: 0.24rem 0.32rem;
     box-shadow:
-      0 4px 18px -2px rgba(18, 24, 38, 0.05),
-      0 1px 3px rgba(18, 24, 38, 0.02),
-      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      0 4px 18px -2px rgb(18 24 38 / 5%),
+      0 1px 3px rgb(18 24 38 / 2%),
+      inset 0 1px 0 rgb(255 255 255 / 90%);
     gap: 0.25rem;
     box-sizing: border-box;
     width: 100%;
@@ -269,8 +269,7 @@ watch(showSearchTrigger, (visible) => {
     gap: 0.16rem;
     min-width: 0;
     flex: 1 1 auto;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: auto hidden;
     white-space: nowrap;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -310,7 +309,7 @@ watch(showSearchTrigger, (visible) => {
 
   .home-sidebar-nav__link:hover {
     color: var(--ag-ink, var(--color-text-primary));
-    background: rgba(255, 255, 255, 0.42);
+    background: rgb(255 255 255 / 42%);
   }
 
   .home-sidebar-nav__link:active {
@@ -320,11 +319,11 @@ watch(showSearchTrigger, (visible) => {
   .home-sidebar-nav__link.home-sidebar-nav__link--active {
     color: var(--ag-blue, #007aff);
     font-weight: 600;
-    background: #ffffff;
+    background: #fff;
     border-radius: 9999px;
     box-shadow:
-      0 0 0 0.5px rgba(0, 0, 0, 0.05),
-      0 1px 2px rgba(0, 0, 0, 0.06);
+      0 0 0 0.5px rgb(0 0 0 / 5%),
+      0 1px 2px rgb(0 0 0 / 6%);
     transform: none;
   }
 
@@ -338,10 +337,10 @@ watch(showSearchTrigger, (visible) => {
     height: 2.15rem;
     padding: 0;
     border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.52);
-    border: 0.5px solid rgba(255, 255, 255, 0.7);
+    background: rgb(255 255 255 / 52%);
+    border: 0.5px solid rgb(255 255 255 / 70%);
     color: var(--ag-ink-soft, var(--color-text-muted));
-    box-shadow: 0 1px 3px rgba(18, 24, 38, 0.03);
+    box-shadow: 0 1px 3px rgb(18 24 38 / 3%);
     cursor: pointer;
     margin: 0;
     transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
@@ -353,16 +352,16 @@ watch(showSearchTrigger, (visible) => {
   .home-sidebar-nav__search-trigger:active,
   .home-sidebar-nav__chat-trigger:active {
     color: var(--ag-blue, #007aff);
-    background: #ffffff;
-    box-shadow: 0 2px 8px rgba(18, 24, 38, 0.08);
+    background: #fff;
+    box-shadow: 0 2px 8px rgb(18 24 38 / 8%);
     transform: scale(1.06);
   }
 
   .home-sidebar-nav__search-trigger[aria-expanded='true'] {
-    background: #ffffff;
+    background: #fff;
     color: var(--ag-blue, #007aff);
-    border-color: rgba(0, 122, 255, 0.35);
-    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.16);
+    border-color: rgb(0 122 255 / 35%);
+    box-shadow: 0 2px 8px rgb(0 122 255 / 16%);
   }
 
   .home-sidebar-nav__search-icon,

@@ -48,10 +48,19 @@ func NewSchema(routes ...Route) *Schema {
 }
 
 func (s *Schema) Resolve(key string) string {
+	clean := strings.Trim(strings.TrimSpace(key), "/")
+	if clean == "" {
+		return ""
+	}
 	for _, r := range s.routes {
-		if r.match(key) {
-			return r.prefix + key
+		if r.prefix != "" && strings.HasPrefix(clean, r.prefix) {
+			return clean
 		}
 	}
-	return key
+	for _, r := range s.routes {
+		if r.match(clean) {
+			return r.prefix + clean
+		}
+	}
+	return clean
 }

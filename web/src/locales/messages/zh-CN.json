@@ -251,7 +251,13 @@
     "download": "下载",
     "downloading": "下载中",
     "downloadFailed": "下载失败",
-    "downloadFailedResponse": "下载失败：服务端返回异常内容"
+    "downloadFailedResponse": "下载失败：服务端返回异常内容",
+    "delete": "删除",
+    "deleting": "删除中",
+    "deleteSuccess": "文件删除成功",
+    "deleteFailed": "删除文件失败",
+    "deleteConfirmTitle": "确认删除文件",
+    "deleteConfirmDesc": "确定要删除文件 \"{name}\" 吗？此操作将永久删除该文件，不可恢复。"
   },
   "staticSite": {
     "likeUnavailable": "当前为静态归档站点，无法点赞。"

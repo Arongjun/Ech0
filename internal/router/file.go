@@ -29,6 +29,11 @@ func setupFileRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 		middleware.RequireScopes(authModel.ScopeFileWrite),
 		h.FileHandler.UploadFile(),
 	)
+	appRouterGroup.AuthRouterGroup.DELETE(
+		"/file/storage",
+		middleware.RequireScopes(authModel.ScopeFileWrite),
+		h.FileHandler.DeleteFileByPath(),
+	)
 }
 
 func registerFile(api huma.API, h *handler.Bundle, revoker authService.TokenRevoker) {

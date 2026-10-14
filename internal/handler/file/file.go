@@ -148,3 +148,16 @@ func (fileHandler *FileHandler) StreamFileByPath(ctx *gin.Context) {
 	}
 	fileHandler.fileService.StreamFileByPath(ctx, query)
 }
+
+func (fileHandler *FileHandler) DeleteFileByPath() gin.HandlerFunc {
+	return res.Execute(func(ctx *gin.Context) res.Response {
+		var query commonModel.FilePathDeleteQueryDto
+		if err := ctx.ShouldBindQuery(&query); err != nil {
+			return res.Response{Msg: commonModel.INVALID_QUERY_PARAMS, Err: err}
+		}
+		if err := fileHandler.fileService.DeleteFileByPath(ctx.Request.Context(), query.StorageType, query.Path); err != nil {
+			return res.Response{Msg: "", Err: err}
+		}
+		return res.Response{Msg: commonModel.DELETE_SUCCESS}
+	})
+}

@@ -91,9 +91,78 @@ func (l *LocalFS) Get(ctx context.Context, key string) (io.ReadCloser, error) {
 	}
 	f, err := os.Open(p)
 	if err != nil {
+		if os.IsNotExist(err) && l.keyFunc != nil {
+			cleaned, cleanErr := CleanKey(key)
+			if cleanErr == nil {
+				rawP := filepath.Join(l.root, filepath.FromSlash(cleaned))
+				if rawP != p {
+					if rawF, rawErr := os.Open(rawP); rawErr == nil {
+						return rawF, nil
+					}
+				}
+			}
+		}
 		return nil, &OpError{Op: "Get", Key: key, Err: mapOSError(err)}
 	}
 	return f, nil
+}
+
+func (l *LocalFS) GetByStoragePath(ctx context.Context, storagePath string) (io.ReadCloser, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, &OpError{Op: "GetByStoragePath", Key: storagePath, Err: err}
+	}
+	cleaned, err := CleanKey(storagePath)
+	if err != nil {
+		return nil, &OpError{Op: "GetByStoragePath", Key: storagePath, Err: err}
+	}
+	p := filepath.Join(l.root, filepath.FromSlash(cleaned))
+	abs, err := filepath.Abs(p)
+	if err != nil || !strings.HasPrefix(abs, l.root) {
+		return nil, &OpError{Op: "GetByStoragePath", Key: storagePath, Err: ErrInvalidKey}
+	}
+	f, err := os.Open(abs)
+	if err != nil {
+		if os.IsNotExist(err) && l.keyFunc != nil {
+			resolved := l.keyFunc(cleaned)
+			resolvedP := filepath.Join(l.root, filepath.FromSlash(resolved))
+			if resolvedP != abs {
+				if rf, rerr := os.Open(resolvedP); rerr == nil {
+					return rf, nil
+				}
+			}
+		}
+		return nil, &OpError{Op: "GetByStoragePath", Key: storagePath, Err: mapOSError(err)}
+	}
+	return f, nil
+}
+
+func (l *LocalFS) DeleteByStoragePath(ctx context.Context, storagePath string) error {
+	if err := ctx.Err(); err != nil {
+		return &OpError{Op: "DeleteByStoragePath", Key: storagePath, Err: err}
+	}
+	cleaned, err := CleanKey(storagePath)
+	if err != nil {
+		return &OpError{Op: "DeleteByStoragePath", Key: storagePath, Err: err}
+	}
+	p := filepath.Join(l.root, filepath.FromSlash(cleaned))
+	abs, err := filepath.Abs(p)
+	if err != nil || !strings.HasPrefix(abs, l.root) {
+		return &OpError{Op: "DeleteByStoragePath", Key: storagePath, Err: ErrInvalidKey}
+	}
+	err = os.Remove(abs)
+	if err != nil && os.IsNotExist(err) && l.keyFunc != nil {
+		resolved := l.keyFunc(cleaned)
+		resolvedP := filepath.Join(l.root, filepath.FromSlash(resolved))
+		if resolvedP != abs {
+			if rerr := os.Remove(resolvedP); rerr == nil {
+				return nil
+			}
+		}
+	}
+	if err != nil && !os.IsNotExist(err) {
+		return &OpError{Op: "DeleteByStoragePath", Key: storagePath, Err: mapOSError(err)}
+	}
+	return nil
 }
 
 func (l *LocalFS) Put(ctx context.Context, key string, r io.Reader, _ ...PutOption) error {
@@ -156,6 +225,17 @@ func (l *LocalFS) Delete(ctx context.Context, key string) error {
 		return &OpError{Op: "Delete", Key: key, Err: err}
 	}
 	if err := os.Remove(p); err != nil {
+		if os.IsNotExist(err) && l.keyFunc != nil {
+			cleaned, cleanErr := CleanKey(key)
+			if cleanErr == nil {
+				rawP := filepath.Join(l.root, filepath.FromSlash(cleaned))
+				if rawP != p {
+					if rawErr := os.Remove(rawP); rawErr == nil || os.IsNotExist(rawErr) {
+						return nil
+					}
+				}
+			}
+		}
 		return &OpError{Op: "Delete", Key: key, Err: mapOSError(err)}
 	}
 	return nil

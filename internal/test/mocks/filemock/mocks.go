@@ -270,6 +270,70 @@ func (_c *MockService_DeleteFile_Call) RunAndReturn(run func(ctx context.Context
 	return _c
 }
 
+// DeleteFileByPath provides a mock function for the type MockService
+func (_mock *MockService) DeleteFileByPath(ctx context.Context, storageType string, filePath string) error {
+	ret := _mock.Called(ctx, storageType, filePath)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteFileByPath")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = returnFunc(ctx, storageType, filePath)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockService_DeleteFileByPath_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteFileByPath'
+type MockService_DeleteFileByPath_Call struct {
+	*mock.Call
+}
+
+// DeleteFileByPath is a helper method to define mock.On call
+//   - ctx context.Context
+//   - storageType string
+//   - filePath string
+func (_e *MockService_Expecter) DeleteFileByPath(ctx any, storageType any, filePath any) *MockService_DeleteFileByPath_Call {
+	return &MockService_DeleteFileByPath_Call{Call: _e.mock.On("DeleteFileByPath", ctx, storageType, filePath)}
+}
+
+func (_c *MockService_DeleteFileByPath_Call) Run(run func(ctx context.Context, storageType string, filePath string)) *MockService_DeleteFileByPath_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockService_DeleteFileByPath_Call) Return(err error) *MockService_DeleteFileByPath_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockService_DeleteFileByPath_Call) RunAndReturn(run func(ctx context.Context, storageType string, filePath string) error) *MockService_DeleteFileByPath_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // DeleteFileRecord provides a mock function for the type MockService
 func (_mock *MockService) DeleteFileRecord(ctx context.Context, id string) error {
 	ret := _mock.Called(ctx, id)

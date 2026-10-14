@@ -124,7 +124,6 @@ const goDetail = () => {
   position: relative;
   background: var(--color-bg-surface);
   backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
   border-radius: var(--ag-radius-lg, 24px);
   border: 1px solid var(--ag-line);
   box-shadow: var(--ag-shadow);

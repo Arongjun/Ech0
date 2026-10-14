@@ -140,13 +140,13 @@ watch(
   position: fixed;
   inset: 0;
   z-index: 9000;
-  background: rgba(15, 23, 42, 0.28);
+  background: rgb(15 23 42 / 28%);
   backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
 }
 
 :root.dark .chat-launcher {
-  background: rgba(0, 0, 0, 0.48);
+  background: rgb(0 0 0 / 48%);
 }
 
 .chat-launcher__stage {
@@ -177,7 +177,7 @@ watch(
   padding: 0.75rem 1.25rem;
   background: var(--ag-glass-strong, var(--color-bg-surface));
   backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--ag-line);
   border-radius: var(--ag-radius-lg, 24px);
   box-shadow: var(--ag-shadow);
@@ -190,7 +190,7 @@ watch(
   border-color: var(--ag-blue, var(--color-accent));
   box-shadow:
     var(--ag-shadow),
-    0 0 0 3px rgba(10, 132, 255, 0.2);
+    0 0 0 3px rgb(10 132 255 / 20%);
 }
 
 .chat-launcher__pill-icon {
@@ -247,7 +247,7 @@ watch(
 .chat-launcher__send--active {
   background: var(--ag-blue, var(--color-accent));
   color: #fff;
-  box-shadow: 0 4px 12px rgba(10, 132, 255, 0.35);
+  box-shadow: 0 4px 12px rgb(10 132 255 / 35%);
 }
 
 .chat-launcher__send:hover {
@@ -278,35 +278,35 @@ watch(
   gap: 0.5rem;
   padding: 0.48rem 1.15rem;
   border-radius: 9999px;
-  background: var(--ag-glass-soft, rgba(255, 255, 255, 0.65));
+  background: var(--ag-glass-soft, rgb(255 255 255 / 65%));
   backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--ag-line, rgba(55, 48, 42, 0.12));
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--ag-line, rgb(55 48 42 / 12%));
   color: var(--color-text-secondary);
   font-size: 0.88rem;
   font-weight: 500;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 4%);
   transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .chat-launcher__history-btn:hover {
   color: var(--ag-blue, #0a84ff);
-  background: #ffffff;
-  border-color: rgba(10, 132, 255, 0.35);
+  background: #fff;
+  border-color: rgb(10 132 255 / 35%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(10, 132, 255, 0.15);
+  box-shadow: 0 4px 14px rgb(10 132 255 / 15%);
 }
 
 :root.dark .chat-launcher__history-btn {
-  background: rgba(30, 41, 59, 0.7);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: rgb(30 41 59 / 70%);
+  border-color: rgb(255 255 255 / 12%);
   color: var(--color-text-primary);
 }
 
 :root.dark .chat-launcher__history-btn:hover {
-  background: rgba(51, 65, 85, 0.85);
-  border-color: rgba(10, 132, 255, 0.45);
+  background: rgb(51 65 85 / 85%);
+  border-color: rgb(10 132 255 / 45%);
 }
 
 .chat-launcher__history-btn:active {

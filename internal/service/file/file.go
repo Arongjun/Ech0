@@ -378,6 +378,53 @@ func (s *FileService) DeleteFile(ctx context.Context, id string) error {
 	return nil
 }
 
+func (s *FileService) DeleteFileByPath(ctx context.Context, storageType string, filePath string) error {
+	userid := viewer.MustFromContext(ctx).UserID()
+	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
+	if err != nil {
+		return err
+	}
+	if !user.IsAdmin {
+		return errors.New(commonModel.NO_PERMISSION_DENIED)
+	}
+
+	normalizedStorageType := storage.NormalizeStorageType(storageType)
+	if normalizedStorageType != storage.StorageTypeLocal && normalizedStorageType != storage.StorageTypeObject {
+		return errors.New(commonModel.INVALID_PARAMS)
+	}
+	cleanPath := strings.Trim(strings.TrimSpace(filePath), "/")
+	if cleanPath == "" {
+		return errors.New(commonModel.INVALID_PARAMS)
+	}
+
+	selector := s.getSelector()
+
+	candidates := selector.ResolveKeyCandidatesByPath(normalizedStorageType, cleanPath)
+	if len(candidates) > 0 {
+		dbFiles, err := s.fileRepository.ListByStorageTypeAndKeys(context.Background(), string(normalizedStorageType), candidates)
+		if err == nil && len(dbFiles) > 0 {
+			for _, f := range dbFiles {
+				_ = s.transactor.Run(context.Background(), func(c context.Context) error {
+					return s.DeleteFileRecord(c, f.ID)
+				})
+			}
+		}
+	}
+	url := selector.ResolveURLByPath(normalizedStorageType, cleanPath)
+	if url != "" {
+		dbFiles, err := s.fileRepository.ListByStorageTypeAndURLs(context.Background(), string(normalizedStorageType), []string{url})
+		if err == nil && len(dbFiles) > 0 {
+			for _, f := range dbFiles {
+				_ = s.transactor.Run(context.Background(), func(c context.Context) error {
+					return s.DeleteFileRecord(c, f.ID)
+				})
+			}
+		}
+	}
+
+	return selector.DeleteByStoragePath(ctx, normalizedStorageType, cleanPath)
+}
+
 func (s *FileService) GetFileByID(ctx context.Context, id string) (commonModel.FileDto, error) {
 	userid := viewer.MustFromContext(ctx).UserID()
 	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)

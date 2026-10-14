@@ -15,35 +15,35 @@
   --ag-ink-faint: #8d8f96;
   --ag-blue: #0a84ff;
   --ag-orange: #c74900;
-  --ag-line: rgba(55, 48, 42, 0.105);
-  --ag-line-soft: rgba(255, 255, 255, 0.62);
+  --ag-line: rgb(55 48 42 / 10.5%);
+  --ag-line-soft: rgb(255 255 255 / 62%);
   --ag-canvas: #f3f7fb;
   --ag-canvas-warm: #fbfcfe;
-  --ag-glass: rgba(255, 255, 255, 0.62);
-  --ag-glass-strong: rgba(255, 255, 255, 0.78);
-  --ag-glass-soft: rgba(255, 255, 255, 0.42);
+  --ag-glass: rgb(255 255 255 / 62%);
+  --ag-glass-strong: rgb(255 255 255 / 78%);
+  --ag-glass-soft: rgb(255 255 255 / 42%);
   --ag-radius-xl: 30px;
   --ag-radius-lg: 24px;
   --ag-radius-md: 18px;
   --ag-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82), inset 0 -1px 0 rgba(31, 38, 50, 0.035),
-    0 10px 24px rgba(40, 48, 62, 0.052), 0 1px 4px rgba(40, 48, 62, 0.035);
+    inset 0 1px 0 rgb(255 255 255 / 82%), inset 0 -1px 0 rgb(31 38 50 / 3.5%),
+    0 10px 24px rgb(40 48 62 / 5.2%), 0 1px 4px rgb(40 48 62 / 3.5%);
 
   --color-bg-canvas: transparent;
   --color-bg-surface: var(--ag-glass-strong);
-  --color-bg-muted: rgba(245, 246, 249, 0.7);
+  --color-bg-muted: rgb(245 246 249 / 70%);
   --color-text-primary: var(--ag-ink);
   --color-text-secondary: var(--ag-ink-soft);
   --color-text-muted: var(--ag-ink-faint);
   --color-border-subtle: var(--ag-line);
-  --color-border-strong: rgba(55, 48, 42, 0.16);
+  --color-border-strong: rgb(55 48 42 / 16%);
   --color-accent: var(--ag-blue);
-  --color-accent-soft: rgba(10, 132, 255, 0.13);
-  --filter-search-shell-bg: rgba(255, 255, 255, 0.62);
+  --color-accent-soft: rgb(10 132 255 / 13%);
+  --filter-search-shell-bg: rgb(255 255 255 / 62%);
   --filter-search-input-border: transparent;
-  --input-bg-color: rgba(255, 255, 255, 0.62);
+  --input-bg-color: rgb(255 255 255 / 62%);
   --input-border-color: var(--ag-line);
-  --input-focus-ring-color: rgba(10, 132, 255, 0.2);
+  --input-focus-ring-color: rgb(10 132 255 / 20%);
   --placeholder-color: var(--ag-ink-faint);
 }
 
@@ -53,16 +53,16 @@
   --ag-ink-faint: #93949b;
   --ag-blue: #0a84ff;
   --ag-orange: #ff9f0a;
-  --ag-line: rgba(255, 255, 255, 0.12);
-  --ag-line-soft: rgba(255, 255, 255, 0.11);
+  --ag-line: rgb(255 255 255 / 12%);
+  --ag-line-soft: rgb(255 255 255 / 11%);
   --ag-canvas: #111115;
   --ag-canvas-warm: #171719;
-  --ag-glass: rgba(42, 42, 47, 0.62);
-  --ag-glass-strong: rgba(50, 50, 56, 0.76);
-  --ag-glass-soft: rgba(255, 255, 255, 0.055);
+  --ag-glass: rgb(42 42 47 / 62%);
+  --ag-glass-strong: rgb(50 50 56 / 76%);
+  --ag-glass-soft: rgb(255 255 255 / 5.5%);
   --ag-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.28),
-    0 12px 28px rgba(0, 0, 0, 0.22), 0 1px 5px rgba(0, 0, 0, 0.16);
+    inset 0 1px 0 rgb(255 255 255 / 8%), inset 0 -1px 0 rgb(0 0 0 / 28%),
+    0 12px 28px rgb(0 0 0 / 22%), 0 1px 5px rgb(0 0 0 / 16%);
 }
 
 html,
@@ -74,8 +74,8 @@ body,
 
 html {
   background:
-    radial-gradient(circle at 18% -10%, rgba(255, 255, 255, 0.96), transparent 24rem),
-    radial-gradient(circle at 86% 0%, rgba(10, 132, 255, 0.14), transparent 30rem),
+    radial-gradient(circle at 18% -10%, rgb(255 255 255 / 96%), transparent 24rem),
+    radial-gradient(circle at 86% 0%, rgb(10 132 255 / 14%), transparent 30rem),
     linear-gradient(135deg, #fbfcfe 0%, #f6f9fc 43%, #edf4fb 100%) !important;
   background-attachment: fixed !important;
 }
@@ -84,9 +84,9 @@ body {
   overflow-x: hidden !important;
   color: var(--ag-ink) !important;
   background:
-    radial-gradient(circle at 18% -10%, rgba(255, 255, 255, 0.96), transparent 24rem),
-    radial-gradient(circle at 86% 0%, rgba(10, 132, 255, 0.14), transparent 30rem),
-    radial-gradient(circle at 64% 42%, rgba(255, 255, 255, 0.62), transparent 24rem),
+    radial-gradient(circle at 18% -10%, rgb(255 255 255 / 96%), transparent 24rem),
+    radial-gradient(circle at 86% 0%, rgb(10 132 255 / 14%), transparent 30rem),
+    radial-gradient(circle at 64% 42%, rgb(255 255 255 / 62%), transparent 24rem),
     linear-gradient(135deg, #fbfcfe 0%, #f6f9fc 43%, #edf4fb 100%) !important;
   background-attachment: fixed !important;
   font-family:
@@ -110,7 +110,6 @@ body {
 .home-main,
 .home-main-track {
   background: transparent !important;
-  background-color: transparent !important;
 }
 
 .home-page {
@@ -125,13 +124,13 @@ body {
 
 :root.dark body {
   background:
-    radial-gradient(circle at 20% -8%, rgba(255, 255, 255, 0.08), transparent 23rem),
-    radial-gradient(circle at 82% 3%, rgba(10, 132, 255, 0.15), transparent 28rem),
+    radial-gradient(circle at 20% -8%, rgb(255 255 255 / 8%), transparent 23rem),
+    radial-gradient(circle at 82% 3%, rgb(10 132 255 / 15%), transparent 28rem),
     linear-gradient(135deg, var(--ag-canvas-warm), var(--ag-canvas) 54%, #0d0d10) !important;
 }
 
 ::selection {
-  background: rgba(10, 132, 255, 0.2) !important;
+  background: rgb(10 132 255 / 20%) !important;
 }
 
 .home-page {
@@ -154,7 +153,7 @@ body {
   position: relative !important;
 }
 
-@media (min-width: 820px) {
+@media (width >= 820px) {
   .home-page {
     overflow: hidden !important;
   }
@@ -188,7 +187,7 @@ body {
   border: 0.5px solid var(--ag-line) !important;
   border-top-color: var(--ag-line-soft) !important;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.18)), var(--ag-glass) !important;
+    linear-gradient(180deg, rgb(255 255 255 / 58%), rgb(255 255 255 / 18%)), var(--ag-glass) !important;
   box-shadow: var(--ag-shadow) !important;
 }
 
@@ -196,21 +195,21 @@ body {
 .home-banner,
 .home-filter__search-shell {
   backdrop-filter: saturate(180%) blur(22px) !important;
-  -webkit-backdrop-filter: saturate(180%) blur(22px) !important;
+  backdrop-filter: saturate(180%) blur(22px) !important;
 }
 
 .timeline-content > div,
 .home-content-block,
 .echo-detail {
   backdrop-filter: saturate(145%) blur(10px) !important;
-  -webkit-backdrop-filter: saturate(145%) blur(10px) !important;
+  backdrop-filter: saturate(145%) blur(10px) !important;
 }
 
 .panel-shell,
 .panel-card,
 .panel-welcome {
   backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
 }
 
 /* Header. */
@@ -238,14 +237,14 @@ body {
   min-width: 9.5rem !important;
   padding: 0.35rem !important;
   border-radius: 18px !important;
-  background: rgba(255, 255, 255, 0.92) !important;
+  background: rgb(255 255 255 / 92%) !important;
   backdrop-filter: blur(24px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  border: 1px solid rgb(255 255 255 / 95%) !important;
   box-shadow:
-    0 12px 36px -4px rgba(18, 24, 38, 0.14),
-    0 4px 14px rgba(18, 24, 38, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+    0 12px 36px -4px rgb(18 24 38 / 14%),
+    0 4px 14px rgb(18 24 38 / 6%),
+    inset 0 1px 0 rgb(255 255 255 / 100%) !important;
   transform-origin: top right;
 }
 
@@ -259,37 +258,37 @@ body {
 }
 
 .locale-toggle__item:hover {
-  background: rgba(0, 122, 255, 0.08) !important;
+  background: rgb(0 122 255 / 8%) !important;
   color: var(--ag-blue) !important;
 }
 
 .locale-toggle__item--active {
   color: var(--ag-blue) !important;
   font-weight: 600 !important;
-  background: rgba(0, 122, 255, 0.06) !important;
+  background: rgb(0 122 255 / 6%) !important;
 }
 
 :root.dark .locale-toggle__menu {
-  background: rgba(30, 36, 48, 0.9) !important;
-  border-color: rgba(255, 255, 255, 0.14) !important;
+  background: rgb(30 36 48 / 90%) !important;
+  border-color: rgb(255 255 255 / 14%) !important;
   box-shadow:
-    0 14px 40px -4px rgba(0, 0, 0, 0.55),
-    0 6px 16px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+    0 14px 40px -4px rgb(0 0 0 / 55%),
+    0 6px 16px rgb(0 0 0 / 35%),
+    inset 0 1px 0 rgb(255 255 255 / 12%) !important;
 }
 
 :root.dark .locale-toggle__item {
-  color: rgba(255, 255, 255, 0.72) !important;
+  color: rgb(255 255 255 / 72%) !important;
 }
 
 :root.dark .locale-toggle__item:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: #ffffff !important;
+  background: rgb(255 255 255 / 10%) !important;
+  color: #fff !important;
 }
 
 :root.dark .locale-toggle__item--active {
-  color: #ffffff !important;
-  background: rgba(255, 255, 255, 0.12) !important;
+  color: #fff !important;
+  background: rgb(255 255 255 / 12%) !important;
 }
 
 .home-header::after {
@@ -300,8 +299,8 @@ body {
   pointer-events: none;
   border-radius: inherit;
   background:
-    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.74), transparent 9rem),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.24), transparent 45%);
+    radial-gradient(circle at 18% 18%, rgb(255 255 255 / 74%), transparent 9rem),
+    linear-gradient(90deg, rgb(255 255 255 / 24%), transparent 45%);
 }
 
 .home-header__brand {
@@ -317,11 +316,11 @@ body {
 img.home-header__logo {
   width: 3.05rem !important;
   height: 3.05rem !important;
-  border: 2px solid rgba(255, 255, 255, 0.82) !important;
+  border: 2px solid rgb(255 255 255 / 82%) !important;
   border-radius: 999px !important;
   background: #fff6ea !important;
   box-shadow:
-    0 8px 18px rgba(31, 38, 50, 0.1),
+    0 8px 18px rgb(31 38 50 / 10%),
     0 0 0 0.5px var(--ag-line) !important;
 }
 
@@ -337,8 +336,8 @@ img.home-header__logo {
   gap: 0.08rem !important;
   padding: 0.12rem !important;
   border-radius: 999px !important;
-  background: rgba(255, 255, 255, 0.2) !important;
-  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.38) !important;
+  background: rgb(255 255 255 / 20%) !important;
+  box-shadow: inset 0 0 0 0.5px rgb(255 255 255 / 38%) !important;
 }
 
 .home-header__link-icon {
@@ -354,7 +353,7 @@ img.home-header__logo {
 
 .home-header__link-icon:hover {
   color: var(--ag-blue) !important;
-  background: rgba(10, 132, 255, 0.12) !important;
+  background: rgb(10 132 255 / 12%) !important;
 }
 
 /* Welcome card. */
@@ -370,11 +369,11 @@ img.home-header__logo {
 .home-banner::after {
   content: '';
   position: absolute;
-  inset: auto 2rem -1.35rem 2rem;
+  inset: auto 2rem -1.35rem;
   height: 2.2rem;
   pointer-events: none;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.32);
+  background: rgb(255 255 255 / 32%);
   filter: blur(13px);
   opacity: 0.58;
 }
@@ -424,16 +423,16 @@ img.home-header__logo {
 .home-aside--rail .home-sidebar-nav__link {
   margin-bottom: 0.2rem !important;
   color: var(--ag-ink-soft) !important;
-  background: rgba(255, 255, 255, 0.34) !important;
+  background: rgb(255 255 255 / 34%) !important;
   box-shadow:
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.42),
-    0 7px 18px rgba(31, 38, 50, 0.045) !important;
+    inset 0 0 0 0.5px rgb(255 255 255 / 42%),
+    0 7px 18px rgb(31 38 50 / 4.5%) !important;
 }
 
 .home-aside--rail .home-sidebar-nav__link:hover,
 .home-aside--rail .home-sidebar-nav__link--active {
   color: var(--ag-ink) !important;
-  background: rgba(255, 255, 255, 0.74) !important;
+  background: rgb(255 255 255 / 74%) !important;
 }
 
 .home-filter__search-shell {
@@ -474,7 +473,7 @@ img.home-header__logo {
   padding: 0 0.75rem !important;
   border: 0 !important;
   border-radius: 999px !important;
-  background: rgba(255, 255, 255, 0.52) !important;
+  background: rgb(255 255 255 / 52%) !important;
   box-shadow: inset 0 0 0 0.5px var(--ag-line) !important;
   color: var(--ag-ink-soft) !important;
 }
@@ -485,10 +484,10 @@ img.home-header__logo {
   min-height: 2rem !important;
   border-radius: 10px !important;
   color: var(--ag-ink-soft) !important;
-  background: rgba(255, 255, 255, 0.76) !important;
+  background: rgb(255 255 255 / 76%) !important;
   border-color: var(--ag-line) !important;
-  border-bottom-color: rgba(55, 48, 42, 0.18) !important;
-  box-shadow: 0 2px 7px rgba(31, 38, 50, 0.055) !important;
+  border-bottom-color: rgb(55 48 42 / 18%) !important;
+  box-shadow: 0 2px 7px rgb(31 38 50 / 5.5%) !important;
 }
 
 .home-aside__version {
@@ -509,7 +508,7 @@ img.home-header__logo {
 
 .timeline-marker > div {
   background: var(--ag-blue) !important;
-  box-shadow: 0 0 0 5px rgba(10, 132, 255, 0.12) !important;
+  box-shadow: 0 0 0 5px rgb(10 132 255 / 12%) !important;
 }
 
 .timeline-content::before {
@@ -519,23 +518,23 @@ img.home-header__logo {
 
 .timeline-content > div {
   position: relative !important;
-  margin: 0 0.08rem 0.88rem 0.08rem !important;
+  margin: 0 0.08rem 0.88rem !important;
   border-radius: 26px !important;
   overflow: hidden !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    inset 0 -1px 0 rgba(31, 38, 50, 0.028),
-    0 8px 18px rgba(40, 48, 62, 0.045),
-    0 1px 3px rgba(40, 48, 62, 0.025) !important;
+    inset 0 1px 0 rgb(255 255 255 / 80%),
+    inset 0 -1px 0 rgb(31 38 50 / 2.8%),
+    0 8px 18px rgb(40 48 62 / 4.5%),
+    0 1px 3px rgb(40 48 62 / 2.5%) !important;
 }
 
 .timeline-content > div:hover {
   transform: translateY(-1px);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.86),
-    inset 0 -1px 0 rgba(31, 38, 50, 0.035),
-    0 12px 24px rgba(40, 48, 62, 0.06),
-    0 1px 5px rgba(40, 48, 62, 0.035) !important;
+    inset 0 1px 0 rgb(255 255 255 / 86%),
+    inset 0 -1px 0 rgb(31 38 50 / 3.5%),
+    0 12px 24px rgb(40 48 62 / 6%),
+    0 1px 5px rgb(40 48 62 / 3.5%) !important;
 }
 
 .echo-header-sticky .text-sm,
@@ -546,10 +545,10 @@ img.home-header__logo {
 
 .echo-open-btn,
 .echo-timeline button[class*='rounded'] {
-  background: rgba(255, 255, 255, 0.72) !important;
+  background: rgb(255 255 255 / 72%) !important;
   box-shadow:
     inset 0 0 0 0.5px var(--ag-line),
-    0 4px 12px rgba(31, 38, 50, 0.08) !important;
+    0 4px 12px rgb(31 38 50 / 8%) !important;
 }
 
 .echos-toolbar p,
@@ -570,11 +569,11 @@ img.home-header__logo {
 }
 
 .echo-detail-back {
-  background: rgba(255, 255, 255, 0.64) !important;
+  background: rgb(255 255 255 / 64%) !important;
   border-radius: 999px !important;
   box-shadow:
     inset 0 0 0 0.5px var(--ag-line),
-    0 4px 12px rgba(31, 38, 50, 0.08) !important;
+    0 4px 12px rgb(31 38 50 / 8%) !important;
 }
 
 /* Panel: real iOS glass, but without heavy nested blur. */
@@ -593,9 +592,9 @@ img.home-header__logo {
 /* Panel page background: remove Ech0's original warm canvas completely. */
 body:has(.panel-page-wrap) {
   background:
-    radial-gradient(circle at 18% -10%, rgba(255, 255, 255, 0.98), transparent 24rem),
-    radial-gradient(circle at 88% 0%, rgba(10, 132, 255, 0.13), transparent 30rem),
-    radial-gradient(circle at 62% 48%, rgba(255, 255, 255, 0.72), transparent 28rem),
+    radial-gradient(circle at 18% -10%, rgb(255 255 255 / 98%), transparent 24rem),
+    radial-gradient(circle at 88% 0%, rgb(10 132 255 / 13%), transparent 30rem),
+    radial-gradient(circle at 62% 48%, rgb(255 255 255 / 72%), transparent 28rem),
     linear-gradient(135deg, #fbfcfe 0%, #f7fafe 46%, #eef5fc 100%) !important;
   background-attachment: fixed !important;
 }
@@ -605,20 +604,19 @@ body:has(.panel-page-wrap) {
   isolation: isolate !important;
   overflow: hidden !important;
   border-radius: 32px !important;
-  border: 0.5px solid rgba(31, 38, 50, 0.075) !important;
-  border-top-color: rgba(255, 255, 255, 0.88) !important;
+  border: 0.5px solid rgb(31 38 50 / 7.5%) !important;
+  border-top-color: rgb(255 255 255 / 88%) !important;
   background:
-    radial-gradient(circle at 16% 0%, rgba(255, 255, 255, 0.96), transparent 18rem),
-    radial-gradient(circle at 92% 4%, rgba(10, 132, 255, 0.09), transparent 20rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.3)),
-    rgba(255, 255, 255, 0.52) !important;
+    radial-gradient(circle at 16% 0%, rgb(255 255 255 / 96%), transparent 18rem),
+    radial-gradient(circle at 92% 4%, rgb(10 132 255 / 9%), transparent 20rem),
+    linear-gradient(180deg, rgb(255 255 255 / 66%), rgb(255 255 255 / 30%)), rgb(255 255 255 / 52%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    inset 0 -1px 0 rgba(31, 38, 50, 0.035),
-    0 22px 52px rgba(35, 45, 62, 0.08),
-    0 2px 10px rgba(35, 45, 62, 0.035) !important;
+    inset 0 1px 0 rgb(255 255 255 / 92%),
+    inset 0 -1px 0 rgb(31 38 50 / 3.5%),
+    0 22px 52px rgb(35 45 62 / 8%),
+    0 2px 10px rgb(35 45 62 / 3.5%) !important;
   backdrop-filter: saturate(175%) blur(20px) !important;
-  -webkit-backdrop-filter: saturate(175%) blur(20px) !important;
+  backdrop-filter: saturate(175%) blur(20px) !important;
 }
 
 .panel-shell::before {
@@ -629,35 +627,33 @@ body:has(.panel-page-wrap) {
   pointer-events: none;
   border-radius: inherit;
   background:
-    linear-gradient(120deg, rgba(255, 255, 255, 0.56), transparent 42%),
-    linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.22) 100%);
+    linear-gradient(120deg, rgb(255 255 255 / 56%), transparent 42%),
+    linear-gradient(180deg, transparent 0%, rgb(255 255 255 / 22%) 100%);
 }
 
 .panel-welcome {
   position: relative !important;
   overflow: hidden !important;
   border-radius: 28px !important;
-  border: 0.5px solid rgba(31, 38, 50, 0.065) !important;
-  border-top-color: rgba(255, 255, 255, 0.86) !important;
+  border: 0.5px solid rgb(31 38 50 / 6.5%) !important;
+  border-top-color: rgb(255 255 255 / 86%) !important;
   background:
-    radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.9), transparent 14rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.34)),
-    rgba(255, 255, 255, 0.56) !important;
+    radial-gradient(circle at 12% 0%, rgb(255 255 255 / 90%), transparent 14rem),
+    linear-gradient(180deg, rgb(255 255 255 / 72%), rgb(255 255 255 / 34%)), rgb(255 255 255 / 56%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    0 12px 26px rgba(35, 45, 62, 0.052) !important;
+    inset 0 1px 0 rgb(255 255 255 / 92%),
+    0 12px 26px rgb(35 45 62 / 5.2%) !important;
 }
 
 .panel-card {
   border-radius: 26px !important;
-  border: 0.5px solid rgba(31, 38, 50, 0.07) !important;
-  border-top-color: rgba(255, 255, 255, 0.82) !important;
+  border: 0.5px solid rgb(31 38 50 / 7%) !important;
+  border-top-color: rgb(255 255 255 / 82%) !important;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.28)),
-    rgba(255, 255, 255, 0.5) !important;
+    linear-gradient(180deg, rgb(255 255 255 / 66%), rgb(255 255 255 / 28%)), rgb(255 255 255 / 50%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.86),
-    0 10px 24px rgba(35, 45, 62, 0.052) !important;
+    inset 0 1px 0 rgb(255 255 255 / 86%),
+    0 10px 24px rgb(35 45 62 / 5.2%) !important;
 }
 
 .panel-nav {
@@ -683,14 +679,13 @@ body:has(.panel-page-wrap) {
 .panel-nav button:hover,
 .panel-nav a:hover {
   color: var(--ag-ink) !important;
-  border-color: rgba(31, 38, 50, 0.065) !important;
-  border-top-color: rgba(255, 255, 255, 0.82) !important;
+  border-color: rgb(31 38 50 / 6.5%) !important;
+  border-top-color: rgb(255 255 255 / 82%) !important;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.34)),
-    rgba(255, 255, 255, 0.56) !important;
+    linear-gradient(180deg, rgb(255 255 255 / 72%), rgb(255 255 255 / 34%)), rgb(255 255 255 / 56%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.86),
-    0 8px 18px rgba(35, 45, 62, 0.06) !important;
+    inset 0 1px 0 rgb(255 255 255 / 86%),
+    0 8px 18px rgb(35 45 62 / 6%) !important;
 }
 
 .panel-content {
@@ -698,17 +693,16 @@ body:has(.panel-page-wrap) {
 }
 
 .panel-widget-wrap {
-  border-color: rgba(31, 38, 50, 0.055) !important;
+  border-color: rgb(31 38 50 / 5.5%) !important;
 }
 
 .panel-page-wrap input,
 .panel-page-wrap textarea,
 .panel-page-wrap select {
-  border-color: rgba(31, 38, 50, 0.08) !important;
+  border-color: rgb(31 38 50 / 8%) !important;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.42)),
-    rgba(255, 255, 255, 0.56) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.76) !important;
+    linear-gradient(180deg, rgb(255 255 255 / 70%), rgb(255 255 255 / 42%)), rgb(255 255 255 / 56%) !important;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 76%) !important;
 }
 
 .panel-page-wrap h1,
@@ -736,18 +730,17 @@ body:has(.panel-page-wrap) {
   border-radius: var(--ag-radius-xl) !important;
   overflow: hidden !important;
   border: 0.5px solid var(--ag-line) !important;
-  border-top-color: rgba(255, 255, 255, 0.72) !important;
+  border-top-color: rgb(255 255 255 / 72%) !important;
   background:
-    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.72), transparent 14rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.18)),
-    rgba(255, 255, 255, 0.5) !important;
+    radial-gradient(circle at 18% 0%, rgb(255 255 255 / 72%), transparent 14rem),
+    linear-gradient(180deg, rgb(255 255 255 / 48%), rgb(255 255 255 / 18%)), rgb(255 255 255 / 50%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.84),
-    inset 0 -1px 0 rgba(31, 38, 50, 0.03),
-    0 12px 28px rgba(40, 48, 62, 0.052),
-    0 1px 5px rgba(40, 48, 62, 0.03) !important;
+    inset 0 1px 0 rgb(255 255 255 / 84%),
+    inset 0 -1px 0 rgb(31 38 50 / 3%),
+    0 12px 28px rgb(40 48 62 / 5.2%),
+    0 1px 5px rgb(40 48 62 / 3%) !important;
   backdrop-filter: saturate(165%) blur(18px) !important;
-  -webkit-backdrop-filter: saturate(165%) blur(18px) !important;
+  backdrop-filter: saturate(165%) blur(18px) !important;
 }
 
 .home-main-track > .home-content-block::before,
@@ -757,7 +750,7 @@ body:has(.panel-page-wrap) {
   inset: 0;
   pointer-events: none;
   border-radius: inherit;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.45), transparent 44%);
+  background: linear-gradient(135deg, rgb(255 255 255 / 45%), transparent 44%);
   opacity: 0.72;
 }
 
@@ -803,16 +796,15 @@ body:has(.panel-page-wrap) {
 .markdown-editor:not(.is-full) {
   position: relative !important;
   z-index: 1 !important;
-  border: 0.5px solid rgba(31, 38, 50, 0.07) !important;
-  border-top-color: rgba(255, 255, 255, 0.7) !important;
+  border: 0.5px solid rgb(31 38 50 / 7%) !important;
+  border-top-color: rgb(255 255 255 / 70%) !important;
   border-radius: 24px !important;
   overflow: hidden !important;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0.2)),
-    rgba(255, 255, 255, 0.48) !important;
+    linear-gradient(180deg, rgb(255 255 255 / 64%), rgb(255 255 255 / 20%)), rgb(255 255 255 / 48%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
-    0 8px 18px rgba(40, 48, 62, 0.035) !important;
+    inset 0 1px 0 rgb(255 255 255 / 82%),
+    0 8px 18px rgb(40 48 62 / 3.5%) !important;
 }
 
 .markdown-editor:not(.is-full) .editor-content {
@@ -833,10 +825,10 @@ body:has(.panel-page-wrap) {
   height: 2rem !important;
   border-radius: 12px !important;
   border-color: var(--ag-line) !important;
-  background: rgba(255, 255, 255, 0.66) !important;
+  background: rgb(255 255 255 / 66%) !important;
   box-shadow:
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.48),
-    0 4px 10px rgba(31, 38, 50, 0.05) !important;
+    inset 0 0 0 0.5px rgb(255 255 255 / 48%),
+    0 4px 10px rgb(31 38 50 / 5%) !important;
 }
 
 .editor-actions {
@@ -867,10 +859,10 @@ body:has(.panel-page-wrap) {
 .editor-actions [role='button'] {
   border-radius: 14px !important;
   border-color: var(--ag-line) !important;
-  background: rgba(255, 255, 255, 0.62) !important;
+  background: rgb(255 255 255 / 62%) !important;
   box-shadow:
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.48),
-    0 6px 14px rgba(31, 38, 50, 0.055) !important;
+    inset 0 0 0 0.5px rgb(255 255 255 / 48%),
+    0 6px 14px rgb(31 38 50 / 5.5%) !important;
 }
 
 .editor-actions__tag-panel,
@@ -881,10 +873,10 @@ body:has(.panel-page-wrap) {
   z-index: 999 !important;
   border-radius: 22px !important;
   border-color: var(--ag-line) !important;
-  background: rgba(255, 255, 255, 0.62) !important;
-  box-shadow: 0 12px 26px rgba(31, 38, 50, 0.08) !important;
+  background: rgb(255 255 255 / 62%) !important;
+  box-shadow: 0 12px 26px rgb(31 38 50 / 8%) !important;
   backdrop-filter: saturate(160%) blur(16px) !important;
-  -webkit-backdrop-filter: saturate(160%) blur(16px) !important;
+  backdrop-filter: saturate(160%) blur(16px) !important;
 }
 
 /* Tags manager: no flat white block, softer fields. */
@@ -901,16 +893,16 @@ body:has(.panel-page-wrap) {
   border-style: solid !important;
   border-color: var(--ag-line) !important;
   border-radius: 18px !important;
-  background: rgba(255, 255, 255, 0.48) !important;
+  background: rgb(255 255 255 / 48%) !important;
   min-height: 2.45rem !important;
 }
 
 .home-content-block form button[type='submit'] {
   border-radius: 16px !important;
   border-color: var(--ag-line) !important;
-  background: rgba(255, 255, 255, 0.62) !important;
+  background: rgb(255 255 255 / 62%) !important;
   min-height: 2.45rem !important;
-  box-shadow: 0 5px 12px rgba(31, 38, 50, 0.04) !important;
+  box-shadow: 0 5px 12px rgb(31 38 50 / 4%) !important;
 }
 
 .home-content-block input {
@@ -932,14 +924,13 @@ body:has(.panel-page-wrap) {
   margin: 0 !important;
   padding: 1rem !important;
   border-radius: 24px !important;
-  border: 0.5px solid rgba(31, 38, 50, 0.07) !important;
-  border-top-color: rgba(255, 255, 255, 0.66) !important;
+  border: 0.5px solid rgb(31 38 50 / 7%) !important;
+  border-top-color: rgb(255 255 255 / 66%) !important;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.18)),
-    rgba(255, 255, 255, 0.42) !important;
+    linear-gradient(180deg, rgb(255 255 255 / 52%), rgb(255 255 255 / 18%)), rgb(255 255 255 / 42%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    0 7px 18px rgba(40, 48, 62, 0.04) !important;
+    inset 0 1px 0 rgb(255 255 255 / 80%),
+    0 7px 18px rgb(40 48 62 / 4%) !important;
 }
 
 .heatmap-title,
@@ -965,24 +956,24 @@ body:has(.panel-page-wrap) {
 
 .comment-teaser-card {
   border-radius: 16px !important;
-  background: rgba(255, 255, 255, 0.44) !important;
+  background: rgb(255 255 255 / 44%) !important;
   box-shadow: inset 0 0 0 0.5px var(--ag-line) !important;
 }
 
 /* Mobile polish. */
-@media (max-width: 819.98px) {
+@media (width <= 819.98px) {
   body {
     background:
-      radial-gradient(circle at 18% -8%, rgba(255, 255, 255, 0.98), transparent 18rem),
-      radial-gradient(circle at 90% 0%, rgba(10, 132, 255, 0.11), transparent 20rem),
+      radial-gradient(circle at 18% -8%, rgb(255 255 255 / 98%), transparent 18rem),
+      radial-gradient(circle at 90% 0%, rgb(10 132 255 / 11%), transparent 20rem),
       linear-gradient(160deg, #fbfcfe 0%, #f7fafe 52%, #eef5fc 100%) !important;
     background-attachment: fixed !important;
   }
 
   body:has(.panel-page-wrap) {
     background:
-      radial-gradient(circle at 18% -8%, rgba(255, 255, 255, 0.98), transparent 18rem),
-      radial-gradient(circle at 90% 0%, rgba(10, 132, 255, 0.11), transparent 20rem),
+      radial-gradient(circle at 18% -8%, rgb(255 255 255 / 98%), transparent 18rem),
+      radial-gradient(circle at 90% 0%, rgb(10 132 255 / 11%), transparent 20rem),
       linear-gradient(160deg, #fbfcfe 0%, #f7fafe 52%, #eef5fc 100%) !important;
   }
 
@@ -1023,7 +1014,7 @@ body:has(.panel-page-wrap) {
   }
 
   .home-aside--rail .home-sidebar-nav__link {
-    background: rgba(255, 255, 255, 0.54) !important;
+    background: rgb(255 255 255 / 54%) !important;
   }
 
   .home-filter__search-shell {
@@ -1047,25 +1038,25 @@ body:has(.panel-page-wrap) {
 
 /* v2.2 Native Glass refinement: less AI-round, more real iOS material. */
 :root {
-  --ag-line: rgba(38, 42, 48, 0.092);
-  --ag-line-soft: rgba(255, 255, 255, 0.72);
-  --ag-glass: rgba(255, 255, 255, 0.5);
-  --ag-glass-strong: rgba(255, 255, 255, 0.66);
-  --ag-glass-soft: rgba(255, 255, 255, 0.34);
+  --ag-line: rgb(38 42 48 / 9.2%);
+  --ag-line-soft: rgb(255 255 255 / 72%);
+  --ag-glass: rgb(255 255 255 / 50%);
+  --ag-glass-strong: rgb(255 255 255 / 66%);
+  --ag-glass-soft: rgb(255 255 255 / 34%);
   --ag-radius-xl: 24px;
   --ag-radius-lg: 20px;
   --ag-radius-md: 14px;
   --ag-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.78), inset 0 -1px 0 rgba(31, 38, 50, 0.026),
-    0 7px 18px rgba(35, 45, 62, 0.04), 0 1px 2px rgba(35, 45, 62, 0.028);
+    inset 0 1px 0 rgb(255 255 255 / 78%), inset 0 -1px 0 rgb(31 38 50 / 2.6%),
+    0 7px 18px rgb(35 45 62 / 4%), 0 1px 2px rgb(35 45 62 / 2.8%);
 }
 
 html,
 body {
   background:
-    radial-gradient(circle at 17% -8%, rgba(255, 255, 255, 0.98), transparent 22rem),
-    radial-gradient(circle at 88% 0%, rgba(10, 132, 255, 0.11), transparent 29rem),
-    radial-gradient(circle at 68% 42%, rgba(255, 255, 255, 0.54), transparent 24rem),
+    radial-gradient(circle at 17% -8%, rgb(255 255 255 / 98%), transparent 22rem),
+    radial-gradient(circle at 88% 0%, rgb(10 132 255 / 11%), transparent 29rem),
+    radial-gradient(circle at 68% 42%, rgb(255 255 255 / 54%), transparent 24rem),
     linear-gradient(135deg, #fbfcfe 0%, #f7fafc 48%, #eef5fb 100%) !important;
 }
 
@@ -1077,8 +1068,8 @@ body::after {
   pointer-events: none;
   opacity: 0.28;
   background-image:
-    linear-gradient(rgba(20, 24, 32, 0.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(20, 24, 32, 0.014) 1px, transparent 1px);
+    linear-gradient(rgb(20 24 32 / 1.8%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(20 24 32 / 1.4%) 1px, transparent 1px);
   background-size: 34px 34px;
   mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 72%, transparent 100%);
 }
@@ -1089,14 +1080,13 @@ body::after {
   padding: 0.58rem 0.72rem !important;
   border-radius: 28px !important;
   background:
-    radial-gradient(circle at 13% 18%, rgba(255, 255, 255, 0.78), transparent 9rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0.32)),
-    rgba(255, 255, 255, 0.48) !important;
+    radial-gradient(circle at 13% 18%, rgb(255 255 255 / 78%), transparent 9rem),
+    linear-gradient(180deg, rgb(255 255 255 / 64%), rgb(255 255 255 / 32%)), rgb(255 255 255 / 48%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.84),
-    inset 0 -1px 0 rgba(31, 38, 50, 0.028),
-    0 8px 20px rgba(35, 45, 62, 0.052),
-    0 1px 2px rgba(35, 45, 62, 0.028) !important;
+    inset 0 1px 0 rgb(255 255 255 / 84%),
+    inset 0 -1px 0 rgb(31 38 50 / 2.8%),
+    0 8px 20px rgb(35 45 62 / 5.2%),
+    0 1px 2px rgb(35 45 62 / 2.8%) !important;
 }
 
 .home-header::after {
@@ -1105,7 +1095,7 @@ body::after {
 
 .home-header__links {
   border-radius: 18px !important;
-  background: rgba(255, 255, 255, 0.14) !important;
+  background: rgb(255 255 255 / 14%) !important;
   box-shadow: none !important;
 }
 
@@ -1114,19 +1104,18 @@ body::after {
 }
 
 .home-header__link-icon:hover {
-  background: rgba(10, 132, 255, 0.1) !important;
+  background: rgb(10 132 255 / 10%) !important;
 }
 
 .home-banner {
   min-height: 6.1rem !important;
   border-radius: 24px !important;
   background:
-    radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.72), transparent 11rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.54), rgba(255, 255, 255, 0.24)),
-    rgba(255, 255, 255, 0.44) !important;
+    radial-gradient(circle at 12% 0%, rgb(255 255 255 / 72%), transparent 11rem),
+    linear-gradient(180deg, rgb(255 255 255 / 54%), rgb(255 255 255 / 24%)), rgb(255 255 255 / 44%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.78),
-    0 7px 16px rgba(35, 45, 62, 0.038) !important;
+    inset 0 1px 0 rgb(255 255 255 / 78%),
+    0 7px 16px rgb(35 45 62 / 3.8%) !important;
 }
 
 .home-banner::after {
@@ -1144,74 +1133,70 @@ body::after {
 }
 
 .home-aside--rail .home-sidebar-nav__link:hover {
-  border-color: rgba(35, 45, 62, 0.055) !important;
-  background: rgba(255, 255, 255, 0.32) !important;
+  border-color: rgb(35 45 62 / 5.5%) !important;
+  background: rgb(255 255 255 / 32%) !important;
   box-shadow: none !important;
 }
 
 .home-aside--rail .home-sidebar-nav__link--active,
 .home-aside--rail .home-sidebar-nav__link.home-sidebar-nav__link--active {
   border-radius: 16px !important;
-  border-color: rgba(35, 45, 62, 0.07) !important;
+  border-color: rgb(35 45 62 / 7%) !important;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.38)),
-    rgba(255, 255, 255, 0.52) !important;
+    linear-gradient(180deg, rgb(255 255 255 / 70%), rgb(255 255 255 / 38%)), rgb(255 255 255 / 52%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.76),
-    0 4px 10px rgba(35, 45, 62, 0.035) !important;
+    inset 0 1px 0 rgb(255 255 255 / 76%),
+    0 4px 10px rgb(35 45 62 / 3.5%) !important;
 }
 
 .home-filter__search-shell {
   min-height: 3.25rem !important;
   border-radius: 18px !important;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.28)),
-    rgba(255, 255, 255, 0.44) !important;
+    linear-gradient(180deg, rgb(255 255 255 / 56%), rgb(255 255 255 / 28%)), rgb(255 255 255 / 44%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    0 5px 13px rgba(35, 45, 62, 0.036) !important;
+    inset 0 1px 0 rgb(255 255 255 / 72%),
+    0 5px 13px rgb(35 45 62 / 3.6%) !important;
 }
 
 .home-filter__search-shell input {
   height: 2.18rem !important;
   border-radius: 13px !important;
-  background: rgba(255, 255, 255, 0.45) !important;
-  box-shadow: inset 0 0 0 0.5px rgba(35, 45, 62, 0.07) !important;
+  background: rgb(255 255 255 / 45%) !important;
+  box-shadow: inset 0 0 0 0.5px rgb(35 45 62 / 7%) !important;
 }
 
 .home-filter__kbd-hint {
   min-height: 1.85rem !important;
   border-radius: 9px !important;
-  box-shadow: 0 1px 4px rgba(31, 38, 50, 0.04) !important;
+  box-shadow: 0 1px 4px rgb(31 38 50 / 4%) !important;
 }
 
 .timeline-content > div {
   border-radius: 20px !important;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.54), rgba(255, 255, 255, 0.25)),
-    rgba(255, 255, 255, 0.42) !important;
+    linear-gradient(180deg, rgb(255 255 255 / 54%), rgb(255 255 255 / 25%)), rgb(255 255 255 / 42%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.76),
-    0 6px 14px rgba(35, 45, 62, 0.036) !important;
+    inset 0 1px 0 rgb(255 255 255 / 76%),
+    0 6px 14px rgb(35 45 62 / 3.6%) !important;
 }
 
 .timeline-content > div:hover {
   transform: none !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
-    0 8px 18px rgba(35, 45, 62, 0.044) !important;
+    inset 0 1px 0 rgb(255 255 255 / 82%),
+    0 8px 18px rgb(35 45 62 / 4.4%) !important;
 }
 
 .home-main-track > .home-content-block,
 .home-main-track > .home-status-widgets {
   border-radius: 24px !important;
   background:
-    radial-gradient(circle at 16% 0%, rgba(255, 255, 255, 0.7), transparent 12rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.54), rgba(255, 255, 255, 0.24)),
-    rgba(255, 255, 255, 0.44) !important;
+    radial-gradient(circle at 16% 0%, rgb(255 255 255 / 70%), transparent 12rem),
+    linear-gradient(180deg, rgb(255 255 255 / 54%), rgb(255 255 255 / 24%)), rgb(255 255 255 / 44%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.78),
-    0 8px 20px rgba(35, 45, 62, 0.04) !important;
+    inset 0 1px 0 rgb(255 255 255 / 78%),
+    0 8px 20px rgb(35 45 62 / 4%) !important;
 }
 
 .home-main-track > .home-content-block::before,
@@ -1226,16 +1211,16 @@ body::after {
 .markdown-editor:not(.is-full) {
   border-radius: 18px !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.76),
-    0 5px 12px rgba(35, 45, 62, 0.032) !important;
+    inset 0 1px 0 rgb(255 255 255 / 76%),
+    0 5px 12px rgb(35 45 62 / 3.2%) !important;
 }
 
 .editor-actions button,
 .editor-actions [role='button'] {
   border-radius: 12px !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.66),
-    0 4px 10px rgba(31, 38, 50, 0.04) !important;
+    inset 0 1px 0 rgb(255 255 255 / 66%),
+    0 4px 10px rgb(31 38 50 / 4%) !important;
 }
 
 .editor-actions__tag-panel,
@@ -1245,8 +1230,8 @@ body::after {
 .editor-image-panel {
   border-radius: 18px !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    0 10px 22px rgba(31, 38, 50, 0.07) !important;
+    inset 0 1px 0 rgb(255 255 255 / 72%),
+    0 10px 22px rgb(31 38 50 / 7%) !important;
 }
 
 .home-status-widgets .widget,
@@ -1254,17 +1239,17 @@ body::after {
 .panel-welcome {
   border-radius: 20px !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.74),
-    0 6px 16px rgba(35, 45, 62, 0.036) !important;
+    inset 0 1px 0 rgb(255 255 255 / 74%),
+    0 6px 16px rgb(35 45 62 / 3.6%) !important;
 }
 
 .panel-shell {
   border-radius: 28px !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.84),
-    inset 0 -1px 0 rgba(31, 38, 50, 0.028),
-    0 18px 42px rgba(35, 45, 62, 0.062),
-    0 2px 7px rgba(35, 45, 62, 0.028) !important;
+    inset 0 1px 0 rgb(255 255 255 / 84%),
+    inset 0 -1px 0 rgb(31 38 50 / 2.8%),
+    0 18px 42px rgb(35 45 62 / 6.2%),
+    0 2px 7px rgb(35 45 62 / 2.8%) !important;
 }
 
 .panel-nav button,
@@ -1279,11 +1264,11 @@ body::after {
 .panel-nav a:hover {
   border-radius: 16px !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.74),
-    0 5px 12px rgba(35, 45, 62, 0.04) !important;
+    inset 0 1px 0 rgb(255 255 255 / 74%),
+    0 5px 12px rgb(35 45 62 / 4%) !important;
 }
 
-@media (max-width: 819.98px) {
+@media (width <= 819.98px) {
   .home-header {
     border-radius: 26px !important;
   }
@@ -1306,32 +1291,32 @@ body::after {
   --ag-ink-faint: #8a9099;
   --ag-blue: #1677f2;
   --ag-orange: #b94a08;
-  --ag-line: rgba(24, 29, 38, 0.105);
-  --ag-line-soft: rgba(255, 255, 255, 0.8);
-  --ag-paper: rgba(255, 255, 255, 0.58);
-  --ag-paper-strong: rgba(255, 255, 255, 0.72);
-  --ag-paper-muted: rgba(245, 248, 251, 0.58);
+  --ag-line: rgb(24 29 38 / 10.5%);
+  --ag-line-soft: rgb(255 255 255 / 80%);
+  --ag-paper: rgb(255 255 255 / 58%);
+  --ag-paper-strong: rgb(255 255 255 / 72%);
+  --ag-paper-muted: rgb(245 248 251 / 58%);
   --ag-radius-xl: 20px;
   --ag-radius-lg: 16px;
   --ag-radius-md: 12px;
   --ag-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.86), inset 0 -1px 0 rgba(20, 25, 34, 0.025),
-    0 5px 14px rgba(30, 39, 54, 0.038), 0 1px 2px rgba(30, 39, 54, 0.032);
+    inset 0 1px 0 rgb(255 255 255 / 86%), inset 0 -1px 0 rgb(20 25 34 / 2.5%),
+    0 5px 14px rgb(30 39 54 / 3.8%), 0 1px 2px rgb(30 39 54 / 3.2%);
 }
 
 html,
 body {
   background:
-    radial-gradient(circle at 12% -8%, rgba(255, 255, 255, 0.98), transparent 20rem),
-    radial-gradient(circle at 87% 2%, rgba(42, 137, 255, 0.16), transparent 31rem),
+    radial-gradient(circle at 12% -8%, rgb(255 255 255 / 98%), transparent 20rem),
+    radial-gradient(circle at 87% 2%, rgb(42 137 255 / 16%), transparent 31rem),
     linear-gradient(105deg, #fbfaf7 0%, #f8fbfd 42%, #eef6fd 100%) !important;
 }
 
 body::after {
   opacity: 0.22 !important;
   background-image:
-    linear-gradient(rgba(18, 24, 32, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(18, 24, 32, 0.016) 1px, transparent 1px) !important;
+    linear-gradient(rgb(18 24 32 / 2%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(18 24 32 / 1.6%) 1px, transparent 1px) !important;
   background-size: 28px 28px !important;
 }
 
@@ -1340,21 +1325,20 @@ body::after {
   margin: 0 0 1rem !important;
   padding: 0.55rem 0.64rem !important;
   border-radius: 22px !important;
-  border-color: rgba(24, 29, 38, 0.08) !important;
-  border-top-color: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgb(24 29 38 / 8%) !important;
+  border-top-color: rgb(255 255 255 / 90%) !important;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.42)),
-    rgba(255, 255, 255, 0.5) !important;
+    linear-gradient(180deg, rgb(255 255 255 / 74%), rgb(255 255 255 / 42%)), rgb(255 255 255 / 50%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 8px 18px rgba(30, 39, 54, 0.048),
-    0 1px 2px rgba(30, 39, 54, 0.028) !important;
+    inset 0 1px 0 rgb(255 255 255 / 90%),
+    0 8px 18px rgb(30 39 54 / 4.8%),
+    0 1px 2px rgb(30 39 54 / 2.8%) !important;
 }
 
 .home-header::after {
   background:
-    linear-gradient(115deg, rgba(255, 255, 255, 0.48), transparent 48%),
-    linear-gradient(180deg, transparent, rgba(21, 29, 40, 0.018)) !important;
+    linear-gradient(115deg, rgb(255 255 255 / 48%), transparent 48%),
+    linear-gradient(180deg, transparent, rgb(21 29 40 / 1.8%)) !important;
   opacity: 0.72 !important;
 }
 
@@ -1363,8 +1347,8 @@ img.home-header__logo {
   width: 2.82rem !important;
   height: 2.82rem !important;
   box-shadow:
-    0 5px 12px rgba(30, 39, 54, 0.08),
-    0 0 0 0.5px rgba(24, 29, 38, 0.12) !important;
+    0 5px 12px rgb(30 39 54 / 8%),
+    0 0 0 0.5px rgb(24 29 38 / 12%) !important;
 }
 
 .home-header__title {
@@ -1387,7 +1371,7 @@ img.home-header__logo {
 
 .home-header__link-icon:hover {
   color: var(--ag-blue) !important;
-  background: rgba(22, 119, 242, 0.09) !important;
+  background: rgb(22 119 242 / 9%) !important;
 }
 
 .home-banner {
@@ -1395,13 +1379,12 @@ img.home-header__logo {
   margin: 0.25rem 0 1rem !important;
   padding: 0.95rem 1rem !important;
   border-radius: 20px !important;
-  border-color: rgba(24, 29, 38, 0.08) !important;
+  border-color: rgb(24 29 38 / 8%) !important;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.34)),
-    rgba(255, 255, 255, 0.48) !important;
+    linear-gradient(180deg, rgb(255 255 255 / 66%), rgb(255 255 255 / 34%)), rgb(255 255 255 / 48%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.86),
-    0 5px 13px rgba(30, 39, 54, 0.036) !important;
+    inset 0 1px 0 rgb(255 255 255 / 86%),
+    0 5px 13px rgb(30 39 54 / 3.6%) !important;
 }
 
 .home-banner::after {
@@ -1441,7 +1424,7 @@ img.home-header__logo {
 }
 
 .home-aside--rail .home-sidebar-nav__link:hover {
-  background: rgba(255, 255, 255, 0.45) !important;
+  background: rgb(255 255 255 / 45%) !important;
   color: var(--ag-ink) !important;
 }
 
@@ -1450,16 +1433,16 @@ img.home-header__logo {
   border-radius: 14px !important;
   color: var(--ag-blue) !important;
   font-weight: 600 !important;
-  background: #ffffff !important;
+  background: #fff !important;
   box-shadow:
-    0 2px 8px rgba(18, 24, 38, 0.06),
-    inset 0 1px 0 #ffffff !important;
+    0 2px 8px rgb(18 24 38 / 6%),
+    inset 0 1px 0 #fff !important;
 }
 
 .home-aside--rail .home-sidebar-nav__link--active::before,
 .home-aside--rail .home-sidebar-nav__link.home-sidebar-nav__link--active::before {
   background: var(--ag-blue);
-  box-shadow: 0 0 6px rgba(0, 122, 255, 0.45);
+  box-shadow: 0 0 6px rgb(0 122 255 / 45%);
 }
 
 /* ========================================================
@@ -1469,7 +1452,7 @@ img.home-header__logo {
   .home-aside--mobile {
     display: flex !important;
     width: 100% !important;
-    margin: 0.15rem 0 0.65rem 0 !important;
+    margin: 0.15rem 0 0.65rem !important;
   }
 
   .home-aside--mobile .home-sidebar-nav {
@@ -1484,14 +1467,14 @@ img.home-header__logo {
     width: 100% !important;
     padding: 0.24rem 0.32rem !important;
     border-radius: 9999px !important;
-    background: rgba(255, 255, 255, 0.72) !important;
+    background: rgb(255 255 255 / 72%) !important;
     backdrop-filter: blur(24px) saturate(190%) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(24px) saturate(190%) !important;
+    border: 1px solid rgb(255 255 255 / 80%) !important;
     box-shadow:
-      0 4px 18px -2px rgba(18, 24, 38, 0.05),
-      0 1px 3px rgba(18, 24, 38, 0.02),
-      inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+      0 4px 18px -2px rgb(18 24 38 / 5%),
+      0 1px 3px rgb(18 24 38 / 2%),
+      inset 0 1px 0 rgb(255 255 255 / 90%) !important;
     gap: 0.25rem !important;
     box-sizing: border-box !important;
   }
@@ -1503,8 +1486,7 @@ img.home-header__logo {
     gap: 0.16rem !important;
     min-width: 0 !important;
     flex: 1 1 auto !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
+    overflow: auto hidden !important;
     white-space: nowrap !important;
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
@@ -1554,7 +1536,7 @@ img.home-header__logo {
 
   .home-sidebar-nav__mobile-row .home-sidebar-nav__link:hover {
     color: var(--ag-ink) !important;
-    background: rgba(255, 255, 255, 0.42) !important;
+    background: rgb(255 255 255 / 42%) !important;
   }
 
   .home-sidebar-nav__mobile-row .home-sidebar-nav__link:active {
@@ -1566,11 +1548,11 @@ img.home-header__logo {
   .home-sidebar-nav__mobile-row .home-sidebar-nav__link.home-sidebar-nav__link--active {
     color: var(--ag-blue) !important;
     font-weight: 600 !important;
-    background: #ffffff !important;
+    background: #fff !important;
     border-radius: 9999px !important;
     box-shadow:
-      0 0 0 0.5px rgba(0, 0, 0, 0.05),
-      0 1px 2px rgba(0, 0, 0, 0.06) !important;
+      0 0 0 0.5px rgb(0 0 0 / 5%),
+      0 1px 2px rgb(0 0 0 / 6%) !important;
     transform: none !important;
   }
 
@@ -1585,10 +1567,10 @@ img.home-header__logo {
     height: 2.15rem !important;
     padding: 0 !important;
     border-radius: 9999px !important;
-    background: rgba(255, 255, 255, 0.52) !important;
-    border: 0.5px solid rgba(255, 255, 255, 0.7) !important;
+    background: rgb(255 255 255 / 52%) !important;
+    border: 0.5px solid rgb(255 255 255 / 70%) !important;
     color: var(--ag-ink-soft) !important;
-    box-shadow: 0 1px 3px rgba(18, 24, 38, 0.03) !important;
+    box-shadow: 0 1px 3px rgb(18 24 38 / 3%) !important;
     cursor: pointer !important;
     margin: 0 !important;
     transition: all 0.2s cubic-bezier(0.2, 0, 0, 1) !important;
@@ -1599,17 +1581,17 @@ img.home-header__logo {
   .home-sidebar-nav__mobile-row .home-sidebar-nav__chat-trigger:hover,
   .home-sidebar-nav__mobile-row .home-sidebar-nav__search-trigger:active,
   .home-sidebar-nav__mobile-row .home-sidebar-nav__chat-trigger:active {
-    background: #ffffff !important;
+    background: #fff !important;
     color: var(--ag-blue) !important;
-    box-shadow: 0 2px 8px rgba(18, 24, 38, 0.08) !important;
+    box-shadow: 0 2px 8px rgb(18 24 38 / 8%) !important;
     transform: scale(1.06) !important;
   }
 
   .home-sidebar-nav__mobile-row .home-sidebar-nav__search-trigger[aria-expanded='true'] {
-    background: #ffffff !important;
+    background: #fff !important;
     color: var(--ag-blue) !important;
-    border-color: rgba(0, 122, 255, 0.35) !important;
-    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.16) !important;
+    border-color: rgb(0 122 255 / 35%) !important;
+    box-shadow: 0 2px 8px rgb(0 122 255 / 16%) !important;
   }
 
   .home-sidebar-nav__mobile-row .home-sidebar-nav__search-icon,
@@ -1628,57 +1610,54 @@ img.home-header__logo {
   min-height: 3rem !important;
   padding: 0.42rem 4.35rem 0.42rem 2.4rem !important;
   border-radius: 15px !important;
-  border-color: rgba(24, 29, 38, 0.08) !important;
+  border-color: rgb(24 29 38 / 8%) !important;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.42)),
-    rgba(255, 255, 255, 0.52) !important;
+    linear-gradient(180deg, rgb(255 255 255 / 70%), rgb(255 255 255 / 42%)), rgb(255 255 255 / 52%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
-    0 4px 10px rgba(30, 39, 54, 0.032) !important;
+    inset 0 1px 0 rgb(255 255 255 / 82%),
+    0 4px 10px rgb(30 39 54 / 3.2%) !important;
 }
 
 .home-filter__search-shell input {
   height: 2.05rem !important;
   border-radius: 10px !important;
-  background: rgba(255, 255, 255, 0.36) !important;
+  background: rgb(255 255 255 / 36%) !important;
 }
 
 .home-filter__kbd-hint {
   right: 0.52rem !important;
   min-height: 1.7rem !important;
   border-radius: 8px !important;
-  background: rgba(255, 255, 255, 0.82) !important;
+  background: rgb(255 255 255 / 82%) !important;
 }
 
 .timeline-content > div {
   border-radius: 16px !important;
-  border-color: rgba(24, 29, 38, 0.078) !important;
+  border-color: rgb(24 29 38 / 7.8%) !important;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.38)),
-    rgba(255, 255, 255, 0.5) !important;
+    linear-gradient(180deg, rgb(255 255 255 / 68%), rgb(255 255 255 / 38%)), rgb(255 255 255 / 50%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
-    0 4px 11px rgba(30, 39, 54, 0.032) !important;
+    inset 0 1px 0 rgb(255 255 255 / 82%),
+    0 4px 11px rgb(30 39 54 / 3.2%) !important;
 }
 
 .timeline-marker > div {
   width: 0.56rem !important;
   height: 0.56rem !important;
-  box-shadow: 0 0 0 4px rgba(22, 119, 242, 0.1) !important;
+  box-shadow: 0 0 0 4px rgb(22 119 242 / 10%) !important;
 }
 
 .home-main-track > .home-content-block,
 .home-main-track > .home-status-widgets,
 .echo-detail {
   border-radius: 20px !important;
-  border-color: rgba(24, 29, 38, 0.082) !important;
-  border-top-color: rgba(255, 255, 255, 0.86) !important;
+  border-color: rgb(24 29 38 / 8.2%) !important;
+  border-top-color: rgb(255 255 255 / 86%) !important;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.34)),
-    rgba(255, 255, 255, 0.48) !important;
+    linear-gradient(180deg, rgb(255 255 255 / 66%), rgb(255 255 255 / 34%)), rgb(255 255 255 / 48%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.84),
-    0 6px 16px rgba(30, 39, 54, 0.038) !important;
+    inset 0 1px 0 rgb(255 255 255 / 84%),
+    0 6px 16px rgb(30 39 54 / 3.8%) !important;
 }
 
 .home-main-track > .home-content-block::before,
@@ -1706,12 +1685,11 @@ img.home-header__logo {
 .panel-shell {
   border-radius: 24px !important;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.34)),
-    rgba(255, 255, 255, 0.46) !important;
+    linear-gradient(180deg, rgb(255 255 255 / 68%), rgb(255 255 255 / 34%)), rgb(255 255 255 / 46%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.86),
-    0 14px 34px rgba(30, 39, 54, 0.052),
-    0 1px 3px rgba(30, 39, 54, 0.028) !important;
+    inset 0 1px 0 rgb(255 255 255 / 86%),
+    0 14px 34px rgb(30 39 54 / 5.2%),
+    0 1px 3px rgb(30 39 54 / 2.8%) !important;
 }
 
 .panel-card,
@@ -1719,11 +1697,10 @@ img.home-header__logo {
 .home-status-widgets .widget {
   border-radius: 16px !important;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.38)),
-    rgba(255, 255, 255, 0.5) !important;
+    linear-gradient(180deg, rgb(255 255 255 / 68%), rgb(255 255 255 / 38%)), rgb(255 255 255 / 50%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
-    0 4px 12px rgba(30, 39, 54, 0.032) !important;
+    inset 0 1px 0 rgb(255 255 255 / 82%),
+    0 4px 12px rgb(30 39 54 / 3.2%) !important;
 }
 
 .panel-nav button,
@@ -1739,7 +1716,7 @@ img.home-header__logo {
   border-radius: 12px !important;
 }
 
-@media (max-width: 819.98px) {
+@media (width <= 819.98px) {
   .home-header {
     border-radius: 20px !important;
   }
@@ -1759,19 +1736,19 @@ img.home-header__logo {
   --ag-ink-faint: #9aa4b4;
   --ag-blue: #4da3ff;
   --ag-orange: #ffb366;
-  --ag-line: rgba(255, 255, 255, 0.13);
-  --ag-line-soft: rgba(255, 255, 255, 0.18);
-  --ag-paper: rgba(27, 32, 42, 0.82);
-  --ag-paper-strong: rgba(35, 41, 53, 0.88);
-  --ag-paper-muted: rgba(21, 26, 36, 0.72);
+  --ag-line: rgb(255 255 255 / 13%);
+  --ag-line-soft: rgb(255 255 255 / 18%);
+  --ag-paper: rgb(27 32 42 / 82%);
+  --ag-paper-strong: rgb(35 41 53 / 88%);
+  --ag-paper-muted: rgb(21 26 36 / 72%);
   --color-text-primary: var(--ag-ink);
   --color-text-secondary: var(--ag-ink-soft);
   --color-text-muted: var(--ag-ink-faint);
   --color-bg-surface: var(--ag-paper-strong);
-  --color-bg-muted: rgba(255, 255, 255, 0.08);
-  --input-bg-color: rgba(12, 16, 23, 0.56);
-  --input-border-color: rgba(255, 255, 255, 0.12);
-  --placeholder-color: rgba(215, 220, 229, 0.56);
+  --color-bg-muted: rgb(255 255 255 / 8%);
+  --input-bg-color: rgb(12 16 23 / 56%);
+  --input-border-color: rgb(255 255 255 / 12%);
+  --placeholder-color: rgb(215 220 229 / 56%);
 }
 
 :root.dark,
@@ -1779,16 +1756,16 @@ img.home-header__logo {
 :root.dark #app {
   color: var(--ag-ink) !important;
   background:
-    radial-gradient(circle at 14% -10%, rgba(71, 116, 170, 0.18), transparent 24rem),
-    radial-gradient(circle at 86% 0%, rgba(20, 91, 166, 0.2), transparent 30rem),
+    radial-gradient(circle at 14% -10%, rgb(71 116 170 / 18%), transparent 24rem),
+    radial-gradient(circle at 86% 0%, rgb(20 91 166 / 20%), transparent 30rem),
     linear-gradient(115deg, #0b0d12 0%, #101722 47%, #07111d 100%) !important;
 }
 
 :root.dark body::after {
   opacity: 0.18 !important;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px) !important;
+    linear-gradient(rgb(255 255 255 / 2.8%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 2.2%) 1px, transparent 1px) !important;
 }
 
 :root.dark .home-header,
@@ -1802,25 +1779,25 @@ img.home-header__logo {
 :root.dark .panel-card,
 :root.dark .panel-welcome,
 :root.dark .base-modal {
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  border-top-color: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgb(255 255 255 / 12%) !important;
+  border-top-color: rgb(255 255 255 / 18%) !important;
   background:
-    linear-gradient(180deg, rgba(43, 50, 64, 0.86), rgba(20, 25, 35, 0.78)), rgba(19, 24, 34, 0.84) !important;
+    linear-gradient(180deg, rgb(43 50 64 / 86%), rgb(20 25 35 / 78%)), rgb(19 24 34 / 84%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.36),
-    0 10px 24px rgba(0, 0, 0, 0.28),
-    0 1px 2px rgba(0, 0, 0, 0.28) !important;
+    inset 0 1px 0 rgb(255 255 255 / 12%),
+    inset 0 -1px 0 rgb(0 0 0 / 36%),
+    0 10px 24px rgb(0 0 0 / 28%),
+    0 1px 2px rgb(0 0 0 / 28%) !important;
   backdrop-filter: saturate(150%) blur(18px) !important;
-  -webkit-backdrop-filter: saturate(150%) blur(18px) !important;
+  backdrop-filter: saturate(150%) blur(18px) !important;
 }
 
 :root.dark .home-header::after,
 :root.dark .home-main-track > .home-content-block::before,
 :root.dark .home-main-track > .home-status-widgets::before {
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 46%),
-    linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.16)) !important;
+    linear-gradient(135deg, rgb(255 255 255 / 8%), transparent 46%),
+    linear-gradient(180deg, transparent, rgb(0 0 0 / 16%)) !important;
   opacity: 0.8 !important;
 }
 
@@ -1854,69 +1831,69 @@ img.home-header__logo {
 
 :root.dark .home-aside--rail .home-sidebar-nav__link:hover {
   color: var(--ag-ink) !important;
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: rgb(255 255 255 / 8%) !important;
 }
 
 :root.dark .home-aside--rail .home-sidebar-nav__link--active,
 :root.dark .home-aside--rail .home-sidebar-nav__link.home-sidebar-nav__link--active {
-  color: #ffffff !important;
+  color: #fff !important;
   font-weight: 600 !important;
-  background: rgba(255, 255, 255, 0.15) !important;
+  background: rgb(255 255 255 / 15%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    0 4px 12px rgba(0, 0, 0, 0.24) !important;
+    inset 0 1px 0 rgb(255 255 255 / 18%),
+    0 4px 12px rgb(0 0 0 / 24%) !important;
 }
 
 :root.dark .home-sidebar-nav__mobile-row {
-  background: rgba(26, 31, 42, 0.75) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgb(26 31 42 / 75%) !important;
+  border-color: rgb(255 255 255 / 10%) !important;
   box-shadow:
-    0 6px 20px -2px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    0 6px 20px -2px rgb(0 0 0 / 40%),
+    inset 0 1px 0 rgb(255 255 255 / 10%) !important;
 }
 
 :root.dark .home-sidebar-nav__mobile-row .home-sidebar-nav__link {
-  color: rgba(255, 255, 255, 0.65) !important;
+  color: rgb(255 255 255 / 65%) !important;
 }
 
 :root.dark .home-sidebar-nav__mobile-row .home-sidebar-nav__link:hover {
-  color: #ffffff !important;
-  background: rgba(255, 255, 255, 0.08) !important;
+  color: #fff !important;
+  background: rgb(255 255 255 / 8%) !important;
 }
 
 :root.dark .home-sidebar-nav__mobile-row .home-sidebar-nav__link--active,
 :root.dark .home-sidebar-nav__mobile-row .home-sidebar-nav__link.home-sidebar-nav__link--active {
-  color: #ffffff !important;
+  color: #fff !important;
   font-weight: 600 !important;
-  background: rgba(255, 255, 255, 0.18) !important;
+  background: rgb(255 255 255 / 18%) !important;
   border-radius: 9999px !important;
   box-shadow:
-    0 0 0 0.5px rgba(255, 255, 255, 0.12),
-    0 1px 3px rgba(0, 0, 0, 0.25) !important;
+    0 0 0 0.5px rgb(255 255 255 / 12%),
+    0 1px 3px rgb(0 0 0 / 25%) !important;
   transform: none !important;
 }
 
 :root.dark .home-sidebar-nav__mobile-row .home-sidebar-nav__search-trigger,
 :root.dark .home-sidebar-nav__mobile-row .home-sidebar-nav__chat-trigger {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  color: rgba(255, 255, 255, 0.7) !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+  background: rgb(255 255 255 / 8%) !important;
+  border-color: rgb(255 255 255 / 12%) !important;
+  color: rgb(255 255 255 / 70%) !important;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 20%) !important;
 }
 
 :root.dark .home-sidebar-nav__mobile-row .home-sidebar-nav__search-trigger:hover,
 :root.dark .home-sidebar-nav__mobile-row .home-sidebar-nav__chat-trigger:hover,
 :root.dark .home-sidebar-nav__mobile-row .home-sidebar-nav__search-trigger:active,
 :root.dark .home-sidebar-nav__mobile-row .home-sidebar-nav__chat-trigger:active {
-  background: rgba(255, 255, 255, 0.2) !important;
-  color: #ffffff !important;
-  border-color: rgba(255, 255, 255, 0.25) !important;
+  background: rgb(255 255 255 / 20%) !important;
+  color: #fff !important;
+  border-color: rgb(255 255 255 / 25%) !important;
 }
 
 :root.dark .home-sidebar-nav__mobile-row .home-sidebar-nav__search-trigger[aria-expanded='true'] {
-  background: rgba(255, 255, 255, 0.22) !important;
-  color: #ffffff !important;
-  border-color: rgba(255, 255, 255, 0.35) !important;
+  background: rgb(255 255 255 / 22%) !important;
+  color: #fff !important;
+  border-color: rgb(255 255 255 / 35%) !important;
 }
 
 :root.dark .home-filter__search-shell input,
@@ -1924,15 +1901,15 @@ img.home-header__logo {
 :root.dark .panel-page-wrap textarea,
 :root.dark .panel-page-wrap select {
   color: var(--ag-ink) !important;
-  background: rgba(7, 10, 16, 0.42) !important;
-  border-color: rgba(255, 255, 255, 0.11) !important;
-  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.08) !important;
+  background: rgb(7 10 16 / 42%) !important;
+  border-color: rgb(255 255 255 / 11%) !important;
+  box-shadow: inset 0 0 0 0.5px rgb(255 255 255 / 8%) !important;
 }
 
 :root.dark .home-filter__search-shell input::placeholder,
 :root.dark .panel-page-wrap input::placeholder,
 :root.dark .panel-page-wrap textarea::placeholder {
-  color: rgba(215, 220, 229, 0.56) !important;
+  color: rgb(215 220 229 / 56%) !important;
 }
 
 :root.dark .home-filter__kbd-hint,
@@ -1941,12 +1918,12 @@ img.home-header__logo {
 :root.dark .echo-open-btn,
 :root.dark .echo-timeline button[class*='rounded'] {
   color: var(--ag-ink-soft) !important;
-  border-color: rgba(255, 255, 255, 0.11) !important;
+  border-color: rgb(255 255 255 / 11%) !important;
   background:
-    linear-gradient(180deg, rgba(57, 65, 80, 0.88), rgba(30, 36, 48, 0.84)), rgba(30, 36, 48, 0.84) !important;
+    linear-gradient(180deg, rgb(57 65 80 / 88%), rgb(30 36 48 / 84%)), rgb(30 36 48 / 84%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 4px 12px rgba(0, 0, 0, 0.18) !important;
+    inset 0 1px 0 rgb(255 255 255 / 10%),
+    0 4px 12px rgb(0 0 0 / 18%) !important;
 }
 
 :root.dark .editor-actions__tag-panel,
@@ -1957,12 +1934,12 @@ img.home-header__logo {
 :root.dark .markdown-editor:not(.is-full),
 :root.dark .home-status-widgets .widget {
   color: var(--ag-ink) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgb(255 255 255 / 12%) !important;
   background:
-    linear-gradient(180deg, rgba(42, 50, 64, 0.9), rgba(20, 25, 35, 0.84)), rgba(20, 25, 35, 0.86) !important;
+    linear-gradient(180deg, rgb(42 50 64 / 90%), rgb(20 25 35 / 84%)), rgb(20 25 35 / 86%) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.11),
-    0 10px 22px rgba(0, 0, 0, 0.26) !important;
+    inset 0 1px 0 rgb(255 255 255 / 11%),
+    0 10px 22px rgb(0 0 0 / 26%) !important;
 }
 
 :root.dark .markdown-editor:not(.is-full) .editor-input {
@@ -1971,7 +1948,7 @@ img.home-header__logo {
 
 :root.dark .timeline-marker > div {
   background: var(--ag-blue) !important;
-  box-shadow: 0 0 0 4px rgba(77, 163, 255, 0.18) !important;
+  box-shadow: 0 0 0 4px rgb(77 163 255 / 18%) !important;
 }
 
 :root.dark .echo-header-sticky .text-sm,
@@ -1992,7 +1969,7 @@ img.home-header__logo {
   border-radius: var(--ag-radius-lg, 24px) !important;
   background: var(--ag-glass-strong) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
   border: 1px solid var(--ag-line) !important;
   box-shadow: var(--ag-shadow) !important;
   transition:
@@ -2003,9 +1980,9 @@ img.home-header__logo {
 .zen-echo-card:hover {
   transform: translateY(-2px) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 14px 28px rgba(40, 48, 62, 0.08),
-    0 2px 6px rgba(40, 48, 62, 0.04) !important;
+    inset 0 1px 0 rgb(255 255 255 / 90%),
+    0 14px 28px rgb(40 48 62 / 8%),
+    0 2px 6px rgb(40 48 62 / 4%) !important;
 }
 
 .zen-echo-card:active {
@@ -2014,36 +1991,36 @@ img.home-header__logo {
 
 :root.dark .zen-echo-card {
   background: var(--ag-glass-strong) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgb(255 255 255 / 10%) !important;
   box-shadow: var(--ag-shadow) !important;
 }
 
 :root.dark .zen-echo-card:hover {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 16px 32px rgba(0, 0, 0, 0.32),
-    0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    inset 0 1px 0 rgb(255 255 255 / 12%),
+    0 16px 32px rgb(0 0 0 / 32%),
+    0 2px 8px rgb(0 0 0 / 20%) !important;
 }
 
 .zen-open-btn {
-  background: rgba(255, 255, 255, 0.6) !important;
+  background: rgb(255 255 255 / 60%) !important;
   border: 1px solid var(--ag-line) !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 4%) !important;
 }
 
 .zen-open-btn:hover {
-  background: rgba(255, 255, 255, 0.95) !important;
+  background: rgb(255 255 255 / 95%) !important;
   color: var(--ag-blue) !important;
   transform: scale(1.08) !important;
 }
 
 :root.dark .zen-open-btn {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgb(255 255 255 / 8%) !important;
+  border-color: rgb(255 255 255 / 12%) !important;
 }
 
 :root.dark .zen-open-btn:hover {
-  background: rgba(255, 255, 255, 0.16) !important;
+  background: rgb(255 255 255 / 16%) !important;
   color: #fff !important;
 }
 
@@ -2055,15 +2032,15 @@ img.home-header__logo {
 .chat-topbar {
   background: var(--ag-glass-strong) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
   border-bottom: 1px solid var(--ag-line) !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02) !important;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 2%) !important;
 }
 
 .chat-topbar .topbar-btn {
   background: var(--ag-glass-soft) !important;
   backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
+  backdrop-filter: blur(16px) !important;
   border: 1px solid var(--ag-line) !important;
   border-radius: 9999px !important;
   color: var(--color-text-secondary) !important;
@@ -2074,9 +2051,9 @@ img.home-header__logo {
 .chat-topbar .topbar-btn:hover {
   background: var(--ag-glass-strong) !important;
   color: var(--ag-blue) !important;
-  border-color: rgba(10, 132, 255, 0.35) !important;
+  border-color: rgb(10 132 255 / 35%) !important;
   transform: translateY(-1px) !important;
-  box-shadow: 0 4px 14px rgba(10, 132, 255, 0.16) !important;
+  box-shadow: 0 4px 14px rgb(10 132 255 / 16%) !important;
 }
 
 .chat-bottom-dock {
@@ -2090,32 +2067,32 @@ img.home-header__logo {
 .chat-bottom-dock .composer {
   background: var(--ag-glass-strong) !important;
   backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
   border: 1px solid var(--ag-line) !important;
   border-radius: 28px !important;
   box-shadow:
-    0 10px 32px rgba(40, 48, 62, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    0 10px 32px rgb(40 48 62 / 8%),
+    inset 0 1px 0 rgb(255 255 255 / 80%) !important;
 }
 
 :root.dark .chat-bottom-dock .composer {
   box-shadow:
-    0 12px 36px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    0 12px 36px rgb(0 0 0 / 35%),
+    inset 0 1px 0 rgb(255 255 255 / 8%) !important;
 }
 
 .chat-bottom-dock .composer:focus-within {
-  border-color: rgba(10, 132, 255, 0.45) !important;
+  border-color: rgb(10 132 255 / 45%) !important;
   box-shadow:
-    0 12px 36px rgba(10, 132, 255, 0.14),
-    0 0 0 3px rgba(10, 132, 255, 0.16) !important;
+    0 12px 36px rgb(10 132 255 / 14%),
+    0 0 0 3px rgb(10 132 255 / 16%) !important;
 }
 
 .chat-hero__chip,
 .chat-dock__chip {
   background: var(--ag-glass-strong) !important;
   backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
+  backdrop-filter: blur(16px) !important;
   border: 1px solid var(--ag-line) !important;
   border-radius: 9999px !important;
   color: var(--color-text-secondary) !important;
@@ -2127,16 +2104,16 @@ img.home-header__logo {
 .chat-dock__chip:hover {
   background: var(--ag-glass-strong) !important;
   color: var(--ag-blue) !important;
-  border-color: rgba(10, 132, 255, 0.35) !important;
+  border-color: rgb(10 132 255 / 35%) !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 6px 18px rgba(10, 132, 255, 0.16) !important;
+  box-shadow: 0 6px 18px rgb(10 132 255 / 16%) !important;
 }
 
 .hairline-chat .turn--user .bubble {
   background: linear-gradient(135deg, #0a84ff 0%, #0071e3 100%) !important;
-  color: #ffffff !important;
-  border-radius: 20px 20px 4px 20px !important;
-  box-shadow: 0 4px 16px rgba(10, 132, 255, 0.28) !important;
+  color: #fff !important;
+  border-radius: 20px 20px 4px !important;
+  box-shadow: 0 4px 16px rgb(10 132 255 / 28%) !important;
   font-weight: 450 !important;
   letter-spacing: -0.01em !important;
 }
@@ -2146,7 +2123,7 @@ img.home-header__logo {
   border-radius: var(--ag-radius-md, 18px) !important;
   background: var(--ag-glass-soft) !important;
   backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
+  backdrop-filter: blur(16px) !important;
   border: 1px solid var(--ag-line) !important;
   padding: 0.5rem 0.75rem !important;
 }
@@ -2159,13 +2136,13 @@ img.home-header__logo {
 }
 
 .activity__row:hover:not(.activity__row--static) {
-  background: rgba(10, 132, 255, 0.08) !important;
+  background: rgb(10 132 255 / 8%) !important;
   color: var(--ag-blue) !important;
 }
 
 .qnav__item--active .qnav__pill {
   background: var(--ag-blue) !important;
-  box-shadow: 0 0 8px rgba(10, 132, 255, 0.4) !important;
+  box-shadow: 0 0 8px rgb(10 132 255 / 40%) !important;
 }
 
 .ask {
@@ -2190,7 +2167,7 @@ img.home-header__logo {
 
 .ask__option--picked {
   border-color: var(--ag-blue) !important;
-  background: rgba(10, 132, 255, 0.1) !important;
+  background: rgb(10 132 255 / 10%) !important;
   color: var(--ag-blue) !important;
   font-weight: 600 !important;
 }
@@ -2201,7 +2178,7 @@ img.home-header__logo {
   color: #fff !important;
   border: none !important;
   font-weight: 600 !important;
-  box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3) !important;
+  box-shadow: 0 2px 8px rgb(10 132 255 / 30%) !important;
   transition:
     transform 0.15s ease,
     opacity 0.15s ease !important;
@@ -2237,7 +2214,7 @@ img.home-header__logo {
 .composer {
   background: var(--ag-glass-strong) !important;
   backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
   border: 1px solid var(--ag-line) !important;
   border-radius: var(--ag-radius-lg, 24px) !important;
   box-shadow: var(--ag-shadow) !important;
@@ -2247,17 +2224,17 @@ img.home-header__logo {
   border-color: var(--ag-blue) !important;
   box-shadow:
     var(--ag-shadow),
-    0 0 0 3px rgba(10, 132, 255, 0.18) !important;
+    0 0 0 3px rgb(10 132 255 / 18%) !important;
 }
 
 .composer__action--send {
-  color: #ffffff !important;
+  color: #fff !important;
 }
 
 .composer__action--send:disabled,
 .composer__action--disabled {
-  background: rgba(120, 120, 128, 0.14) !important;
-  color: rgba(120, 120, 128, 0.4) !important;
+  background: rgb(120 120 128 / 14%) !important;
+  color: rgb(120 120 128 / 40%) !important;
   box-shadow: none !important;
 }
 
@@ -2285,7 +2262,7 @@ img.home-header__logo {
 .audio-player {
   background: var(--ag-glass-strong) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
   border: 1px solid var(--ag-line) !important;
   border-radius: var(--ag-radius-md, 18px) !important;
   box-shadow: var(--ag-shadow) !important;
@@ -2296,7 +2273,7 @@ img.home-header__logo {
   background: var(--ag-blue) !important;
   color: #fff !important;
   border: none !important;
-  box-shadow: 0 4px 10px rgba(10, 132, 255, 0.32) !important;
+  box-shadow: 0 4px 10px rgb(10 132 255 / 32%) !important;
   transition:
     transform 0.15s ease,
     filter 0.15s ease !important;
@@ -2312,7 +2289,7 @@ img.home-header__logo {
 }
 
 .audio-player__tag {
-  background: rgba(10, 132, 255, 0.12) !important;
+  background: rgb(10 132 255 / 12%) !important;
   color: var(--ag-blue) !important;
   border-radius: 9999px !important;
   font-weight: 600 !important;
@@ -2320,7 +2297,7 @@ img.home-header__logo {
 
 .audio-player__range::-webkit-slider-thumb {
   background: var(--ag-blue) !important;
-  box-shadow: 0 2px 6px rgba(10, 132, 255, 0.4) !important;
+  box-shadow: 0 2px 6px rgb(10 132 255 / 40%) !important;
 }
 
 .video-media__poster {
@@ -2336,15 +2313,15 @@ img.home-header__logo {
 .video-media__tag,
 .video-media__fullscreen {
   backdrop-filter: blur(16px) saturate(160%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
-  background: rgba(0, 0, 0, 0.52) !important;
-  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  backdrop-filter: blur(16px) saturate(160%) !important;
+  background: rgb(0 0 0 / 52%) !important;
+  border: 1px solid rgb(255 255 255 / 22%) !important;
   border-radius: 9999px !important;
   font-weight: 500 !important;
 }
 
 .video-media__fullscreen:hover {
-  background: rgba(0, 0, 0, 0.72) !important;
+  background: rgb(0 0 0 / 72%) !important;
   transform: scale(1.05) !important;
 }
 
@@ -2353,23 +2330,23 @@ img.home-header__logo {
 }
 
 .video-lightbox {
-  background: rgba(0, 0, 0, 0.78) !important;
+  background: rgb(0 0 0 / 78%) !important;
   backdrop-filter: blur(28px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
 }
 
 .video-lightbox__close {
-  background: rgba(255, 255, 255, 0.16) !important;
-  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  background: rgb(255 255 255 / 16%) !important;
+  border: 1px solid rgb(255 255 255 / 25%) !important;
   backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
+  backdrop-filter: blur(16px) !important;
   transition:
     transform 0.15s ease,
     background 0.15s ease !important;
 }
 
 .video-lightbox__close:hover {
-  background: rgba(255, 255, 255, 0.28) !important;
+  background: rgb(255 255 255 / 28%) !important;
   transform: scale(1.08) !important;
 }
 
@@ -2379,14 +2356,14 @@ img.home-header__logo {
 
 .video-lightbox__video {
   border-radius: var(--ag-radius-lg, 24px) !important;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6) !important;
+  box-shadow: 0 24px 64px rgb(0 0 0 / 60%) !important;
 }
 
 /* 4. Background Job & Progress Cards */
 .jpc {
   background: var(--ag-glass-strong) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
   border: 1px solid var(--ag-line) !important;
   border-radius: var(--ag-radius-lg, 24px) !important;
   box-shadow: var(--ag-shadow) !important;

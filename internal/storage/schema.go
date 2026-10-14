@@ -3,10 +3,16 @@
 
 package storage
 
-import "github.com/lin-snow/ech0/pkg/virefs"
+import (
+	"strings"
+
+	"github.com/lin-snow/ech0/pkg/virefs"
+)
 
 func NewFileSchema() *virefs.Schema {
 	return virefs.NewSchema(
+		virefs.RouteByFunc("snapshots/", func(k string) bool { return strings.HasPrefix(strings.Trim(k, "/"), "snapshots/") }),
+		virefs.RouteByFunc("capsules/", func(k string) bool { return strings.HasPrefix(strings.Trim(k, "/"), "capsules/") }),
 		virefs.RouteByExt("images/", ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".avif"),
 		virefs.RouteByExt("audios/", ".mp3", ".flac", ".wav", ".m4a", ".ogg"),
 		virefs.RouteByExt("videos/", ".mp4", ".avi", ".mkv", ".webm"),

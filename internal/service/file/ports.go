@@ -35,6 +35,7 @@ type Service interface {
 	ConfirmTempFiles(ctx context.Context, fileIDs []string) error
 	DeleteFileRecord(ctx context.Context, id string) error
 	DeleteStoredFile(storageType string, key string) error
+	DeleteFileByPath(ctx context.Context, storageType string, filePath string) error
 }
 
 type CommonRepository interface {

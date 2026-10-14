@@ -104,9 +104,77 @@ func (o *ObjectFS) Get(ctx context.Context, key string) (io.ReadCloser, error) {
 		Key:    aws.String(s3k),
 	})
 	if err != nil {
+		if o.keyFunc != nil {
+			cleaned, cleanErr := CleanKey(key)
+			if cleanErr == nil {
+				rawS3k := o.basePrefix + cleaned
+				if rawS3k != s3k {
+					if rawOut, rawErr := o.client.GetObject(ctx, &s3.GetObjectInput{
+						Bucket: aws.String(o.bucket),
+						Key:    aws.String(rawS3k),
+					}); rawErr == nil {
+						return rawOut.Body, nil
+					}
+				}
+			}
+		}
 		return nil, &OpError{Op: "Get", Key: key, Err: mapS3Error(err)}
 	}
 	return out.Body, nil
+}
+
+func (o *ObjectFS) GetByStoragePath(ctx context.Context, storagePath string) (io.ReadCloser, error) {
+	cleaned, err := CleanKey(storagePath)
+	if err != nil {
+		return nil, &OpError{Op: "GetByStoragePath", Key: storagePath, Err: err}
+	}
+	s3k := o.basePrefix + cleaned
+	out, err := o.client.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(o.bucket),
+		Key:    aws.String(s3k),
+	})
+	if err != nil {
+		if o.keyFunc != nil {
+			resolved := o.keyFunc(cleaned)
+			resolvedS3k := o.basePrefix + resolved
+			if resolvedS3k != s3k {
+				if rOut, rErr := o.client.GetObject(ctx, &s3.GetObjectInput{
+					Bucket: aws.String(o.bucket),
+					Key:    aws.String(resolvedS3k),
+				}); rErr == nil {
+					return rOut.Body, nil
+				}
+			}
+		}
+		return nil, &OpError{Op: "GetByStoragePath", Key: storagePath, Err: mapS3Error(err)}
+	}
+	return out.Body, nil
+}
+
+func (o *ObjectFS) DeleteByStoragePath(ctx context.Context, storagePath string) error {
+	cleaned, err := CleanKey(storagePath)
+	if err != nil {
+		return &OpError{Op: "DeleteByStoragePath", Key: storagePath, Err: err}
+	}
+	s3k := o.basePrefix + cleaned
+	_, err = o.client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(o.bucket),
+		Key:    aws.String(s3k),
+	})
+	if err != nil {
+		return &OpError{Op: "DeleteByStoragePath", Key: storagePath, Err: mapS3Error(err)}
+	}
+	if o.keyFunc != nil {
+		resolved := o.keyFunc(cleaned)
+		resolvedS3k := o.basePrefix + resolved
+		if resolvedS3k != s3k {
+			_, _ = o.client.DeleteObject(ctx, &s3.DeleteObjectInput{
+				Bucket: aws.String(o.bucket),
+				Key:    aws.String(resolvedS3k),
+			})
+		}
+	}
+	return nil
 }
 
 func (o *ObjectFS) Put(ctx context.Context, key string, r io.Reader, opts ...PutOption) error {

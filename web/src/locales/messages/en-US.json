@@ -251,7 +251,13 @@
     "download": "Download",
     "downloading": "Downloading",
     "downloadFailed": "Download failed",
-    "downloadFailedResponse": "Download failed: server returned unexpected content"
+    "downloadFailedResponse": "Download failed: server returned unexpected content",
+    "delete": "Delete",
+    "deleting": "Deleting",
+    "deleteSuccess": "File deleted successfully",
+    "deleteFailed": "Failed to delete file",
+    "deleteConfirmTitle": "Confirm File Deletion",
+    "deleteConfirmDesc": "Are you sure you want to delete \"{name}\"? This action cannot be undone."
   },
   "staticSite": {
     "likeUnavailable": "This is a static archive; liking is unavailable."
