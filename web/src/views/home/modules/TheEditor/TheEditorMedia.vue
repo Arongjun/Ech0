@@ -69,7 +69,7 @@ import { Mode } from '@/enums/enums'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useI18n } from 'vue-i18n'
-import { usePhotoSwipeGallery } from '@/components/advanced/media/image/composables/usePhotoSwipeGallery'
+import { useMediaFancybox } from '@/composables/useMediaFancybox'
 
 const { openConfirm } = useBaseDialog()
 const { t } = useI18n()
@@ -81,14 +81,18 @@ const { echoToUpdate } = storeToRefs(echoStore)
 const editorStore = useEditorStore()
 const { filesToAdd, currentMode, isUpdateMode, mediaCategory } = storeToRefs(editorStore)
 const previewItems = computed(() =>
-  filesToAdd.value.map((image, idx) => ({
-    src: getImageToAddUrl(image),
-    width: image.width,
-    height: image.height,
-    alt: t('imageGallery.previewImage', { index: idx + 1 }),
-  })),
+  filesToAdd.value.map((image, idx) => {
+    const url = getImageToAddUrl(image)
+    return {
+      src: url,
+      thumb: url,
+      width: image.width,
+      height: image.height,
+      alt: t('imageGallery.previewImage', { index: idx + 1 }),
+    }
+  }),
 )
-const { open: openPreview } = usePhotoSwipeGallery(previewItems)
+const { open: openPreview } = useMediaFancybox(previewItems)
 
 const isAudio = computed(() => mediaCategory.value === FILE_CATEGORY.AUDIO)
 const isVideo = computed(() => mediaCategory.value === FILE_CATEGORY.VIDEO)

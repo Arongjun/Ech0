@@ -142,7 +142,6 @@ watch(
   z-index: 9000;
   background: rgb(15 23 42 / 28%);
   backdrop-filter: blur(16px) saturate(160%);
-  backdrop-filter: blur(16px) saturate(160%);
 }
 
 :root.dark .chat-launcher {
@@ -176,7 +175,6 @@ watch(
   width: min(40rem, 100%);
   padding: 0.75rem 1.25rem;
   background: var(--ag-glass-strong, var(--color-bg-surface));
-  backdrop-filter: blur(24px) saturate(180%);
   backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--ag-line);
   border-radius: var(--ag-radius-lg, 24px);
@@ -279,7 +277,6 @@ watch(
   padding: 0.48rem 1.15rem;
   border-radius: 9999px;
   background: var(--ag-glass-soft, rgb(255 255 255 / 65%));
-  backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   border: 1px solid var(--ag-line, rgb(55 48 42 / 12%));
   color: var(--color-text-secondary);

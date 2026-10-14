@@ -31,6 +31,7 @@
     "@cap.js/widget": "^0.1.58",
     "@dicebear/core": "^10.7.0",
     "@dicebear/styles": "^10.6.0",
+    "@fancyapps/ui": "^6.1.15",
     "@headlessui/vue": "^1.7.23",
     "@vue/devtools-api": "^8.2.1",
     "@vueuse/core": "^14.4.0",

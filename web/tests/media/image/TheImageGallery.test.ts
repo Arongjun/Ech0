@@ -7,9 +7,10 @@ import { describe, expect, it, vi } from 'vitest'
 import { ImageLayout } from '@/enums/enums'
 import TheImageGallery from '@/components/advanced/media/image/TheImageGallery.vue'
 
-vi.mock('@/components/advanced/media/image/composables/usePhotoSwipeGallery', () => ({
-  usePhotoSwipeGallery: () => ({
+vi.mock('@/composables/useMediaFancybox', () => ({
+  useMediaFancybox: () => ({
     open: vi.fn(),
+    close: vi.fn(),
     destroy: vi.fn(),
   }),
 }))

@@ -72,7 +72,7 @@ import { computed, ref, watch } from 'vue'
 import { getImageUrl, getHubImageUrl } from '@/utils/other'
 import { ImageLayout } from '@/enums/enums'
 import { useI18n } from 'vue-i18n'
-import { usePhotoSwipeGallery } from './composables/usePhotoSwipeGallery'
+import { useMediaFancybox } from '@/composables/useMediaFancybox'
 import GalleryWaterfall from './layouts/GalleryWaterfall.vue'
 import GalleryGrid from './layouts/GalleryGrid.vue'
 import GalleryCarousel from './layouts/GalleryCarousel.vue'
@@ -110,18 +110,19 @@ const resolvedSrcs = computed(() =>
 const galleryItems = computed(() =>
   images.value.map((image, idx) => ({
     src: resolvedSrcs.value[idx] || '',
+    thumb: resolvedSrcs.value[idx] || '',
     width: image.width,
     height: image.height,
     alt: getAlt(idx),
   })),
 )
 
-const { open } = usePhotoSwipeGallery(galleryItems)
+const { open: openGalleryMedia } = useMediaFancybox(galleryItems)
 
 const getAlt = (idx: number) => t('imageGallery.previewImage', { index: idx + 1 })
 
 const openGallery = (index: number, sourceElement?: HTMLElement | null) => {
-  open(index, sourceElement)
+  openGalleryMedia(index, sourceElement)
 }
 
 const getImageKey = (image: App.Api.Ech0.FileObject, idx: number) =>

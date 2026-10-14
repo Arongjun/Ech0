@@ -18,7 +18,7 @@ import Trashbin from '@/components/icons/trashbin.vue'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
-import { usePhotoSwipeGallery } from '@/components/advanced/media/image/composables/usePhotoSwipeGallery'
+import { useMediaFancybox, type MediaGalleryItem } from '@/composables/useMediaFancybox'
 import { resolveFileUrlByPath } from '@/utils/other'
 
 const EASE_OUT = 'cubic-bezier(0.33, 1, 0.68, 1)'
@@ -105,8 +105,8 @@ const previewingId = ref('')
 const deletingId = ref('')
 const refreshingRoot = ref<RootStorageType | ''>('')
 const selectedNodeKey = ref('')
-const previewGalleryItems = ref<Array<{ src: string; alt?: string }>>([])
-const { open: openGallery } = usePhotoSwipeGallery(previewGalleryItems)
+const previewGalleryItems = ref<MediaGalleryItem[]>([])
+const { open: openGallery } = useMediaFancybox(previewGalleryItems)
 const activePreviewObjectUrl = ref('')
 const { openConfirm } = useBaseDialog()
 const settingStore = useSettingStore()
@@ -403,10 +403,15 @@ const triggerPreview = async (storageType: RootStorageType, node: TreeNode) => {
       )
 
       if (node.url) {
-        previewGalleryItems.value = imageNodes.map((img) => ({
-          src: img.url ? resolveFileUrlByPath(img.url) : '',
-          alt: img.name,
-        }))
+        previewGalleryItems.value = imageNodes.map((img) => {
+          const resolved = img.url ? resolveFileUrlByPath(img.url) : ''
+          return {
+            src: resolved,
+            thumb: resolved,
+            caption: img.name,
+            alt: img.name,
+          }
+        })
         openGallery(initialIndex)
         return
       }
@@ -421,10 +426,16 @@ const triggerPreview = async (storageType: RootStorageType, node: TreeNode) => {
         }
         const objectUrl = window.URL.createObjectURL(blob)
         activePreviewObjectUrl.value = objectUrl
-        previewGalleryItems.value = imageNodes.map((img, idx) => ({
-          src: idx === initialIndex ? objectUrl : img.url ? resolveFileUrlByPath(img.url) : '',
-          alt: img.name,
-        }))
+        previewGalleryItems.value = imageNodes.map((img, idx) => {
+          const resolved =
+            idx === initialIndex ? objectUrl : img.url ? resolveFileUrlByPath(img.url) : ''
+          return {
+            src: resolved,
+            thumb: resolved,
+            caption: img.name,
+            alt: img.name,
+          }
+        })
         openGallery(initialIndex)
       } finally {
         previewingId.value = ''

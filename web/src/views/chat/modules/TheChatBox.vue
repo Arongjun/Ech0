@@ -758,7 +758,6 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
   background: var(--ag-glass-strong, rgb(255 255 255 / 78%));
   backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid var(--ag-line, rgb(55 48 42 / 10%));
   box-shadow: 0 1px 4px rgb(0 0 0 / 2%);
 }
@@ -937,7 +936,6 @@ onBeforeUnmount(() => {
   border-radius: 9999px;
   background: var(--ag-glass-strong, rgb(255 255 255 / 80%));
   backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
   border: 1px solid var(--ag-line, rgb(55 48 42 / 10%));
   font-size: 0.88rem;
   font-weight: 500;
@@ -1056,7 +1054,6 @@ onBeforeUnmount(() => {
   border-radius: 9999px;
   background: var(--ag-glass-strong, rgb(255 255 255 / 80%));
   backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
   border: 1px solid var(--ag-line, rgb(55 48 42 / 10%));
   font-size: 0.82rem;
   font-weight: 500;
@@ -1100,7 +1097,6 @@ onBeforeUnmount(() => {
   align-items: flex-end;
   gap: 0.75rem;
   background: var(--ag-glass-strong, rgb(255 255 255 / 82%));
-  backdrop-filter: blur(24px) saturate(180%);
   backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--ag-line, rgb(55 48 42 / 10%));
   border-radius: 28px;

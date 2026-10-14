@@ -250,7 +250,6 @@ watch(showSearchTrigger, (visible) => {
   .home-sidebar-nav__mobile-row {
     background: var(--ag-glass-strong, rgb(255 255 255 / 72%));
     backdrop-filter: blur(24px) saturate(190%);
-    backdrop-filter: blur(24px) saturate(190%);
     border: 1px solid var(--ag-line-soft, rgb(255 255 255 / 80%));
     border-radius: 9999px;
     padding: 0.24rem 0.32rem;
