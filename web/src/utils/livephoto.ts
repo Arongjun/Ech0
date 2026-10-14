@@ -404,6 +404,16 @@ export function detectLivePhotoPairs(files: File[]): LivePhotoPair[] {
     }
   }
 
+  // Fallback: If no baseName match was found and exactly 1 image + 1 video are provided,
+  // pair them together (e.g. user exported Live Photo as video or system picker renamed files)
+  if (pairs.length === 0 && images.length === 1 && videos.length === 1) {
+    pairs.push({
+      imageIndex: images[0].index,
+      videoIndex: videos[0].index,
+      pairId: generatePairId(),
+    })
+  }
+
   return pairs
 }
 

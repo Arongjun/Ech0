@@ -215,5 +215,15 @@ describe('livephoto', () => {
     expect(result?.imageFile.size).toBe(videoStart)
     expect(result?.videoFile.size).toBe(videoLen)
   })
+
+  it('pairs 1 image and 1 video as fallback when basenames do not match', () => {
+    const photo = new File(['img'], 'live0.jpeg', { type: 'image/jpeg' })
+    const video = new File(['vid'], 'video.mov', { type: 'video/quicktime' })
+    const pairs = detectLivePhotoPairs([photo, video])
+    expect(pairs.length).toBe(1)
+    expect(pairs[0].imageIndex).toBe(0)
+    expect(pairs[0].videoIndex).toBe(1)
+    expect(typeof pairs[0].pairId).toBe('string')
+  })
 })
 
