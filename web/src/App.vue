@@ -10,6 +10,7 @@ import { resolveAvatarUrl } from './service/request/shared'
 import 'vue-sonner/style.css'
 import BaseDialog from './components/common/BaseDialog.vue'
 import TheRouteProgress from './components/common/TheRouteProgress.vue'
+import { sessionStg } from '@/utils/storage'
 
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useBfCacheRestore } from '@/composables/useBfCacheRestore'
@@ -40,6 +41,16 @@ if (typeof window !== 'undefined') {
 }
 
 router.beforeEach((to, from) => {
+  if (from.name === 'home') {
+    if (typeof window !== 'undefined' && window.scrollY > 0) {
+      sessionStg.setItem('home:window:scrollTop', String(window.scrollY))
+    }
+    const mainCol = document.querySelector('.home-main') as HTMLElement | null
+    if (mainCol && mainCol.scrollTop > 0) {
+      sessionStg.setItem('home:timeline:scrollTop', String(mainCol.scrollTop))
+    }
+  }
+
   if (isPopState || isBfCacheRestore.value) {
     transitionName.value = 'none'
     return

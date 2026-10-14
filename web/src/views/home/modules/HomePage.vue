@@ -81,9 +81,10 @@ import {
   onDeactivated,
   computed,
   watch,
+  nextTick,
 } from 'vue'
 import { useEchoStore, useUserStore, useSettingStore } from '@/stores'
-import { useRoute } from 'vue-router'
+import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import {
   TheCommentWidget,
@@ -119,8 +120,12 @@ const shouldHideBannerOnMobile = computed(
 const mainColumn = ref<HTMLElement | null>(null)
 const TIMELINE_SCROLL_KEY = 'home:timeline:scrollTop'
 const WINDOW_SCROLL_KEY = 'home:window:scrollTop'
+const LAST_ACTIVE_ECHO_KEY = 'home:lastActiveEchoId'
 let timelineScrollRaf: number | null = null
 let windowScrollRaf: number | null = null
+const isNavigatingAway = ref(false)
+const isRestoringScroll = ref(false)
+let scrollListenersBound = false
 
 const paletteOpen = ref<boolean>(false)
 const chatLauncherOpen = ref<boolean>(false)
@@ -147,35 +152,116 @@ const handleGlobalKeydown = (event: KeyboardEvent) => {
 }
 
 const saveTimelineScrollPosition = () => {
-  if (!mainColumn.value || timelineScrollRaf !== null) return
+  if (isNavigatingAway.value || isRestoringScroll.value || !mainColumn.value || timelineScrollRaf !== null) return
 
   timelineScrollRaf = window.requestAnimationFrame(() => {
     timelineScrollRaf = null
-    if (!mainColumn.value) return
-    sessionStg.setItem(TIMELINE_SCROLL_KEY, String(mainColumn.value.scrollTop))
+    if (isNavigatingAway.value || isRestoringScroll.value || !mainColumn.value) return
+    const top = mainColumn.value.scrollTop
+    if (top > 0) {
+      sessionStg.setItem(TIMELINE_SCROLL_KEY, String(top))
+    }
   })
 }
 
 const saveWindowScrollPosition = () => {
-  if (windowScrollRaf !== null) return
+  if (isNavigatingAway.value || isRestoringScroll.value || windowScrollRaf !== null) return
   windowScrollRaf = window.requestAnimationFrame(() => {
     windowScrollRaf = null
-    sessionStg.setItem(WINDOW_SCROLL_KEY, String(window.scrollY))
+    if (isNavigatingAway.value || isRestoringScroll.value) return
+    const top = window.scrollY
+    if (top > 0) {
+      sessionStg.setItem(WINDOW_SCROLL_KEY, String(top))
+    }
   })
 }
 
-const restoreTimelineScrollPosition = () => {
-  if (mainColumn.value) {
-    const raw = sessionStg.getItem(TIMELINE_SCROLL_KEY)
-    const scrollTop = raw ? Number(raw) : 0
-    if (Number.isFinite(scrollTop) && scrollTop > 0) {
-      mainColumn.value.scrollTop = scrollTop
-    }
+const bindScrollListeners = () => {
+  if (scrollListenersBound) return
+  if (typeof window !== 'undefined') {
+    window.addEventListener('scroll', saveWindowScrollPosition, { passive: true })
   }
-  const rawWindow = sessionStg.getItem(WINDOW_SCROLL_KEY)
-  const windowTop = rawWindow ? Number(rawWindow) : 0
-  if (Number.isFinite(windowTop) && windowTop > 0) {
-    window.scrollTo({ top: windowTop, behavior: 'auto' })
+  if (mainColumn.value) {
+    mainColumn.value.addEventListener('scroll', saveTimelineScrollPosition, { passive: true })
+  }
+  scrollListenersBound = true
+}
+
+const unbindScrollListeners = () => {
+  if (!scrollListenersBound) return
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('scroll', saveWindowScrollPosition)
+  }
+  if (mainColumn.value) {
+    mainColumn.value.removeEventListener('scroll', saveTimelineScrollPosition)
+  }
+  if (timelineScrollRaf !== null) {
+    window.cancelAnimationFrame(timelineScrollRaf)
+    timelineScrollRaf = null
+  }
+  if (windowScrollRaf !== null) {
+    window.cancelAnimationFrame(windowScrollRaf)
+    windowScrollRaf = null
+  }
+  scrollListenersBound = false
+}
+
+const restoreTimelineScrollPosition = async () => {
+  isRestoringScroll.value = true
+  try {
+    const rawTimeline = sessionStg.getItem(TIMELINE_SCROLL_KEY)
+    const timelineTop = rawTimeline ? Number(rawTimeline) : 0
+    const rawWindow = sessionStg.getItem(WINDOW_SCROLL_KEY)
+    const windowTop = rawWindow ? Number(rawWindow) : 0
+    const lastEchoId = sessionStg.getItem(LAST_ACTIVE_ECHO_KEY)
+
+    await nextTick()
+    await new Promise((resolve) => window.requestAnimationFrame(resolve))
+
+    let restored = false
+
+    if (mainColumn.value && Number.isFinite(timelineTop) && timelineTop > 0) {
+      mainColumn.value.scrollTop = timelineTop
+      restored = true
+    }
+    if (typeof window !== 'undefined' && Number.isFinite(windowTop) && windowTop > 0) {
+      window.scrollTo({ top: windowTop, behavior: 'instant' as ScrollBehavior })
+      restored = true
+    }
+
+    if (lastEchoId) {
+      const cardEl =
+        document.getElementById(`echo-${lastEchoId}`) ||
+        (document.querySelector(`[data-echo-id="${lastEchoId}"]`) as HTMLElement | null)
+      if (cardEl) {
+        if (!restored) {
+          cardEl.scrollIntoView({ block: 'center', behavior: 'instant' })
+          restored = true
+        }
+      }
+    }
+
+    await new Promise((resolve) => window.requestAnimationFrame(resolve))
+    if (
+      mainColumn.value &&
+      Number.isFinite(timelineTop) &&
+      timelineTop > 0 &&
+      Math.abs(mainColumn.value.scrollTop - timelineTop) > 10
+    ) {
+      mainColumn.value.scrollTop = timelineTop
+    }
+    if (
+      typeof window !== 'undefined' &&
+      Number.isFinite(windowTop) &&
+      windowTop > 0 &&
+      Math.abs(window.scrollY - windowTop) > 10
+    ) {
+      window.scrollTo({ top: windowTop, behavior: 'instant' as ScrollBehavior })
+    }
+  } finally {
+    window.requestAnimationFrame(() => {
+      isRestoringScroll.value = false
+    })
   }
 }
 
@@ -193,19 +279,28 @@ const prefetchHeavyChunks = () => {
   }
 }
 
+onBeforeRouteLeave(() => {
+  isNavigatingAway.value = true
+  if (mainColumn.value && mainColumn.value.scrollTop > 0) {
+    sessionStg.setItem(TIMELINE_SCROLL_KEY, String(mainColumn.value.scrollTop))
+  }
+  if (typeof window !== 'undefined' && window.scrollY > 0) {
+    sessionStg.setItem(WINDOW_SCROLL_KEY, String(window.scrollY))
+  }
+})
+
 onMounted(async () => {
   if (mainColumn.value) {
     mainColumn.value.scrollLeft = 0
-    mainColumn.value.addEventListener('scroll', saveTimelineScrollPosition, { passive: true })
   }
-  window.addEventListener('scroll', saveWindowScrollPosition, { passive: true })
+  bindScrollListeners()
   const stopScrollRestoreWatch = watch(
     () => echoStore.echoList.length > 0 && !echoStore.isLoading,
     (ready) => {
       if (!ready) return
       stopScrollRestoreWatch()
       window.requestAnimationFrame(() => {
-        restoreTimelineScrollPosition()
+        void restoreTimelineScrollPosition()
       })
     },
     { immediate: true, flush: 'post' },
@@ -215,45 +310,26 @@ onMounted(async () => {
 })
 
 onDeactivated(() => {
-  if (mainColumn.value) {
+  isNavigatingAway.value = true
+  if (mainColumn.value && mainColumn.value.scrollTop > 0) {
     sessionStg.setItem(TIMELINE_SCROLL_KEY, String(mainColumn.value.scrollTop))
   }
-  sessionStg.setItem(WINDOW_SCROLL_KEY, String(window.scrollY))
-  window.removeEventListener('scroll', saveWindowScrollPosition)
+  if (typeof window !== 'undefined' && window.scrollY > 0) {
+    sessionStg.setItem(WINDOW_SCROLL_KEY, String(window.scrollY))
+  }
+  unbindScrollListeners()
   window.removeEventListener('keydown', handleGlobalKeydown)
 })
 
 onActivated(() => {
-  window.addEventListener('scroll', saveWindowScrollPosition, { passive: true })
+  isNavigatingAway.value = false
+  bindScrollListeners()
   window.addEventListener('keydown', handleGlobalKeydown)
-
-  if (mainColumn.value) {
-    const raw = sessionStg.getItem(TIMELINE_SCROLL_KEY)
-    const scrollTop = raw ? Number(raw) : 0
-    if (Number.isFinite(scrollTop) && scrollTop > 0) {
-      mainColumn.value.scrollTop = scrollTop
-    }
-  }
-  const rawWindow = sessionStg.getItem(WINDOW_SCROLL_KEY)
-  const windowTop = rawWindow ? Number(rawWindow) : 0
-  if (Number.isFinite(windowTop) && windowTop > 0) {
-    window.scrollTo({ top: windowTop, behavior: 'instant' as ScrollBehavior })
-  }
+  void restoreTimelineScrollPosition()
 })
 
 onBeforeUnmount(() => {
-  if (mainColumn.value) {
-    mainColumn.value.removeEventListener('scroll', saveTimelineScrollPosition)
-  }
-  if (timelineScrollRaf !== null) {
-    window.cancelAnimationFrame(timelineScrollRaf)
-    timelineScrollRaf = null
-  }
-  if (windowScrollRaf !== null) {
-    window.cancelAnimationFrame(windowScrollRaf)
-    windowScrollRaf = null
-  }
-  window.removeEventListener('scroll', saveWindowScrollPosition)
+  unbindScrollListeners()
   window.removeEventListener('keydown', handleGlobalKeydown)
 })
 </script>

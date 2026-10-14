@@ -89,7 +89,8 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSettingStore, useUserStore, useThemeStore } from '@/stores'
 import { resolveAvatarUrl, isStaticMode, staticBase } from '@/service/request/shared'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
+import { sessionStg } from '@/utils/storage'
 import { theToast } from '@/utils/toast'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 
@@ -101,6 +102,7 @@ const { SystemSetting } = storeToRefs(settingStore)
 const { isLogin } = storeToRefs(userStore)
 const { t } = useI18n()
 const router = useRouter()
+const route = useRoute()
 const { openConfirm } = useBaseDialog()
 
 const isStatic = isStaticMode()
@@ -182,6 +184,19 @@ const handleThemeToggle = async () => {
 }
 
 const handleGoExplore = async () => {
+  if (route.name === 'home' && (!route.query.tab || route.query.tab === 'home')) {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+    const mainCol = document.querySelector('.home-main') as HTMLElement | null
+    if (mainCol) {
+      mainCol.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+    sessionStg.removeItem('home:timeline:scrollTop')
+    sessionStg.removeItem('home:window:scrollTop')
+    sessionStg.removeItem('home:lastActiveEchoId')
+    return
+  }
   await router.push({ name: 'home' })
 }
 

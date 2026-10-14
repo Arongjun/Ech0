@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
-  <div class="echo-timeline group w-full">
+  <div :id="`echo-${props.echo.id}`" :data-echo-id="props.echo.id" class="echo-timeline group w-full">
     <div class="echo-header-sticky flex justify-between items-center">
       <div class="flex justify-start items-center h-9">
         <div class="flex items-center h-full pr-1">
@@ -173,6 +173,7 @@ import { getEchoFilesBy, isContentLeadingEcho } from '@/utils/echo'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useTimeDisplay } from '@/composables/useTimeDisplay'
 import { useI18n } from 'vue-i18n'
+import { sessionStg } from '@/utils/storage'
 
 const TheMediaPlayer = defineAsyncComponent(
   () => import('@/components/advanced/media/TheMediaPlayer.vue'),
@@ -239,6 +240,16 @@ const handleUpdateEcho = async () => {
 }
 
 const handleExpandEcho = (echoId: string) => {
+  sessionStg.setItem('home:lastActiveEchoId', echoId)
+  if (typeof window !== 'undefined') {
+    if (window.scrollY > 0) {
+      sessionStg.setItem('home:window:scrollTop', String(window.scrollY))
+    }
+    const mainCol = document.querySelector('.home-main') as HTMLElement | null
+    if (mainCol && mainCol.scrollTop > 0) {
+      sessionStg.setItem('home:timeline:scrollTop', String(mainCol.scrollTop))
+    }
+  }
   router.push({
     name: 'echo',
     params: { echoId: echoId },
