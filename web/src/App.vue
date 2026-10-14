@@ -59,10 +59,7 @@ router.beforeEach((to, from) => {
   const toName = (to.name as string) || ''
   const fromName = (from.name as string) || ''
 
-  if (
-    (toName === 'home' && fromName === 'echo') ||
-    (toName === 'echo' && fromName === 'home')
-  ) {
+  if ((toName === 'home' && fromName === 'echo') || (toName === 'echo' && fromName === 'home')) {
     transitionName.value = 'none'
     return
   }

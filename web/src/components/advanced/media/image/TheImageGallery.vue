@@ -1,10 +1,10 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
-  <div v-if="images.length" class="image-gallery-container">
+  <div v-if="displayImages.length" class="image-gallery-container">
     <GalleryWaterfall
       v-if="layoutValue === ImageLayout.WATERFALL"
-      :images="images"
+      :images="displayImages"
       :resolved-srcs="resolvedSrcs"
       :get-alt="getAlt"
       :get-image-key="getImageKey"
@@ -17,7 +17,7 @@
 
     <GalleryGrid
       v-if="layoutValue === ImageLayout.GRID"
-      :images="images"
+      :images="displayImages"
       :resolved-srcs="resolvedSrcs"
       :get-alt="getAlt"
       :get-image-key="getImageKey"
@@ -29,7 +29,7 @@
 
     <GalleryCarousel
       v-if="layoutValue === ImageLayout.CAROUSEL"
-      :images="images"
+      :images="displayImages"
       :resolved-srcs="resolvedSrcs"
       :get-alt="getAlt"
       :is-loaded="isImageLoaded"
@@ -41,7 +41,7 @@
 
     <GalleryHorizontal
       v-if="layoutValue === ImageLayout.HORIZONTAL"
-      :images="images"
+      :images="displayImages"
       :resolved-srcs="resolvedSrcs"
       :scroll-hint-text="t('imageGallery.scrollHint')"
       :get-alt="getAlt"
@@ -55,7 +55,7 @@
 
     <GalleryStack
       v-if="layoutValue === ImageLayout.STACK"
-      :images="images"
+      :images="displayImages"
       :resolved-srcs="resolvedSrcs"
       :get-alt="getAlt"
       :get-image-key="getImageKey"
@@ -73,6 +73,8 @@ import { getImageUrl, getHubImageUrl } from '@/utils/other'
 import { ImageLayout } from '@/enums/enums'
 import { useI18n } from 'vue-i18n'
 import { useMediaFancybox } from '@/composables/useMediaFancybox'
+import { pairEchoFiles } from '@/utils/livephoto'
+import { getHubFileUrl, getFileUrl } from '@/utils/other'
 import GalleryWaterfall from './layouts/GalleryWaterfall.vue'
 import GalleryGrid from './layouts/GalleryGrid.vue'
 import GalleryCarousel from './layouts/GalleryCarousel.vue'
@@ -91,7 +93,24 @@ const props = withDefaults(
 
 const { t } = useI18n()
 
-const images = computed(() => props.images || [])
+const pairedResult = computed(() => {
+  const raw = props.images || []
+  if (raw.length === 0)
+    return { imageFiles: [], videoFiles: [], audioFiles: [], hasLivePhoto: false }
+  if (raw.some((img) => img.is_live_photo && img.live_video_url)) {
+    return {
+      imageFiles: raw,
+      videoFiles: [],
+      audioFiles: [],
+      hasLivePhoto: true,
+    }
+  }
+  return pairEchoFiles(raw, (video) =>
+    props.baseUrl ? getHubFileUrl(video, props.baseUrl) : getFileUrl(video),
+  )
+})
+
+const displayImages = computed(() => pairedResult.value.imageFiles)
 const isValidLayout = (layout?: ImageLayout | string): layout is ImageLayout => {
   if (!layout) return false
   return (Object.values(ImageLayout) as string[]).includes(layout)
@@ -102,13 +121,13 @@ const layoutValue = computed(() =>
 )
 const loadedImages = ref<Record<string, boolean>>({})
 const resolvedSrcs = computed(() =>
-  images.value.map((image) =>
+  displayImages.value.map((image) =>
     props.baseUrl ? getHubImageUrl(image, props.baseUrl) : getImageUrl(image),
   ),
 )
 
 const galleryItems = computed(() =>
-  images.value.map((image, idx) => ({
+  displayImages.value.map((image, idx) => ({
     src: resolvedSrcs.value[idx] || '',
     thumb: resolvedSrcs.value[idx] || '',
     width: image.width,
@@ -160,7 +179,7 @@ const markImageLoaded = (image: App.Api.Ech0.FileObject, idx: number) => {
 }
 
 watch(
-  images,
+  displayImages,
   (nextImages) => {
     const nextKeys = new Set(nextImages.map((image, idx) => getImageKey(image, idx)))
     const nextLoadedMap: Record<string, boolean> = {}

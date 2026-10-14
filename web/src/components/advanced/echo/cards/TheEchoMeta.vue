@@ -99,7 +99,9 @@ const tags = computed<NormalizedTag[]>(() => {
   const seen = new Set<string>()
 
   const addTag = (name: unknown, id?: unknown) => {
-    const cleanName = String(name || '').trim().replace(/^#+/, '')
+    const cleanName = String(name || '')
+      .trim()
+      .replace(/^#+/, '')
     if (cleanName && !seen.has(cleanName)) {
       seen.add(cleanName)
       result.push({

@@ -152,7 +152,13 @@ const handleGlobalKeydown = (event: KeyboardEvent) => {
 }
 
 const saveTimelineScrollPosition = () => {
-  if (isNavigatingAway.value || isRestoringScroll.value || !mainColumn.value || timelineScrollRaf !== null) return
+  if (
+    isNavigatingAway.value ||
+    isRestoringScroll.value ||
+    !mainColumn.value ||
+    timelineScrollRaf !== null
+  )
+    return
 
   timelineScrollRaf = window.requestAnimationFrame(() => {
     timelineScrollRaf = null

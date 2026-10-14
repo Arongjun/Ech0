@@ -84,11 +84,11 @@ const handleClick = (event: MouseEvent) => {
 .livephoto-badge {
   position: absolute;
   top: 8px;
-  left: 8px;
+  right: 8px;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 6px;
+  padding: 3px 7px;
   border-radius: 9999px;
   background: rgb(0 0 0 / 55%);
   backdrop-filter: blur(4px);
@@ -97,10 +97,23 @@ const handleClick = (event: MouseEvent) => {
   font-weight: 600;
   letter-spacing: 0.05em;
   pointer-events: none;
-  z-index: 2;
+  z-index: 3;
   transition:
     opacity 0.2s ease,
     background 0.2s ease;
+}
+
+button:hover .livephoto-badge {
+  background: rgb(0 0 0 / 72%);
+}
+
+@media (width <= 480px) {
+  .livephoto-badge {
+    top: 5px;
+    right: 5px;
+    padding: 2px 5px;
+    font-size: 9px;
+  }
 }
 
 .livephoto-text {

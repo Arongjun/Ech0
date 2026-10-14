@@ -1,7 +1,11 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
-  <div :id="`echo-${props.echo.id}`" :data-echo-id="props.echo.id" class="echo-timeline group w-full">
+  <div
+    :id="`echo-${props.echo.id}`"
+    :data-echo-id="props.echo.id"
+    class="echo-timeline group w-full"
+  >
     <div class="echo-header-sticky flex justify-between items-center">
       <div class="flex justify-start items-center h-9">
         <div class="flex items-center h-full pr-1">
@@ -267,7 +271,10 @@ const CONTENT_CLICK_IGNORE_SELECTOR = [
   'details',
   '[role="button"]',
   '.image-gallery-container',
+  '.video-media',
+  '.audio-player',
   '.extension-renderer',
+  '.fancybox__container',
 ].join(', ')
 const CONTENT_CLICK_MOVE_THRESHOLD = 8
 

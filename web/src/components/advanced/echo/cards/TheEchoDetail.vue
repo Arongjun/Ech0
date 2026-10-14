@@ -114,10 +114,7 @@ const displayAuthorName = computed(() => {
     return user.value.username
   }
   return (
-    props.echo.user?.username ||
-    props.echo.username ||
-    SystemSetting.value?.server_name ||
-    'Ech0'
+    props.echo.user?.username || props.echo.username || SystemSetting.value?.server_name || 'Ech0'
   )
 })
 

@@ -8,8 +8,8 @@
     :baseUrl="baseUrl"
     :priority="priority"
   />
-  <TheAudioPlayer v-else-if="audioFiles.length > 0" :files="audioFiles" :baseUrl="baseUrl" />
-  <TheVideoPlayer v-else-if="videoFiles.length > 0" :files="videoFiles" :baseUrl="baseUrl" />
+  <TheVideoPlayer v-if="videoFiles.length > 0" :files="videoFiles" :baseUrl="baseUrl" />
+  <TheAudioPlayer v-if="audioFiles.length > 0" :files="audioFiles" :baseUrl="baseUrl" />
 </template>
 
 <script setup lang="ts">
