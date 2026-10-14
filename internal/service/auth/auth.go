@@ -610,9 +610,8 @@ func selfClientReturnURLs(oauthRedirectURI string) []string {
 		returns = append(returns,
 			origin+"/panel",
 			origin+"/auth",
-			origin+"/",
-			origin,
 		)
+
 	}
 	return returns
 }
