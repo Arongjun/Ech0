@@ -2,6 +2,8 @@
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <script setup lang="ts">
 import HomePage from './modules/HomePage.vue'
+
+defineOptions({ name: 'HomeView' })
 </script>
 
 <template>

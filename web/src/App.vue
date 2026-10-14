@@ -181,9 +181,11 @@ onMounted(() => {
   </div>
   <div class="app-stack">
     <TheRouteProgress />
-    <RouterView v-slot="{ Component }">
+    <RouterView v-slot="{ Component, route }">
       <Transition :name="transitionName" mode="out-in">
-        <component :is="Component" />
+        <KeepAlive :include="['HomeView']">
+          <component :is="Component" :key="route.name === 'home' ? 'home' : route.fullPath" />
+        </KeepAlive>
       </Transition>
     </RouterView>
     <Toaster :theme="toasterTheme" position="top-right" :expand="false" richColors />

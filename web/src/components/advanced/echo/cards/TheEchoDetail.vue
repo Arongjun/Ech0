@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
-  <article class="echo-detail w-full max-w-sm mx-auto">
+  <article class="echo-detail w-full mx-auto">
     <header class="echo-detail-head">
       <img
         :src="authorAvatar"

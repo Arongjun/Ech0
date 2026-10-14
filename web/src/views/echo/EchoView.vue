@@ -2,6 +2,8 @@
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <script setup lang="ts">
 import EchoPage from './modules/EchoPage.vue'
+
+defineOptions({ name: 'EchoView' })
 </script>
 
 <template>

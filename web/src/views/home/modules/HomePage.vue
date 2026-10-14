@@ -72,7 +72,16 @@ import TheFilter from './TheFilter.vue'
 import TheEchos from './TheEchos.vue'
 import TheCommandPalette from './TheCommandPalette.vue'
 import TheChatLauncher from './TheChatLauncher.vue'
-import { defineAsyncComponent, onMounted, ref, onBeforeUnmount, computed, watch } from 'vue'
+import {
+  defineAsyncComponent,
+  onMounted,
+  ref,
+  onBeforeUnmount,
+  onActivated,
+  onDeactivated,
+  computed,
+  watch,
+} from 'vue'
 import { useEchoStore, useUserStore, useSettingStore } from '@/stores'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
@@ -203,6 +212,33 @@ onMounted(async () => {
   )
   window.addEventListener('keydown', handleGlobalKeydown)
   prefetchHeavyChunks()
+})
+
+onDeactivated(() => {
+  if (mainColumn.value) {
+    sessionStg.setItem(TIMELINE_SCROLL_KEY, String(mainColumn.value.scrollTop))
+  }
+  sessionStg.setItem(WINDOW_SCROLL_KEY, String(window.scrollY))
+  window.removeEventListener('scroll', saveWindowScrollPosition)
+  window.removeEventListener('keydown', handleGlobalKeydown)
+})
+
+onActivated(() => {
+  window.addEventListener('scroll', saveWindowScrollPosition, { passive: true })
+  window.addEventListener('keydown', handleGlobalKeydown)
+
+  if (mainColumn.value) {
+    const raw = sessionStg.getItem(TIMELINE_SCROLL_KEY)
+    const scrollTop = raw ? Number(raw) : 0
+    if (Number.isFinite(scrollTop) && scrollTop > 0) {
+      mainColumn.value.scrollTop = scrollTop
+    }
+  }
+  const rawWindow = sessionStg.getItem(WINDOW_SCROLL_KEY)
+  const windowTop = rawWindow ? Number(rawWindow) : 0
+  if (Number.isFinite(windowTop) && windowTop > 0) {
+    window.scrollTo({ top: windowTop, behavior: 'instant' as ScrollBehavior })
+  }
 })
 
 onBeforeUnmount(() => {
