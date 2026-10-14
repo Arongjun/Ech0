@@ -251,6 +251,10 @@
 
 /* 6. Mobile responsiveness */
 @media (width <= 768px) {
+  .fancybox__slide.has-livephoto {
+    --f-carousel-slide-padding: 48px 8px 8px;
+  }
+
   .fancybox-livephoto-container .livephoto-content .livephoto-icon {
     padding: 4px 8px;
   }
@@ -275,3 +279,19 @@
     height: 12px;
   }
 }
+
+/* 7. Hide navigation arrows on mobile & touch devices to prevent obstructing photos */
+@media (hover: none) and (pointer: coarse) {
+  .fancybox__container .f-button.is-prev,
+  .fancybox__container .f-button.is-next {
+    display: none !important;
+  }
+}
+
+@media (width <= 768px) {
+  .fancybox__container .f-button.is-prev,
+  .fancybox__container .f-button.is-next {
+    display: none !important;
+  }
+}
+

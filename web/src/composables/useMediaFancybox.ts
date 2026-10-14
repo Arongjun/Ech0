@@ -82,7 +82,7 @@ function createLivePhotoHTML(imageUrl: string, videoUrl: string, altText?: strin
     ? t('imageGallery.turnOffAutoPlay', '关闭自动播放')
     : t('imageGallery.turnOnAutoPlay', '开启自动播放')
 
-  return `<div class="fancybox-livephoto-container"><div class="livephoto-content"><video class="livephoto-video" src="${videoUrl}" preload="metadata" playsinline disablepictureinpicture></video><img class="livephoto-image" src="${imageUrl}" alt="${alt}" /><div class="livephoto-control-wrapper"><div class="livephoto-icon"><svg class="livephoto-icon-svg ${autoPlayEnabled ? '' : 'disabled'}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="12" cy="12" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="12" cy="12" r="3" fill="currentColor"/>${autoPlayEnabled ? '' : '<line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" stroke-width="1.5"/>'}</svg><span class="livephoto-label">LIVE</span><svg class="livephoto-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="livephoto-dropdown"><div class="livephoto-dropdown-item" data-action="toggle-autoplay"><span class="dropdown-text">${autoPlayText}</span><svg class="dropdown-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="3" fill="currentColor"/>${autoPlayEnabled ? '' : '<line x1="4" y1="4" x2="20" y2="20"/>'}</svg></div></div></div></div></div>`
+  return `<div class="fancybox-livephoto-container"><div class="livephoto-content"><video class="livephoto-video" src="${videoUrl}" preload="auto" muted playsinline webkit-playsinline disablepictureinpicture></video><img class="livephoto-image" src="${imageUrl}" alt="${alt}" /><div class="livephoto-control-wrapper"><div class="livephoto-icon"><svg class="livephoto-icon-svg ${autoPlayEnabled ? '' : 'disabled'}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="12" cy="12" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="12" cy="12" r="3" fill="currentColor"/>${autoPlayEnabled ? '' : '<line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" stroke-width="1.5"/>'}</svg><span class="livephoto-label">LIVE</span><svg class="livephoto-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="livephoto-dropdown"><div class="livephoto-dropdown-item" data-action="toggle-autoplay"><span class="dropdown-text">${autoPlayText}</span><svg class="dropdown-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="3" fill="currentColor"/>${autoPlayEnabled ? '' : '<line x1="4" y1="4" x2="20" y2="20"/>'}</svg></div></div></div></div></div>`
 }
 
 interface LivePhotoSlideData {
@@ -93,21 +93,57 @@ interface LivePhotoSlideData {
 
 type FancyboxSlideElement = CarouselSlide & LivePhotoSlideData
 
+function getSlideContainer(slide: FancyboxSlideElement): HTMLElement | null {
+  if (slide.htmlEl) {
+    if (slide.htmlEl.classList?.contains('fancybox-livephoto-container')) {
+      return slide.htmlEl
+    }
+    const found = slide.htmlEl.querySelector?.('.fancybox-livephoto-container')
+    if (found) return found as HTMLElement
+  }
+  if (slide.el) {
+    if (slide.el.classList?.contains('fancybox-livephoto-container')) {
+      return slide.el
+    }
+    const found = slide.el.querySelector?.('.fancybox-livephoto-container')
+    if (found) return found as HTMLElement
+  }
+  return null
+}
+
+const playLiveVideo = async (video: HTMLVideoElement, container?: HTMLElement | null) => {
+  try {
+    container?.classList.add('zoom')
+    video.currentTime = 0
+    await video.play()
+  } catch {
+    try {
+      video.muted = true
+      await video.play()
+    } catch (err) {
+      console.warn('Live photo video play error:', err)
+      container?.classList.remove('zoom')
+    }
+  }
+}
+
+const pauseLiveVideo = (video: HTMLVideoElement, container?: HTMLElement | null) => {
+  try {
+    video.pause()
+    container?.classList.remove('zoom')
+  } catch {
+    // ignore
+  }
+}
+
 function initLivePhotoInteraction(slide: FancyboxSlideElement): void {
   try {
-    let container: HTMLElement | null = null
-    if (slide.htmlEl) {
-      container = slide.htmlEl.classList?.contains('fancybox-livephoto-container')
-        ? slide.htmlEl
-        : slide.htmlEl.querySelector('.fancybox-livephoto-container')
-    }
-    if (!container && slide.el) {
-      container = slide.el.querySelector('.fancybox-livephoto-container')
-    }
+    const container = getSlideContainer(slide)
     if (!container) return
 
     const video = container.querySelector('.livephoto-video') as HTMLVideoElement | null
     const icon = container.querySelector('.livephoto-icon') as HTMLElement | null
+    const chevron = container.querySelector('.livephoto-chevron') as HTMLElement | null
     const controlWrapper = container.querySelector(
       '.livephoto-control-wrapper',
     ) as HTMLElement | null
@@ -116,25 +152,8 @@ function initLivePhotoInteraction(slide: FancyboxSlideElement): void {
 
     if (!video || !icon) return
 
-    const start = (e?: Event) => {
-      if (e) {
-        e.stopPropagation()
-      }
-      container?.classList.add('zoom')
-      video.currentTime = 0
-      video.play().catch(() => {})
-    }
-
-    const leave = (e?: Event) => {
-      if (e) {
-        e.preventDefault()
-      }
-      container?.classList.remove('zoom')
-      video.pause()
-    }
-
     const handleVideoEnded = () => {
-      container?.classList.remove('zoom')
+      container.classList.remove('zoom')
     }
 
     const preventContextMenu = (e: Event) => {
@@ -177,9 +196,7 @@ function initLivePhotoInteraction(slide: FancyboxSlideElement): void {
         if (mainIconSvg) {
           mainIconSvg.innerHTML = `<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="12" cy="12" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="12" cy="12" r="3" fill="currentColor"/>${livePhotoAutoPlay.value ? '' : '<line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" stroke-width="1.5"/>'}`
         }
-        if (isMobile()) {
-          hideDropdown()
-        }
+        hideDropdown()
       })
     }
 
@@ -205,20 +222,20 @@ function initLivePhotoInteraction(slide: FancyboxSlideElement): void {
       })
     }
 
-    const chevron = icon.querySelector('.livephoto-chevron')
     if (chevron) {
       chevron.addEventListener('click', (e) => {
-        if (!isMobile()) {
-          toggleDropdown(e)
-          hasHoveredDropdown = false
-        }
+        toggleDropdown(e)
+        hasHoveredDropdown = false
       })
     }
 
+    // Tap or click on the LIVE badge: toggle playback
     icon.addEventListener('click', (e) => {
-      if (isMobile()) {
-        e.stopPropagation()
-        toggleDropdown(e)
+      e.stopPropagation()
+      if (container.classList.contains('zoom') && !video.paused) {
+        pauseLiveVideo(video, container)
+      } else {
+        playLiveVideo(video, container)
       }
     })
 
@@ -231,34 +248,61 @@ function initLivePhotoInteraction(slide: FancyboxSlideElement): void {
     }
     document.addEventListener('click', closeOnClickOutside)
 
-    icon.addEventListener('mouseenter', start)
-    icon.addEventListener('mouseleave', leave)
+    // PC: mouse hover on badge plays
+    icon.addEventListener('mouseenter', () => {
+      if (!isMobile()) playLiveVideo(video, container)
+    })
+    icon.addEventListener('mouseleave', () => {
+      if (!isMobile()) pauseLiveVideo(video, container)
+    })
+
+    // Touch interactions for mobile:
+    // 1. Long press (>180ms) plays while holding, pauses on release
+    // 2. Quick tap toggles full playback
+    let touchHoldTimer: ReturnType<typeof setTimeout> | null = null
+    let isTouchHolding = false
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (controlWrapper?.contains(e.target as Node)) return
+      isTouchHolding = false
+      touchHoldTimer = setTimeout(() => {
+        isTouchHolding = true
+        playLiveVideo(video, container)
+      }, 180)
+    }
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (controlWrapper?.contains(e.target as Node)) return
+      if (touchHoldTimer) {
+        clearTimeout(touchHoldTimer)
+        touchHoldTimer = null
+      }
+      if (isTouchHolding) {
+        isTouchHolding = false
+        pauseLiveVideo(video, container)
+      } else {
+        if (container.classList.contains('zoom') && !video.paused) {
+          pauseLiveVideo(video, container)
+        } else {
+          playLiveVideo(video, container)
+        }
+      }
+    }
+
+    const handleTouchCancel = (e: TouchEvent) => {
+      if (controlWrapper?.contains(e.target as Node)) return
+      if (touchHoldTimer) {
+        clearTimeout(touchHoldTimer)
+        touchHoldTimer = null
+      }
+      isTouchHolding = false
+      pauseLiveVideo(video, container)
+    }
 
     if (livephotoContent) {
-      livephotoContent.addEventListener(
-        'touchstart',
-        (e: TouchEvent) => {
-          if (controlWrapper?.contains(e.target as Node)) return
-          start(e)
-        },
-        { passive: false },
-      )
-      livephotoContent.addEventListener(
-        'touchend',
-        (e: TouchEvent) => {
-          if (controlWrapper?.contains(e.target as Node)) return
-          leave(e)
-        },
-        { passive: false },
-      )
-      livephotoContent.addEventListener(
-        'touchcancel',
-        (e: TouchEvent) => {
-          if (controlWrapper?.contains(e.target as Node)) return
-          leave(e)
-        },
-        { passive: false },
-      )
+      livephotoContent.addEventListener('touchstart', handleTouchStart, { passive: true })
+      livephotoContent.addEventListener('touchend', handleTouchEnd, { passive: true })
+      livephotoContent.addEventListener('touchcancel', handleTouchCancel, { passive: true })
     }
 
     container.addEventListener('contextmenu', preventContextMenu, { passive: false })
@@ -267,23 +311,23 @@ function initLivePhotoInteraction(slide: FancyboxSlideElement): void {
 
     if (livePhotoAutoPlay.value) {
       setTimeout(() => {
-        container?.classList.add('zoom')
-        video.currentTime = 0
-        video.play().catch(() => {})
-      }, 300)
+        playLiveVideo(video, container)
+      }, 250)
     }
 
     slide.livePhotoPause = () => {
-      video.pause()
+      pauseLiveVideo(video, container)
       video.currentTime = 0
-      container?.classList.remove('zoom')
     }
 
     slide.livePhotoCleanup = () => {
       document.removeEventListener('click', closeOnClickOutside)
-      icon.removeEventListener('mouseenter', start)
-      icon.removeEventListener('mouseleave', leave)
-      container?.removeEventListener('contextmenu', preventContextMenu)
+      if (livephotoContent) {
+        livephotoContent.removeEventListener('touchstart', handleTouchStart)
+        livephotoContent.removeEventListener('touchend', handleTouchEnd)
+        livephotoContent.removeEventListener('touchcancel', handleTouchCancel)
+      }
+      container.removeEventListener('contextmenu', preventContextMenu)
       icon.removeEventListener('contextmenu', preventContextMenu)
       video.removeEventListener('ended', handleVideoEnded)
       video.pause()
@@ -414,6 +458,7 @@ export function useMediaFancybox(
           ArrowLeft: 'prev',
         },
         Carousel: {
+          Arrows: slides.length > 1,
           Video: {
             autoplay: true,
           },
@@ -442,7 +487,7 @@ export function useMediaFancybox(
               const liveSlide = slide as FancyboxSlideElement
               const isLive =
                 liveSlide.class?.includes('has-livephoto') ||
-                liveSlide.htmlEl?.querySelector?.('.fancybox-livephoto-container')
+                Boolean(getSlideContainer(liveSlide))
               if (isLive && index === curIndex) {
                 initLivePhotoInteraction(liveSlide)
               }
@@ -459,20 +504,16 @@ export function useMediaFancybox(
                 setTimeout(() => {
                   const isLive =
                     curSlide.class?.includes('has-livephoto') ||
-                    curSlide.htmlEl?.querySelector?.('.fancybox-livephoto-container')
+                    Boolean(getSlideContainer(curSlide))
                   if (isLive) {
                     if (curSlide.livePhotoCleanup) {
                       if (livePhotoAutoPlay.value) {
-                        const container =
-                          curSlide.el?.querySelector?.('.fancybox-livephoto-container') ||
-                          curSlide.htmlEl?.querySelector?.('.fancybox-livephoto-container')
-                        const video = container?.querySelector?.(
+                        const container = getSlideContainer(curSlide)
+                        const video = container?.querySelector(
                           '.livephoto-video',
-                        ) as HTMLVideoElement
+                        ) as HTMLVideoElement | null
                         if (container && video) {
-                          container.classList.add('zoom')
-                          video.currentTime = 0
-                          video.play().catch(() => {})
+                          playLiveVideo(video, container)
                         }
                       }
                     } else {
