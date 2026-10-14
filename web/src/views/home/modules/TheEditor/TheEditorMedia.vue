@@ -58,42 +58,43 @@
         </button>
       </div>
 
-      <!-- Multi-Image Grid Layout with Drag & Drop Reordering -->
+      <!-- Multi-Image Grid Layout with Real-time Drag & Touch Reordering -->
       <div v-else class="w-full">
-        <div
+        <TransitionGroup
+          name="media-flip"
+          tag="div"
           class="grid gap-2.5 sm:gap-3"
           :class="filesToAdd.length === 2 ? 'grid-cols-2' : 'grid-cols-3'"
         >
           <div
             v-for="(file, idx) in filesToAdd"
-            :key="file.id || idx"
-            class="relative aspect-square rounded-lg overflow-hidden border border-[var(--color-border-subtle)] bg-[var(--color-bg-muted)] shadow-xs group cursor-grab active:cursor-grabbing transition-all duration-150 select-none"
+            :key="file.id || file.url || file.key || file.name || idx"
+            :data-media-index="idx"
+            class="media-item relative aspect-square rounded-lg overflow-hidden border border-[var(--color-border-subtle)] bg-[var(--color-bg-muted)] shadow-xs group cursor-grab active:cursor-grabbing select-none"
             :class="[
               draggedIdx === idx
-                ? 'opacity-40 scale-95 ring-2 ring-[var(--color-border-strong)]'
-                : '',
-              dragOverIdx === idx && draggedIdx !== idx
-                ? 'ring-2 ring-[var(--color-accent)] ring-offset-2 scale-[1.02]'
-                : '',
+                ? 'is-dragging ring-2 ring-[var(--color-accent)]'
+                : 'hover:shadow-sm',
             ]"
             draggable="true"
             @dragstart="onDragStart(idx, $event)"
-            @dragenter.prevent="onDragEnter(idx)"
             @dragover.prevent="onDragOver(idx, $event)"
-            @dragleave="onDragLeave(idx)"
-            @drop.prevent="onDrop(idx)"
             @dragend="onDragEnd"
+            @touchstart.passive="onTouchStart(idx, $event)"
+            @touchmove="onTouchMove($event)"
+            @touchend="onTouchEnd"
+            @touchcancel="onTouchEnd"
           >
             <!-- Thumbnail Image -->
             <button
               type="button"
               class="w-full h-full p-0 border-0 bg-transparent cursor-zoom-in overflow-hidden block"
-              @click="openPreview(idx)"
+              @click="handlePreviewClick(idx)"
             >
               <img
                 :src="getImageToAddUrl(file)"
                 alt="Image"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200 pointer-events-none"
                 loading="lazy"
               />
             </button>
@@ -126,7 +127,7 @@
               <Close color="currentColor" class="w-3.5 h-3.5" />
             </button>
           </div>
-        </div>
+        </TransitionGroup>
 
         <!-- Drag Reorder Hint -->
         <div
@@ -170,7 +171,6 @@ const { t } = useI18n()
 
 const isDeleting = ref<boolean>(false)
 const draggedIdx = ref<number | null>(null)
-const dragOverIdx = ref<number | null>(null)
 
 const echoStore = useEchoStore()
 const { echoToUpdate } = storeToRefs(echoStore)
@@ -201,17 +201,20 @@ const mediaFiles = computed<App.Api.Ech0.FileObject[]>(() =>
   filesToAdd.value.map((file) => ({ ...file, id: file.id ?? '', echo_id: '' })),
 )
 
+const moveItem = (fromIdx: number, toIdx: number) => {
+  if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return
+  if (fromIdx >= filesToAdd.value.length || toIdx >= filesToAdd.value.length) return
+  const list = [...filesToAdd.value]
+  const [moved] = list.splice(fromIdx, 1)
+  list.splice(toIdx, 0, moved)
+  editorStore.setFilesToAdd(list)
+}
+
 const onDragStart = (idx: number, e: DragEvent) => {
   draggedIdx.value = idx
   if (e.dataTransfer) {
     e.dataTransfer.effectAllowed = 'move'
     e.dataTransfer.setData('text/plain', String(idx))
-  }
-}
-
-const onDragEnter = (idx: number) => {
-  if (draggedIdx.value !== null && draggedIdx.value !== idx) {
-    dragOverIdx.value = idx
   }
 }
 
@@ -221,39 +224,92 @@ const onDragOver = (idx: number, e: DragEvent) => {
     if (e.dataTransfer) {
       e.dataTransfer.dropEffect = 'move'
     }
-    dragOverIdx.value = idx
+    const fromIdx = draggedIdx.value
+    moveItem(fromIdx, idx)
+    draggedIdx.value = idx
   }
-}
-
-const onDragLeave = (idx: number) => {
-  if (dragOverIdx.value === idx) {
-    dragOverIdx.value = null
-  }
-}
-
-const onDrop = (targetIdx: number) => {
-  if (draggedIdx.value === null || draggedIdx.value === targetIdx) {
-    draggedIdx.value = null
-    dragOverIdx.value = null
-    return
-  }
-
-  const list = [...filesToAdd.value]
-  const [moved] = list.splice(draggedIdx.value, 1)
-  list.splice(targetIdx, 0, moved)
-  editorStore.setFilesToAdd(list)
-
-  if (isUpdateMode.value && echoToUpdate.value) {
-    void editorStore.handleAddOrUpdateEcho(true)
-  }
-
-  draggedIdx.value = null
-  dragOverIdx.value = null
 }
 
 const onDragEnd = () => {
   draggedIdx.value = null
-  dragOverIdx.value = null
+  if (isUpdateMode.value && echoToUpdate.value) {
+    void editorStore.handleAddOrUpdateEcho(true)
+  }
+}
+
+let touchStartX = 0
+let touchStartY = 0
+let isTouching = false
+let isTouchDragging = false
+let touchOriginIdx = -1
+let hasTouchMoved = false
+
+const onTouchStart = (idx: number, e: TouchEvent) => {
+  if (e.touches.length !== 1) return
+  const touch = e.touches[0]
+  touchStartX = touch.clientX
+  touchStartY = touch.clientY
+  touchOriginIdx = idx
+  isTouching = true
+  isTouchDragging = false
+  hasTouchMoved = false
+}
+
+const onTouchMove = (e: TouchEvent) => {
+  if (!isTouching || e.touches.length !== 1) return
+  const touch = e.touches[0]
+  const dx = touch.clientX - touchStartX
+  const dy = touch.clientY - touchStartY
+
+  if (!isTouchDragging && Math.hypot(dx, dy) > 8) {
+    isTouchDragging = true
+    hasTouchMoved = true
+    draggedIdx.value = touchOriginIdx
+  }
+
+  if (isTouchDragging) {
+    if (e.cancelable) {
+      e.preventDefault()
+    }
+    const el = document.elementFromPoint(touch.clientX, touch.clientY)
+    const card = el?.closest('[data-media-index]') as HTMLElement | null
+    if (card && card.dataset.mediaIndex !== undefined) {
+      const targetIdx = parseInt(card.dataset.mediaIndex, 10)
+      if (
+        !isNaN(targetIdx) &&
+        draggedIdx.value !== null &&
+        targetIdx !== draggedIdx.value &&
+        targetIdx >= 0 &&
+        targetIdx < filesToAdd.value.length
+      ) {
+        const fromIdx = draggedIdx.value
+        moveItem(fromIdx, targetIdx)
+        draggedIdx.value = targetIdx
+      }
+    }
+  }
+}
+
+const onTouchEnd = () => {
+  if (isTouchDragging) {
+    draggedIdx.value = null
+    isTouchDragging = false
+    isTouching = false
+    if (isUpdateMode.value && echoToUpdate.value) {
+      void editorStore.handleAddOrUpdateEcho(true)
+    }
+  } else {
+    isTouching = false
+    isTouchDragging = false
+  }
+  setTimeout(() => {
+    hasTouchMoved = false
+  }, 120)
+}
+
+const handlePreviewClick = (idx: number) => {
+  if (hasTouchMoved || isTouchDragging) return
+  openPreview(idx)
 }
 
 const handleRemoveImageAt = (index: number) => {
@@ -301,4 +357,28 @@ const handleRemoveImageAt = (index: number) => {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.media-flip-move {
+  transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.media-item {
+  touch-action: pan-y;
+  -webkit-touch-callout: none;
+  user-select: none;
+  user-select: none;
+}
+
+.media-item.is-dragging {
+  z-index: 30;
+  opacity: 0.9;
+  transform: scale(1.05);
+  box-shadow:
+    0 12px 24px -4px rgb(0 0 0 / 25%),
+    0 4px 8px -2px rgb(0 0 0 / 20%);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+  touch-action: none;
+}
+</style>

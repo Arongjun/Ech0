@@ -343,7 +343,17 @@ export function useUpload(opts: UseUploadOptions) {
 
     try {
       let working = item.file
-      if (opts.enableCompressor.value && working.type.startsWith('image/')) {
+      const isGif = working.type === 'image/gif' || working.name.toLowerCase().endsWith('.gif')
+      const isSvg = working.type === 'image/svg+xml' || working.name.toLowerCase().endsWith('.svg')
+      const isLivePair = Boolean(item.livePairId)
+
+      if (
+        opts.enableCompressor.value &&
+        working.type.startsWith('image/') &&
+        !isGif &&
+        !isSvg &&
+        !isLivePair
+      ) {
         item.status = UPLOAD_STATUS.COMPRESSING
         item.compressionAttempted = true
         try {
@@ -366,9 +376,7 @@ export function useUpload(opts: UseUploadOptions) {
       if (item.livePairId && isCompanionVideoFile(item.file)) {
         const pairedImage = items.value.find(
           (i) =>
-            i.livePairId === item.livePairId &&
-            i !== item &&
-            i.status === UPLOAD_STATUS.SUCCESS,
+            i.livePairId === item.livePairId && i !== item && i.status === UPLOAD_STATUS.SUCCESS,
         )
         if (pairedImage?.result?.key) {
           pairKey = pairedImage.result.key
@@ -451,6 +459,7 @@ export function useUpload(opts: UseUploadOptions) {
     }
     return {
       id: fileId,
+      name: item.originalFile?.name || file.name,
       url: fileUrl,
       storage_type: FILE_STORAGE_TYPE.LOCAL,
       key: fileKey,
@@ -531,6 +540,7 @@ export function useUpload(opts: UseUploadOptions) {
 
     return {
       id: presign.id,
+      name: item.originalFile?.name || file.name,
       url: presign.file_url,
       storage_type: FILE_STORAGE_TYPE.OBJECT,
       key: presign.key,

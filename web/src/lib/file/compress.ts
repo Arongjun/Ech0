@@ -67,7 +67,15 @@ export async function compressImage(file: File, opts: CompressOptions = {}): Pro
   const convertTypes = opts.convertTypes ?? DEFAULT_CONVERT_TYPES
   const outputMimeType = opts.outputMimeType ?? (isSafari() ? 'image/jpeg' : 'image/webp')
 
-  if (!file.type || !convertTypes.includes(file.type)) {
+  const lowerName = file.name.toLowerCase()
+  if (
+    !file.type ||
+    file.type === 'image/gif' ||
+    lowerName.endsWith('.gif') ||
+    file.type === 'image/svg+xml' ||
+    lowerName.endsWith('.svg') ||
+    !convertTypes.includes(file.type)
+  ) {
     return file
   }
 

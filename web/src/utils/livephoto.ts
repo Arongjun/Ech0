@@ -10,12 +10,11 @@ export interface LivePhotoPair {
 const FTYP_SIGNATURE = [0x66, 0x74, 0x79, 0x70] as const
 const MIN_EMBEDDED_FILE_SIZE = 1024 * 1024
 const SEARCH_START_PERCENTAGE = 0.05
-const SEARCH_END_PERCENTAGE = 0.8
 const MP4_BOX_HEADER_SIZE = 4
 
 function findFtypPosition(uint8Array: Uint8Array, ftypSignature: readonly number[]): number {
   const searchStart = Math.floor(uint8Array.length * SEARCH_START_PERCENTAGE)
-  const searchEnd = Math.floor(uint8Array.length * SEARCH_END_PERCENTAGE)
+  const searchEnd = uint8Array.length - 8
 
   for (let i = searchStart; i < searchEnd; i++) {
     if (
@@ -159,9 +158,26 @@ export function detectLivePhotoPairs(files: File[]): LivePhotoPair[] {
 
   files.forEach((file, index) => {
     const baseName = getBaseName(file.name)
-    if (file.type.startsWith('image/')) {
+    const lowerName = file.name.toLowerCase()
+    const isVideo =
+      file.type.startsWith('video/') ||
+      lowerName.endsWith('.mov') ||
+      lowerName.endsWith('.mp4') ||
+      lowerName.endsWith('.webm') ||
+      lowerName.endsWith('.ogg')
+    const isImage =
+      !isVideo &&
+      (file.type.startsWith('image/') ||
+        lowerName.endsWith('.jpg') ||
+        lowerName.endsWith('.jpeg') ||
+        lowerName.endsWith('.png') ||
+        lowerName.endsWith('.heic') ||
+        lowerName.endsWith('.heif') ||
+        lowerName.endsWith('.webp'))
+
+    if (isImage) {
       images.push({ index, baseName })
-    } else if (file.type.startsWith('video/')) {
+    } else if (isVideo) {
       videos.push({ index, baseName })
     }
   })
