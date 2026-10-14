@@ -12,8 +12,10 @@ export interface MediaGalleryItem {
   caption?: string
   width?: number
   height?: number
-  type?: 'image' | 'video' | 'html'
+  type?: 'image' | 'video' | 'html' | 'html5video'
   videoSrc?: string
+  poster?: string
+  mimeType?: string
   isLivePhoto?: boolean
   [key: string]: unknown
 }
@@ -25,6 +27,8 @@ export interface UseMediaFancyboxOptions {
   thumbsType?: 'classic' | 'modern' | 'scrollable'
   dragToClose?: boolean
   minThumbsCount?: number
+  zoomEffect?: boolean
+  hideScrollbar?: boolean
 }
 
 const isVideoUrl = (url: string) => {
@@ -75,7 +79,7 @@ export function useMediaFancybox(
       const alt = item.alt || ''
       const caption = item.caption
 
-      const isVideo = item.type === 'video' || isVideoUrl(src)
+      const isVideo = item.type === 'video' || item.type === 'html5video' || isVideoUrl(src)
 
       const slide: Partial<CarouselSlide> = {
         src,
@@ -84,7 +88,13 @@ export function useMediaFancybox(
         alt,
         width: item.width,
         height: item.height,
-        type: isVideo ? 'video' : 'image',
+        type: isVideo ? 'html5video' : 'image',
+      }
+
+      if (isVideo) {
+        slide.poster = (item.poster as string) || (item.thumb as string) || ''
+        slide.html5videoFormat = (item.mimeType as string) || 'video/mp4'
+        slide.autoplay = true
       }
 
       if (idx === startIndex && sourceElement) {
@@ -101,8 +111,9 @@ export function useMediaFancybox(
     try {
       const fancyboxOptions: Partial<FancyboxOptions> = {
         theme: options?.theme || 'auto',
-        zoomEffect: true,
+        zoomEffect: options?.zoomEffect ?? false,
         fadeEffect: true,
+        hideScrollbar: options?.hideScrollbar ?? false,
         startIndex: Math.max(0, Math.min(startIndex, slides.length - 1)),
         backdropClick: 'close',
         dragToClose: options?.dragToClose ?? true,
@@ -119,6 +130,9 @@ export function useMediaFancybox(
           ArrowLeft: 'prev',
         },
         Carousel: {
+          Video: {
+            autoplay: true,
+          },
           Toolbar: {
             display: {
               left: ['counter'],

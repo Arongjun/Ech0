@@ -59,10 +59,13 @@ describe('useMediaFancybox', () => {
     expect(slides[1]).toMatchObject({
       src: 'https://example.com/2.mp4',
       caption: 'Video 2',
-      type: 'video',
+      type: 'html5video',
+      autoplay: true,
+      html5videoFormat: 'video/mp4',
     })
 
     // Carousel toolbar & thumbs
+    expect(options.Carousel?.Video).toEqual({ autoplay: true })
     expect(options.Carousel?.Toolbar?.display?.right).toEqual([
       'zoomIn',
       'zoomOut',
@@ -74,6 +77,7 @@ describe('useMediaFancybox', () => {
     expect(options.Carousel?.Thumbs?.type).toBe('classic')
     expect(options.Carousel?.Thumbs?.showOnStart).toBe(true)
     expect(options.dragToClose).toBe(true)
+    expect(options.hideScrollbar).toBe(false)
   })
 
   it('attaches triggerEl to the active slide when sourceElement is provided', () => {

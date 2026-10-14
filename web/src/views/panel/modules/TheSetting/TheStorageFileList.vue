@@ -345,6 +345,13 @@ const isImageFileName = (name: string) => {
   return ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'avif', 'bmp', 'ico'].includes(ext)
 }
 
+const isVideoFileName = (name: string) => {
+  const ext = (name.split('.').pop() || '').toLowerCase()
+  return ['mp4', 'webm', 'ogg', 'mov', 'm4v'].includes(ext)
+}
+
+const isMediaFileName = (name: string) => isImageFileName(name) || isVideoFileName(name)
+
 const inferMimeType = (name: string, fallback?: string) => {
   if (fallback && fallback !== 'application/octet-stream') {
     return fallback
@@ -365,14 +372,16 @@ const inferMimeType = (name: string, fallback?: string) => {
     json: 'application/json',
     mp3: 'audio/mpeg',
     mp4: 'video/mp4',
+    webm: 'video/webm',
+    mov: 'video/quicktime',
   }
   return map[ext] || 'application/octet-stream'
 }
 
-const getImageNodesInScope = (storageType: RootStorageType) => {
+const getMediaNodesInScope = (storageType: RootStorageType) => {
   return getVisibleRows(storageType)
     .map((r) => r.node)
-    .filter((n) => n.node_type === 'file' && isImageFileName(n.name))
+    .filter((n) => n.node_type === 'file' && isMediaFileName(n.name))
 }
 
 const fetchBlobForNode = async (storageType: RootStorageType, node: TreeNode): Promise<Blob> => {
@@ -395,21 +404,24 @@ const fetchBlobForNode = async (storageType: RootStorageType, node: TreeNode): P
 
 const triggerPreview = async (storageType: RootStorageType, node: TreeNode) => {
   try {
-    if (isImageFileName(node.name)) {
-      const imageNodes = getImageNodesInScope(storageType)
+    if (isMediaFileName(node.name)) {
+      const mediaNodes = getMediaNodesInScope(storageType)
       const initialIndex = Math.max(
         0,
-        imageNodes.findIndex((n) => n.path === node.path),
+        mediaNodes.findIndex((n) => n.path === node.path),
       )
 
       if (node.url) {
-        previewGalleryItems.value = imageNodes.map((img) => {
-          const resolved = img.url ? resolveFileUrlByPath(img.url) : ''
+        previewGalleryItems.value = mediaNodes.map((mediaNode) => {
+          const resolved = mediaNode.url ? resolveFileUrlByPath(mediaNode.url) : ''
+          const isVideo = isVideoFileName(mediaNode.name)
           return {
             src: resolved,
             thumb: resolved,
-            caption: img.name,
-            alt: img.name,
+            poster: isVideo && resolved ? `${resolved}#t=0.1` : resolved,
+            type: isVideo ? 'html5video' : 'image',
+            caption: mediaNode.name,
+            alt: mediaNode.name,
           }
         })
         openGallery(initialIndex)
@@ -426,14 +438,21 @@ const triggerPreview = async (storageType: RootStorageType, node: TreeNode) => {
         }
         const objectUrl = window.URL.createObjectURL(blob)
         activePreviewObjectUrl.value = objectUrl
-        previewGalleryItems.value = imageNodes.map((img, idx) => {
+        previewGalleryItems.value = mediaNodes.map((mediaNode, idx) => {
           const resolved =
-            idx === initialIndex ? objectUrl : img.url ? resolveFileUrlByPath(img.url) : ''
+            idx === initialIndex
+              ? objectUrl
+              : mediaNode.url
+                ? resolveFileUrlByPath(mediaNode.url)
+                : ''
+          const isVideo = isVideoFileName(mediaNode.name)
           return {
             src: resolved,
             thumb: resolved,
-            caption: img.name,
-            alt: img.name,
+            poster: isVideo && resolved ? `${resolved}#t=0.1` : resolved,
+            type: isVideo ? 'html5video' : 'image',
+            caption: mediaNode.name,
+            alt: mediaNode.name,
           }
         })
         openGallery(initialIndex)

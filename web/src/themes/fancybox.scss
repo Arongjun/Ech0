@@ -6,11 +6,10 @@
  * Provides polished frosted-glass UI, customized toolbar, classic thumbnail strip, and animations.
  */
 
+.fancybox__container,
 .fancybox__dialog {
   --fancybox-color: #f3f4f6;
-  --fancybox-backdrop-bg: rgb(15 17 23 / 90%);
-  --fancybox-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
+  --fancybox-backdrop-bg: rgb(15 17 23 / 88%);
 
   /* Button aesthetics */
   --f-button-width: 42px;
@@ -57,9 +56,7 @@
 /* Light mode overrides */
 .fancybox__container[theme='light'] {
   --fancybox-color: #1f2937;
-  --fancybox-backdrop-bg: rgb(255 255 255 / 94%);
-  --fancybox-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
+  --fancybox-backdrop-bg: rgb(255 255 255 / 90%);
   --f-button-bg: rgb(0 0 0 / 6%);
   --f-button-hover-bg: rgb(0 0 0 / 12%);
   --f-button-active-bg: rgb(0 0 0 / 18%);
@@ -70,6 +67,25 @@
   --f-arrow-color: #374151;
   --f-arrow-hover-color: #111827;
   --f-thumb-selected-shadow: inset 0 0 0 2px #4f46e5, 0 4px 12px rgb(0 0 0 / 15%);
+}
+
+/* Hardware-accelerated backdrop with synchronized fade-out to prevent screen flash / stutter */
+.fancybox__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--fancybox-backdrop-bg) !important;
+  backdrop-filter: blur(20px) !important;
+  filter: none !important;
+  transform: translateZ(0);
+  will-change: opacity;
+  backface-visibility: hidden;
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.fancybox__container.is-hiding .fancybox__backdrop,
+.fancybox__container.is-closing .fancybox__backdrop {
+  opacity: 0 !important;
 }
 
 /* Toolbar styling */
@@ -186,4 +202,43 @@
     --f-arrow-height: 38px;
     --f-arrow-pos: 12px;
   }
+}
+
+/* Video slide presentation & smooth playback container */
+.fancybox__slide.has-html5video,
+.fancybox__slide.has-video {
+  padding: clamp(12px, 3vw, 36px) clamp(8px, 2vw, 24px);
+}
+
+.fancybox__slide.has-html5video .f-html,
+.fancybox__slide.has-video .f-html {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  max-width: min(92vw, 1360px);
+  max-height: min(85vh, 860px);
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 20px 50px rgb(0 0 0 / 45%);
+}
+
+.fancybox__container[theme='light'] .fancybox__slide.has-html5video .f-html,
+.fancybox__container[theme='light'] .fancybox__slide.has-video .f-html {
+  box-shadow: 0 16px 40px rgb(0 0 0 / 20%);
+}
+
+.f-html5video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: inherit;
+  border-radius: inherit;
+  object-fit: contain;
+  background: #000;
+  outline: none;
 }

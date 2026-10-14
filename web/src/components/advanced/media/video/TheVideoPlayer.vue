@@ -57,13 +57,6 @@
         {{ t('videoPlayer.fullscreen') }}
       </button>
     </div>
-
-    <TheVideoLightbox
-      :visible="activeIndex !== null"
-      :src="activeSrc"
-      :start-time="resumeTime"
-      @close="close"
-    />
   </div>
 </template>
 
@@ -75,7 +68,7 @@ import { formatMediaTime } from '../shared/time'
 import Video from '@/components/icons/video.vue'
 import Pause from '@/components/icons/pause.vue'
 import Full from '@/components/icons/full.vue'
-import TheVideoLightbox from './TheVideoLightbox.vue'
+import { useMediaFancybox, type MediaGalleryItem } from '@/composables/useMediaFancybox'
 
 type VideoMeta = { duration: number; width: number; height: number }
 
@@ -125,11 +118,19 @@ const hideTimerByIndex: Record<number, ReturnType<typeof setTimeout>> = {}
 const MOVE_ACTIVATE_DISTANCE = 8
 let lastPointer: { x: number; y: number } | null = null
 
-const activeIndex = ref<number | null>(null)
-const activeSrc = computed(() =>
-  activeIndex.value !== null ? (items.value[activeIndex.value]?.src ?? '') : '',
+const galleryItems = computed<MediaGalleryItem[]>(() =>
+  items.value.map((item, idx) => ({
+    src: item.src,
+    thumb: item.src,
+    poster: item.src ? `${item.src}#t=0.1` : '',
+    type: 'html5video',
+    width: item.width || metaByIndex.value[idx]?.width,
+    height: item.height || metaByIndex.value[idx]?.height,
+    alt: t('videoPlayer.play'),
+  })),
 )
-const resumeTime = ref(0)
+
+const { open: openGalleryMedia } = useMediaFancybox(galleryItems)
 
 function posterSrc(src: string) {
   return src ? `${src}#t=0.1` : ''
@@ -351,8 +352,8 @@ function controlsVisible(idx: number) {
 function open(idx: number, event?: MouseEvent) {
   clearHoverTimer()
   const trigger = event?.currentTarget as HTMLElement | undefined
-  const video = trigger?.closest('.video-media__poster')?.querySelector('video')
-  resumeTime.value = video ? video.currentTime : 0
+  const poster = trigger?.closest('.video-media__poster') as HTMLElement | null
+  const video = poster?.querySelector('video')
   if (video) {
     video.pause()
     video.currentTime = 0
@@ -360,11 +361,7 @@ function open(idx: number, event?: MouseEvent) {
   }
   pausedByIndex.value[idx] = false
   hideControls(idx)
-  activeIndex.value = idx
-}
-
-function close() {
-  activeIndex.value = null
+  openGalleryMedia(idx, poster)
 }
 </script>
 
