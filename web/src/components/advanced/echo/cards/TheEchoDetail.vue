@@ -4,22 +4,37 @@
   <article class="echo-detail w-full max-w-sm mx-auto">
     <header class="echo-detail-head">
       <img
-        :src="logo"
-        alt="logo"
+        :src="authorAvatar"
+        :alt="displayAuthorName"
         loading="lazy"
         decoding="async"
         class="w-10 h-10 sm:w-12 sm:h-12 rounded-full ring-1 ring-[var(--color-border-subtle)] shadow-[var(--shadow-sm)] object-cover"
+        @error="handleAvatarError"
       />
-      <div class="flex flex-col">
-        <div class="flex items-center gap-1">
+      <div class="flex flex-col min-w-0">
+        <div class="flex items-center gap-1 min-w-0">
           <h2
-            class="text-[var(--color-text-primary)] font-bold overflow-hidden whitespace-nowrap text-center"
+            class="text-[var(--color-text-primary)] font-bold overflow-hidden whitespace-nowrap text-ellipsis"
+            :title="displayAuthorName"
           >
-            {{ SystemSetting.server_name }}
+            {{ displayAuthorName }}
           </h2>
-          <Verified class="text-sky-500 w-5 h-5" />
+          <Verified class="text-sky-500 w-5 h-5 flex-shrink-0" />
         </div>
-        <span class="echo-username text-[var(--color-text-secondary)]">@ {{ echo.username }}</span>
+        <div
+          class="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] min-w-0 truncate"
+        >
+          <span v-if="echo.username" class="echo-username">@ {{ echo.username }}</span>
+          <span v-if="echo.username && SystemSetting.server_name" class="opacity-40">·</span>
+          <span
+            v-if="SystemSetting.server_name"
+            class="echo-site-tag font-serif flex items-center gap-0.5 truncate"
+            :title="SystemSetting.server_name"
+          >
+            <span>🌐</span>
+            <span>{{ SystemSetting.server_name }}</span>
+          </span>
+        </div>
       </div>
       <button
         type="button"
@@ -64,7 +79,7 @@ import { computed, defineAsyncComponent } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useSettingStore } from '@/stores'
+import { useSettingStore, useUserStore } from '@/stores'
 import { resolveAvatarUrl } from '@/service/request/shared'
 import { isContentLeadingEcho } from '@/utils/echo'
 import { TheMdPreview } from '@/components/advanced/md'
@@ -87,9 +102,54 @@ const emit = defineEmits<{
 }>()
 
 const settingStore = useSettingStore()
+const userStore = useUserStore()
 
 const { SystemSetting } = storeToRefs(settingStore)
-const logo = computed(() => resolveAvatarUrl(SystemSetting.value?.server_logo))
+const { user } = storeToRefs(userStore)
+
+const isCurrentUserEcho = computed(() => {
+  return Boolean(
+    user.value &&
+    (props.echo.user_id === user.value.id ||
+      (props.echo.username && props.echo.username === user.value.username)),
+  )
+})
+
+const authorAvatar = computed(() => {
+  if (isCurrentUserEcho.value && user.value?.avatar) {
+    return resolveAvatarUrl(user.value.avatar)
+  }
+  if (props.echo.user?.avatar) {
+    return resolveAvatarUrl(props.echo.user.avatar)
+  }
+  if (user.value?.avatar) {
+    return resolveAvatarUrl(user.value.avatar)
+  }
+  return resolveAvatarUrl(SystemSetting.value?.server_logo)
+})
+
+const displayAuthorName = computed(() => {
+  if (isCurrentUserEcho.value && user.value?.username) {
+    return user.value.username
+  }
+  return (
+    props.echo.user?.username ||
+    props.echo.username ||
+    user.value?.username ||
+    SystemSetting.value?.server_name ||
+    'Ech0'
+  )
+})
+
+const handleAvatarError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  const fallback = resolveAvatarUrl(SystemSetting.value?.server_logo)
+  if (img.src !== fallback) {
+    img.src = fallback
+  } else {
+    img.src = '/Ech0.svg'
+  }
+}
 
 const router = useRouter()
 const { t } = useI18n()

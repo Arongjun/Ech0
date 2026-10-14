@@ -486,8 +486,7 @@ export function useMediaFancybox(
             carousel.getSlides().forEach((slide: CarouselSlide, index: number) => {
               const liveSlide = slide as FancyboxSlideElement
               const isLive =
-                liveSlide.class?.includes('has-livephoto') ||
-                Boolean(getSlideContainer(liveSlide))
+                liveSlide.class?.includes('has-livephoto') || Boolean(getSlideContainer(liveSlide))
               if (isLive && index === curIndex) {
                 initLivePhotoInteraction(liveSlide)
               }

@@ -98,7 +98,7 @@ const userStore = useUserStore()
 const themeStore = useThemeStore()
 
 const { SystemSetting } = storeToRefs(settingStore)
-const { user, isLogin } = storeToRefs(userStore)
+const { isLogin } = storeToRefs(userStore)
 const { t } = useI18n()
 const router = useRouter()
 const { openConfirm } = useBaseDialog()
@@ -106,12 +106,7 @@ const { openConfirm } = useBaseDialog()
 const isStatic = isStaticMode()
 const rssHref = computed(() => (isStatic ? staticBase() + 'rss.xml' : '/rss'))
 
-const logo = computed(() => {
-  if (isLogin.value && user.value?.avatar) {
-    return resolveAvatarUrl(user.value.avatar)
-  }
-  return resolveAvatarUrl(SystemSetting.value?.server_logo)
-})
+const logo = computed(() => resolveAvatarUrl(SystemSetting.value?.server_logo))
 const fullTitle = computed(() => String(SystemSetting.value?.server_name ?? ''))
 const typedTitle = ref('')
 const isTypingTitle = ref(false)

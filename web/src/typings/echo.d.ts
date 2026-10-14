@@ -51,6 +51,11 @@ declare namespace App {
         tags?: Tag[]
         fav_count: number
         created_at: number | string
+        user?: {
+          id?: string
+          username?: string
+          avatar?: string
+        }
       }
 
       type FileObject = {
