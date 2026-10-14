@@ -10,9 +10,9 @@ on:
         default: "arong"
       push_test_latest:
         description: "额外推送 test-latest 标签"
-        required: true
+        required: false
         type: boolean
-        default: true
+        default: false
 
 permissions:
   contents: read
