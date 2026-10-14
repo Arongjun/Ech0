@@ -8,8 +8,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
+	"mime"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -745,10 +747,7 @@ func (s *FileService) StreamFileByID(ctx *gin.Context, id string) {
 		return
 	}
 
-	contentType := fileRecord.ContentType
-	if contentType == "" {
-		contentType = "application/octet-stream"
-	}
+	contentType := inferContentType(fileRecord.Name, fileRecord.Key, fileRecord.ContentType)
 	ctx.Header("Content-Type", contentType)
 
 	normalizedStorageType := storage.NormalizeStorageType(fileRecord.StorageType)
@@ -790,10 +789,6 @@ func (s *FileService) StreamFileByPath(ctx *gin.Context, query commonModel.FileP
 		ctx.String(http.StatusBadRequest, "非法文件路径")
 		return
 	}
-	contentType := strings.TrimSpace(query.ContentType)
-	if contentType == "" {
-		contentType = "application/octet-stream"
-	}
 	fileName := strings.TrimSpace(query.Name)
 	if fileName == "" {
 		fileName = path.Base(filePath)
@@ -801,6 +796,7 @@ func (s *FileService) StreamFileByPath(ctx *gin.Context, query commonModel.FileP
 	if fileName == "" {
 		fileName = "file"
 	}
+	contentType := inferContentType(fileName, filePath, strings.TrimSpace(query.ContentType))
 	selector := s.getSelector()
 	if reader, pathErr := selector.GetByStoragePath(context.Background(), storageType, filePath); pathErr == nil {
 		s.streamReader(ctx, reader, fileName, contentType, time.Now().UTC(), "", string(storageType)+":path:"+filePath)
@@ -838,6 +834,7 @@ func (s *FileService) streamReader(
 ) {
 	defer func() { _ = reader.Close() }()
 	ctx.Header("Content-Type", contentType)
+	ctx.Header("Content-Disposition", fmt.Sprintf("inline; filename=%q", fileName))
 
 	readSeeker, ok := reader.(io.ReadSeeker)
 	if ok {
@@ -1196,6 +1193,39 @@ func resolveContentType(filename string, detected string) string {
 		return mime
 	}
 	return detected
+}
+
+func inferContentType(name string, pathStr string, declared string) string {
+	if declared != "" && declared != "application/octet-stream" {
+		return declared
+	}
+	for _, candidate := range []string{name, pathStr} {
+		ext := strings.ToLower(filepath.Ext(strings.TrimSpace(candidate)))
+		if ext == "" {
+			continue
+		}
+		if mimes, ok := safeExtMIME[ext]; ok && len(mimes) > 0 {
+			return mimes[0]
+		}
+		switch ext {
+		case ".svg":
+			return "image/svg+xml"
+		case ".ico":
+			return "image/x-icon"
+		case ".bmp":
+			return "image/bmp"
+		case ".pdf":
+			return "application/pdf"
+		case ".txt", ".log", ".md":
+			return "text/plain; charset=utf-8"
+		case ".json":
+			return "application/json"
+		}
+		if m := mime.TypeByExtension(ext); m != "" {
+			return m
+		}
+	}
+	return "application/octet-stream"
 }
 
 func (s *FileService) getSelector() *storage.StorageSelector {

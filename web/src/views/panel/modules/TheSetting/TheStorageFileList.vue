@@ -9,7 +9,7 @@ import {
   fetchFileTree,
   fetchDeleteFileByPath,
 } from '@/service/api'
-import { nextTick, reactive, ref, computed, onMounted, watch } from 'vue'
+import { nextTick, reactive, ref, computed, onMounted, watch, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { theToast } from '@/utils/toast'
 import DownloadIcon from '@/components/icons/download.vue'
@@ -18,6 +18,7 @@ import Trashbin from '@/components/icons/trashbin.vue'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
+import { usePhotoSwipeGallery } from '@/components/advanced/media/image/composables/usePhotoSwipeGallery'
 
 const EASE_OUT = 'cubic-bezier(0.33, 1, 0.68, 1)'
 const EASE_IN_OUT = 'cubic-bezier(0.65, 0, 0.35, 1)'
@@ -103,6 +104,9 @@ const previewingId = ref('')
 const deletingId = ref('')
 const refreshingRoot = ref<RootStorageType | ''>('')
 const selectedNodeKey = ref('')
+const previewGalleryItems = ref<Array<{ src: string; alt?: string }>>([])
+const { open: openGallery } = usePhotoSwipeGallery(previewGalleryItems)
+const activePreviewObjectUrl = ref('')
 const { openConfirm } = useBaseDialog()
 const settingStore = useSettingStore()
 const { S3Setting } = storeToRefs(settingStore)
@@ -335,33 +339,88 @@ const triggerDownload = async (storageType: RootStorageType, node: TreeNode) => 
   }
 }
 
+const isImageFileName = (name: string) => {
+  const ext = (name.split('.').pop() || '').toLowerCase()
+  return ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'avif', 'bmp', 'ico'].includes(ext)
+}
+
+const inferMimeType = (name: string, fallback?: string) => {
+  if (fallback && fallback !== 'application/octet-stream') {
+    return fallback
+  }
+  const ext = (name.split('.').pop() || '').toLowerCase()
+  const map: Record<string, string> = {
+    png: 'image/png',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    gif: 'image/gif',
+    webp: 'image/webp',
+    svg: 'image/svg+xml',
+    avif: 'image/avif',
+    bmp: 'image/bmp',
+    ico: 'image/x-icon',
+    pdf: 'application/pdf',
+    txt: 'text/plain',
+    json: 'application/json',
+    mp3: 'audio/mpeg',
+    mp4: 'video/mp4',
+  }
+  return map[ext] || 'application/octet-stream'
+}
+
 const triggerPreview = async (storageType: RootStorageType, node: TreeNode) => {
   try {
     const actionKey = actionKeyOf(storageType, node)
     previewingId.value = actionKey
-    const blob = node.file_id
+    const inferredMime = inferMimeType(node.name, node.content_type)
+    const rawBlob = node.file_id
       ? await fetchDownloadFileById(node.file_id)
       : await fetchDownloadFileByPath({
           storage_type: storageType,
           path: node.path,
           name: node.name,
-          content_type: node.content_type,
+          content_type: node.content_type || inferredMime,
         })
-    if (await isErrorLikeBlob(blob)) {
+    if (await isErrorLikeBlob(rawBlob)) {
       theToast.error(String(t('storageFileList.previewFailedResponse')))
       return
     }
+
+    const resolvedMime =
+      rawBlob.type && rawBlob.type !== 'application/octet-stream' ? rawBlob.type : inferredMime
+    const blob =
+      rawBlob.type === resolvedMime ? rawBlob : new Blob([rawBlob], { type: resolvedMime })
+
+    if (activePreviewObjectUrl.value) {
+      window.URL.revokeObjectURL(activePreviewObjectUrl.value)
+      activePreviewObjectUrl.value = ''
+    }
+
     const objectUrl = window.URL.createObjectURL(blob)
-    window.open(objectUrl, '_blank', 'noopener,noreferrer')
-    window.setTimeout(() => {
-      window.URL.revokeObjectURL(objectUrl)
-    }, 60_000)
+    activePreviewObjectUrl.value = objectUrl
+
+    if (isImageFileName(node.name)) {
+      previewGalleryItems.value = [{ src: objectUrl, alt: node.name }]
+      openGallery(0)
+    } else {
+      window.open(objectUrl, '_blank', 'noopener,noreferrer')
+      window.setTimeout(() => {
+        window.URL.revokeObjectURL(objectUrl)
+      }, 60_000)
+    }
   } catch {
     theToast.error(String(t('storageFileList.previewFailed')))
   } finally {
     previewingId.value = ''
   }
 }
+
+onBeforeUnmount(() => {
+  if (activePreviewObjectUrl.value) {
+    window.URL.revokeObjectURL(activePreviewObjectUrl.value)
+    activePreviewObjectUrl.value = ''
+  }
+})
 
 const isErrorLikeBlob = async (blob: Blob) => {
   const mime = (blob.type || '').toLowerCase()
