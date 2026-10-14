@@ -146,7 +146,8 @@ const goBack = () => {
 <style scoped lang="css">
 .echo-detail {
   background-color: transparent;
-  padding: 0.5rem 0.25rem;
+  padding: 0.75rem 0.5rem 1.75rem;
+  margin-bottom: 2rem;
 }
 
 .echo-detail-head {
@@ -168,7 +169,7 @@ const goBack = () => {
 }
 
 .echo-detail-body {
-  padding: 2rem 0;
+  padding: 1.5rem 0 1rem;
 }
 
 .echo-detail-body :deep(.image-gallery-container > div) {

@@ -573,7 +573,8 @@ img.home-header__logo {
 .echo-detail {
   max-width: min(42rem, calc(100vw - 2rem)) !important;
   margin-top: 1.25rem !important;
-  padding: 1rem !important;
+  margin-bottom: 2rem !important;
+  padding: 1.25rem 1.25rem 1.75rem !important;
   border-radius: var(--ag-radius-xl) !important;
 }
 

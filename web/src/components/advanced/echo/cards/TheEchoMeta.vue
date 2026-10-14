@@ -3,7 +3,17 @@
 <template>
   <div class="echo-meta">
     <div v-if="tags.length > 0" class="echo-meta-tags">
-      <span v-for="tag in tags" :key="tag.id" class="echo-meta-chip"> #{{ tag.name }} </span>
+      <button
+        v-for="tag in tags"
+        :key="tag.id || tag.name"
+        type="button"
+        class="echo-meta-chip cursor-pointer"
+        v-tooltip="t('homeSidebar.tags')"
+        :aria-label="tag.name"
+        @click.stop="handleTagClick(tag)"
+      >
+        #{{ tag.name }}
+      </button>
     </div>
 
     <div class="echo-meta-line">
@@ -54,6 +64,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Lock from '@/components/icons/lock.vue'
 import GrayLike from '@/components/icons/graylike.vue'
@@ -64,9 +75,12 @@ import { fetchLikeEcho } from '@/service/api'
 import { theToast } from '@/utils/toast'
 import { localStg } from '@/utils/storage'
 import { isStaticMode } from '@/service/request/shared'
+import { useEchoStore } from '@/stores'
 
 const { t } = useI18n()
 const { toggleTimeDisplay, formatDisplayTime } = useTimeDisplay()
+const router = useRouter()
+const echoStore = useEchoStore()
 
 const props = defineProps<{
   echo: App.Api.Ech0.Echo
@@ -76,8 +90,65 @@ const emit = defineEmits<{
   (e: 'updateLikeCount', echoId: string): void
 }>()
 
+type NormalizedTag = { id: string; name: string }
+
 const wordCount = computed(() => countWords(props.echo.content))
-const tags = computed(() => props.echo.tags ?? [])
+
+const tags = computed<NormalizedTag[]>(() => {
+  const result: NormalizedTag[] = []
+  const seen = new Set<string>()
+
+  const addTag = (name: unknown, id?: unknown) => {
+    const cleanName = String(name || '').trim().replace(/^#+/, '')
+    if (cleanName && !seen.has(cleanName)) {
+      seen.add(cleanName)
+      result.push({
+        id: id ? String(id) : cleanName,
+        name: cleanName,
+      })
+    }
+  }
+
+  // 1. From props.echo.tags
+  if (Array.isArray(props.echo.tags)) {
+    for (const item of props.echo.tags) {
+      if (!item) continue
+      if (typeof item === 'string') {
+        addTag(item)
+      } else if (typeof item === 'object') {
+        addTag(item.name, item.id)
+      }
+    }
+  }
+
+  // 2. Fallback / supplement: extract hashtags from content if any (#tag)
+  if (props.echo.content) {
+    const matches = props.echo.content.matchAll(/(?:^|[\s，。！？,!?])#([^\s#，。！？,!?]+)/g)
+    for (const match of matches) {
+      if (match[1]) {
+        addTag(match[1])
+      }
+    }
+  }
+
+  return result
+})
+
+const handleTagClick = (tag: NormalizedTag) => {
+  if (!tag) return
+  const matched = echoStore.tagList.find(
+    (t) => t.id === tag.id || t.name === tag.name || t.name === `#${tag.name}`,
+  ) || {
+    id: tag.id,
+    name: tag.name,
+    usage_count: 1,
+    created_at: Date.now(),
+  }
+  echoStore.filteredTag = matched
+  echoStore.isFilteringMode = true
+  echoStore.refreshEchos()
+  router.push({ name: 'home' })
+}
 
 const isLikeAnimating = ref(false)
 
@@ -116,18 +187,18 @@ const handleLikeEcho = (echoId: string) => {
 .echo-meta {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  padding: 0.5rem 0 0;
+  gap: 0.65rem;
+  padding: 0.75rem 0 0;
 }
 
 .echo-meta-line {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
   color: var(--color-text-muted);
   font-family: var(--font-family-mono);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   letter-spacing: 0.02em;
 }
 
@@ -148,7 +219,8 @@ const handleLikeEcho = (echoId: string) => {
 .echo-meta-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
+  align-items: center;
+  gap: 0.45rem;
 }
 
 .echo-meta-chip {
@@ -156,10 +228,22 @@ const handleLikeEcho = (echoId: string) => {
   align-items: center;
   border: 1px dashed var(--color-border-subtle);
   border-radius: var(--radius-sm);
-  padding: 0.08rem 0.4rem;
+  padding: 0.15rem 0.55rem;
   color: var(--color-text-muted);
-  font-size: 0.7rem;
-  line-height: 1.3;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    color 0.18s ease,
+    border-color 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.echo-meta-chip:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-bg-muted);
 }
 
 .echo-meta-actions {

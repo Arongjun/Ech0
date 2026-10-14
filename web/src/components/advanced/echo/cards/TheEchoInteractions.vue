@@ -22,5 +22,6 @@ import TheComment from '@/components/advanced/TheComment.vue'
   background-size: 8px 1px;
   background-repeat: repeat-x;
   background-position: left top;
+  padding-top: 1.75rem;
 }
 </style>

@@ -54,16 +54,29 @@ watch(
     echo.value = getEchoFromStore(id)
     if (!echo.value) {
       isLoading.value = true
-      echo.value = await echoStore.prefetchEcho(id)
+      echo.value = await echoStore.prefetchEcho(id, true)
       isLoading.value = false
+    } else {
+      echoStore.prefetchEcho(id, true).then((fullEcho) => {
+        if (fullEcho) {
+          echo.value = fullEcho
+        }
+      })
     }
   },
 )
 
 onMounted(async () => {
   if (!echo.value) {
-    echo.value = await echoStore.prefetchEcho(echoId)
+    isLoading.value = true
+    echo.value = await echoStore.prefetchEcho(echoId, true)
+    isLoading.value = false
+  } else {
+    echoStore.prefetchEcho(echoId, true).then((fullEcho) => {
+      if (fullEcho) {
+        echo.value = fullEcho
+      }
+    })
   }
-  isLoading.value = false
 })
 </script>

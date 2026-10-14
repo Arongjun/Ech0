@@ -168,22 +168,32 @@ export const useEchoStore = defineStore('echoStore', () => {
 
   const pendingEchoMap = new Map<string, Promise<App.Api.Ech0.Echo | null>>()
 
-  const prefetchEcho = (echoId: string): Promise<App.Api.Ech0.Echo | null> => {
+  const prefetchEcho = (echoId: string, force = false): Promise<App.Api.Ech0.Echo | null> => {
     const id = String(echoId ?? '').trim()
     if (!id) return Promise.resolve(null)
 
-    const idx = echoIndexMap.value.get(id)
-    if (idx !== undefined && echoList.value[idx]) {
-      return Promise.resolve(echoList.value[idx]!)
+    if (!force) {
+      const idx = echoIndexMap.value.get(id)
+      if (idx !== undefined && echoList.value[idx]) {
+        return Promise.resolve(echoList.value[idx]!)
+      }
     }
 
     const existing = pendingEchoMap.get(id)
-    if (existing) return existing
+    if (existing && !force) return existing
 
     const promise: Promise<App.Api.Ech0.Echo | null> = fetchGetEchoById(id)
       .then((res) => {
         if (res.code === 1 && res.data) {
-          return res.data
+          const item = {
+            ...res.data,
+            id: normalizeEchoId(res.data),
+          }
+          const idx = echoIndexMap.value.get(id)
+          if (idx !== undefined) {
+            echoList.value[idx] = item
+          }
+          return item
         }
         return null
       })
