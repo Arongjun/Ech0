@@ -72,7 +72,7 @@ import { computed, ref, watch } from 'vue'
 import { getImageUrl, getHubImageUrl } from '@/utils/other'
 import { ImageLayout } from '@/enums/enums'
 import { useI18n } from 'vue-i18n'
-import { useMediaFancybox } from '@/composables/useMediaFancybox'
+import { usePhotoSwipeGallery, type PhotoSwipeItem } from './composables/usePhotoSwipeGallery'
 import GalleryWaterfall from './layouts/GalleryWaterfall.vue'
 import GalleryGrid from './layouts/GalleryGrid.vue'
 import GalleryCarousel from './layouts/GalleryCarousel.vue'
@@ -107,7 +107,7 @@ const resolvedSrcs = computed(() =>
   ),
 )
 
-const galleryItems = computed(() =>
+const galleryItems = computed<PhotoSwipeItem[]>(() =>
   images.value.map((image, idx) => ({
     src: resolvedSrcs.value[idx] || '',
     thumb: resolvedSrcs.value[idx] || '',
@@ -119,7 +119,7 @@ const galleryItems = computed(() =>
   })),
 )
 
-const { open: openGalleryMedia } = useMediaFancybox(galleryItems)
+const { open: openGalleryMedia } = usePhotoSwipeGallery(galleryItems)
 
 const getAlt = (idx: number) => t('imageGallery.previewImage', { index: idx + 1 })
 

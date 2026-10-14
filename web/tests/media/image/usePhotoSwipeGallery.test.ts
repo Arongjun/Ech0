@@ -4,7 +4,10 @@
 import { defineComponent, ref } from 'vue'
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { usePhotoSwipeGallery } from '@/components/advanced/media/image/composables/usePhotoSwipeGallery'
+import {
+  usePhotoSwipeGallery,
+  type PhotoSwipeItem,
+} from '@/components/advanced/media/image/composables/usePhotoSwipeGallery'
 
 type MockPhotoSwipeInstance = {
   options: Record<string, unknown>
@@ -65,7 +68,7 @@ class MockImage {
   }
 }
 
-const createHost = (items: Array<{ src: string; width?: number; height?: number; alt?: string }>) =>
+const createHost = (items: Array<PhotoSwipeItem>) =>
   mount(
     defineComponent({
       setup() {
@@ -190,6 +193,41 @@ describe('usePhotoSwipeGallery', () => {
     expect(photoSwipeInstances).toHaveLength(1)
     const options = photoSwipeInstances[0]?.options as { index: number }
     expect(options.index).toBe(1)
+
+    wrapper.unmount()
+  })
+
+  it('passes isLivePhoto and videoSrc properties in dataSource and registers live photo hooks', async () => {
+    imageSizeMap.set('/live.heic', { width: 1080, height: 1440 })
+
+    const wrapper = createHost([
+      {
+        src: '/live.heic',
+        width: 1080,
+        height: 1440,
+        alt: 'Live Photo Test',
+        isLivePhoto: true,
+        videoSrc: '/live.mov',
+      },
+    ])
+
+    const open = (wrapper.vm as { open: (index: number) => void }).open
+    open(0)
+    await waitForOpen()
+
+    const instance = photoSwipeInstances[0]
+    expect(instance).toBeDefined()
+    const options = instance.options as {
+      dataSource: Array<{ src: string; isLivePhoto?: boolean; videoSrc?: string }>
+    }
+    expect(options.dataSource[0].isLivePhoto).toBe(true)
+    expect(options.dataSource[0].videoSrc).toBe('/live.mov')
+
+    const registeredEvents = instance.on.mock.calls.map((call) => call[0])
+    expect(registeredEvents).toContain('afterSetContent')
+    expect(registeredEvents).toContain('openingAnimationEnd')
+    expect(registeredEvents).toContain('change')
+    expect(registeredEvents).toContain('close')
 
     wrapper.unmount()
   })

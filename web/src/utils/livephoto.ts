@@ -45,7 +45,8 @@ function findVideoOffsetFromXmp(data: Uint8Array): number | null {
       if (offset > 0 && offset < data.length) {
         const candidate = data.length - offset
         if (isValidVideoBox(data, candidate)) return candidate
-        if (isValidVideoBox(data, candidate - MP4_BOX_HEADER_SIZE)) return candidate - MP4_BOX_HEADER_SIZE
+        if (isValidVideoBox(data, candidate - MP4_BOX_HEADER_SIZE))
+          return candidate - MP4_BOX_HEADER_SIZE
         return candidate
       }
     }
@@ -58,7 +59,8 @@ function findVideoOffsetFromXmp(data: Uint8Array): number | null {
       if (offset > 0 && offset < data.length) {
         const candidate = data.length - offset
         if (isValidVideoBox(data, candidate)) return candidate
-        if (isValidVideoBox(data, candidate - MP4_BOX_HEADER_SIZE)) return candidate - MP4_BOX_HEADER_SIZE
+        if (isValidVideoBox(data, candidate - MP4_BOX_HEADER_SIZE))
+          return candidate - MP4_BOX_HEADER_SIZE
         return candidate
       }
     }
@@ -72,7 +74,8 @@ function findVideoOffsetFromXmp(data: Uint8Array): number | null {
       if (offset > 0 && offset < data.length) {
         const candidate = data.length - offset
         if (isValidVideoBox(data, candidate)) return candidate
-        if (isValidVideoBox(data, candidate - MP4_BOX_HEADER_SIZE)) return candidate - MP4_BOX_HEADER_SIZE
+        if (isValidVideoBox(data, candidate - MP4_BOX_HEADER_SIZE))
+          return candidate - MP4_BOX_HEADER_SIZE
         return candidate
       }
     }
@@ -92,11 +95,7 @@ function findEmbeddedVideoStart(uint8Array: Uint8Array, isHeic: boolean): number
   if (isHeic) {
     if (uint8Array.length >= 8) {
       const firstBoxSize =
-        ((uint8Array[0] << 24) |
-          (uint8Array[1] << 16) |
-          (uint8Array[2] << 8) |
-          uint8Array[3]) >>>
-        0
+        ((uint8Array[0] << 24) | (uint8Array[1] << 16) | (uint8Array[2] << 8) | uint8Array[3]) >>> 0
       searchStart = Math.max(32, Math.min(firstBoxSize, 256))
     } else {
       searchStart = 32
@@ -311,7 +310,7 @@ export async function separateEmbeddedMotionPhoto(
     const imageData = fileData.slice(0, videoStartPos)
     const videoData = fileData.slice(videoStartPos)
 
-    const imageType = isHeic ? (file.type || 'image/heic') : 'image/jpeg'
+    const imageType = isHeic ? file.type || 'image/heic' : 'image/jpeg'
     let imageExt = 'jpg'
     if (lowerName.endsWith('.heic')) imageExt = 'heic'
     else if (lowerName.endsWith('.heif')) imageExt = 'heif'

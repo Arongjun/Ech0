@@ -89,7 +89,7 @@
             <button
               type="button"
               class="w-full h-full p-0 border-0 bg-transparent cursor-zoom-in overflow-hidden block"
-              @click="handlePreviewClick(idx)"
+              @click="handlePreviewClick(idx, $event)"
             >
               <img
                 :src="getImageToAddUrl(file)"
@@ -164,7 +164,10 @@ import { Mode } from '@/enums/enums'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useI18n } from 'vue-i18n'
-import { useMediaFancybox } from '@/composables/useMediaFancybox'
+import {
+  usePhotoSwipeGallery,
+  type PhotoSwipeItem,
+} from '@/components/advanced/media/image/composables/usePhotoSwipeGallery'
 
 const { openConfirm } = useBaseDialog()
 const { t } = useI18n()
@@ -177,7 +180,7 @@ const { echoToUpdate } = storeToRefs(echoStore)
 const editorStore = useEditorStore()
 const { filesToAdd, currentMode, isUpdateMode, mediaCategory } = storeToRefs(editorStore)
 
-const previewItems = computed(() =>
+const previewItems = computed<PhotoSwipeItem[]>(() =>
   filesToAdd.value.map((image, idx) => {
     const url = getImageToAddUrl(image)
     return {
@@ -191,7 +194,7 @@ const previewItems = computed(() =>
     }
   }),
 )
-const { open: openPreview } = useMediaFancybox(previewItems)
+const { open: openPreview } = usePhotoSwipeGallery(previewItems)
 
 const isAudio = computed(() => mediaCategory.value === FILE_CATEGORY.AUDIO)
 const isVideo = computed(() => mediaCategory.value === FILE_CATEGORY.VIDEO)
@@ -307,9 +310,10 @@ const onTouchEnd = () => {
   }, 120)
 }
 
-const handlePreviewClick = (idx: number) => {
+const handlePreviewClick = (idx: number, e?: MouseEvent) => {
   if (hasTouchMoved || isTouchDragging) return
-  openPreview(idx)
+  const trigger = (e?.currentTarget as HTMLElement) || null
+  openPreview(idx, trigger)
 }
 
 const handleRemoveImageAt = (index: number) => {
@@ -365,7 +369,6 @@ const handleRemoveImageAt = (index: number) => {
 .media-item {
   touch-action: pan-y;
   -webkit-touch-callout: none;
-  user-select: none;
   user-select: none;
 }
 

@@ -1,0 +1,151 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+/* Copyright (C) 2025-2026 lin-snow */
+
+/**
+ * PhotoSwipe Live Photo integration styling
+ */
+
+.pswp-livephoto-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+  border-radius: inherit;
+}
+
+.pswp-livephoto-video.is-active {
+  opacity: 1;
+}
+
+.pswp-livephoto-video::-webkit-media-controls,
+.pswp-livephoto-video::-webkit-media-controls-enclosure,
+.pswp-livephoto-video::-webkit-media-controls-panel,
+.pswp-livephoto-video::-webkit-media-controls-picture-in-picture-button {
+  display: none !important;
+}
+
+.pswp-livephoto-badge-wrapper {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  pointer-events: auto;
+  user-select: none;
+  transition: opacity 0.2s ease;
+}
+
+.pswp-livephoto-badge-wrapper.is-zoomed {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pswp-livephoto-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: rgb(0 0 0 / 55%);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 25%);
+  border: 1px solid rgb(255 255 255 / 15%);
+}
+
+.pswp-livephoto-badge:hover {
+  background: rgb(0 0 0 / 72%);
+  transform: scale(1.03);
+}
+
+.pswp-livephoto-badge:active {
+  transform: scale(0.97);
+}
+
+.pswp-livephoto-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.pswp-livephoto-icon.is-disabled {
+  opacity: 0.6;
+}
+
+.pswp-livephoto-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.pswp-livephoto-chevron {
+  width: 10px;
+  height: 10px;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  transition: transform 0.2s ease;
+  margin-left: 1px;
+}
+
+.pswp-livephoto-badge-wrapper.is-open .pswp-livephoto-chevron {
+  transform: rotate(180deg);
+}
+
+.pswp-livephoto-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 130px;
+  padding: 4px;
+  border-radius: 12px;
+  background: rgb(28 28 30 / 92%);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgb(255 255 255 / 12%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+  opacity: 0;
+  transform: translateY(-6px) scale(0.96);
+  pointer-events: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pswp-livephoto-badge-wrapper.is-open .pswp-livephoto-dropdown {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.pswp-livephoto-dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.pswp-livephoto-dropdown-item:hover {
+  background: rgb(255 255 255 / 12%);
+}
+
+.pswp-livephoto-dropdown-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}

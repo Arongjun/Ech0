@@ -7,13 +7,15 @@ import { describe, expect, it, vi } from 'vitest'
 import { ImageLayout } from '@/enums/enums'
 import TheImageGallery from '@/components/advanced/media/image/TheImageGallery.vue'
 
-vi.mock('@/composables/useMediaFancybox', () => ({
-  useMediaFancybox: () => ({
-    open: vi.fn(),
-    close: vi.fn(),
-    destroy: vi.fn(),
+vi.mock(
+  '@/components/advanced/media/image/composables/usePhotoSwipeGallery',
+  () => ({
+    usePhotoSwipeGallery: () => ({
+      open: vi.fn(),
+      destroy: vi.fn(),
+    }),
   }),
-}))
+)
 
 vi.mock('vue-i18n', async (importOriginal) => {
   const actual = await importOriginal<typeof import('vue-i18n')>()

@@ -2,12 +2,7 @@
 // Copyright (C) 2025-2026 lin-snow
 
 const HEIC_EXTENSIONS = ['.heic', '.heif', '.hif']
-const HEIC_MIME_TYPES = [
-  'image/heic',
-  'image/heif',
-  'image/heic-sequence',
-  'image/heif-sequence',
-]
+const HEIC_MIME_TYPES = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence']
 
 export function isHeicFile(file: File): boolean {
   const type = (file.type || '').toLowerCase()
