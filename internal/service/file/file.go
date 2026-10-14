@@ -717,25 +717,26 @@ func (s *FileService) ListFileTree(
 				item.URL = u
 			}
 			if candidates, ok := keyCandidatesByPath[node.Path]; ok {
-			for _, key := range candidates {
-				if id := idByKey[key]; id != "" {
-					item.FileID = id
-					break
+				for _, key := range candidates {
+					if id := idByKey[key]; id != "" {
+						item.FileID = id
+						break
+					}
 				}
-			}
-			if item.FileID == "" {
-				logUtil.GetLogger().Warn(
-					"Tree key mapping missing file id, fallback to url mapping",
-					slog.String("path", node.Path),
-					slog.Any("key_candidates", candidates),
-					slog.String("storage_type", string(storageType)),
-				)
-				if url, ok := urlByPath[node.Path]; ok {
-					item.FileID = idByURL[url]
+				if item.FileID == "" {
+					logUtil.GetLogger().Warn(
+						"Tree key mapping missing file id, fallback to url mapping",
+						slog.String("path", node.Path),
+						slog.Any("key_candidates", candidates),
+						slog.String("storage_type", string(storageType)),
+					)
+					if url, ok := urlByPath[node.Path]; ok {
+						item.FileID = idByURL[url]
+					}
 				}
+			} else if url, ok := urlByPath[node.Path]; ok {
+				item.FileID = idByURL[url]
 			}
-		} else if url, ok := urlByPath[node.Path]; ok {
-			item.FileID = idByURL[url]
 		}
 		items = append(items, item)
 	}
