@@ -2,154 +2,183 @@
 // Copyright (C) 2025-2026 lin-snow
 
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import { useFetch } from '@vueuse/core'
+import { ref, computed } from 'vue'
 import { theToast } from '@/utils/toast'
 import { timeValueToMs } from '@/utils/timeValue'
 import { useConnectStore } from './connect'
 import { i18n } from '@/locales'
+import { localStg } from '@/utils/storage'
+import type { HubInstance, InstanceConnectSummary, EchoPost } from '@/services/hub/types'
+import { loadHubConfig, normalizeHubInstanceUrl } from '@/services/hub/loadHubConfig'
+import { probeInstances } from '@/services/hub/probeInstances'
+import { fetchInstancesConnectBundle, resolveHubInstanceLogo } from '@/services/hub/connectApi'
+import { queryInstancePage } from '@/services/hub/echoApi'
+import { HUB_FAN_OUT_LIMIT, pMapLimit } from '@/services/hub/pMapLimit'
 
-interface HubState {
+export type ExploreWorldMode = 'global' | 'peer'
+
+const EXPLORE_WORLD_KEY = 'ech0_explore_world_mode'
+const PAGE_SIZE = 10
+const BATCH_SIZE = 10
+
+interface HubBufferState {
   url: string
+  instanceId: string
+  serverName: string
+  logo: string
   buffer: App.Api.Hub.Echo[]
   currentPage: number
   hasMore: boolean
   isLoading: boolean
 }
 
+function readStoredWorldMode(): ExploreWorldMode {
+  const v = localStg.getItem<string>(EXPLORE_WORLD_KEY)
+  return v === 'peer' ? 'peer' : 'global'
+}
+
+function toHubEcho(
+  post: EchoPost,
+  inst: { url: string; instanceId: string; serverName: string; logo: string },
+): App.Api.Hub.Echo {
+  const instKey = normalizeHubInstanceUrl(inst.url)
+  return {
+    id: post.id,
+    content: post.content,
+    username: post.username ?? '',
+    echo_files: post.echo_files,
+    tags: post.tags as App.Api.Hub.Echo['tags'],
+    layout: post.layout,
+    private: post.private ?? false,
+    user_id: post.user_id ?? '',
+    extension: post.extension,
+    fav_count: post.fav_count ?? 0,
+    created_at: post.created_at,
+    createdTs: timeValueToMs(post.created_at),
+    server_name: inst.serverName,
+    server_url: instKey,
+    virtual_key: `${instKey}-${post.id}`,
+    logo: inst.logo,
+  }
+}
+
 export const useHubStore = defineStore('hubStore', () => {
   const connectStore = useConnectStore()
 
-  const hubList = ref<App.Api.Hub.HubList>([])
-  const hubinfoList = ref<App.Api.Hub.HubInfoList>([])
-  const hubInfoMap = ref<Map<string, App.Api.Hub.HubItemInfo>>(new Map())
-  const hubStates = ref<Map<string, HubState>>(new Map())
+  const worldMode = ref<ExploreWorldMode>(readStoredWorldMode())
+  const activeNodes = ref<InstanceConnectSummary[]>([])
+  const totalNodesCount = ref<number>(0)
 
+  const hubStates = ref<Map<string, HubBufferState>>(new Map())
   const echoList = ref<App.Api.Hub.Echo[]>([])
   const existingIds = ref<Set<string>>(new Set())
 
   const isPreparing = ref<boolean>(true)
   const isLoading = ref<boolean>(false)
   const hasTriedInitialLoad = ref<boolean>(false)
-  const pageSize = ref<number>(10)
-  const batchSize = ref<number>(10)
   const hasMore = ref<boolean>(true)
 
-  const getHubList = async () => {
-    isPreparing.value = true
-    hasTriedInitialLoad.value = false
-    await connectStore.getConnect()
+  const activeNodesCount = computed(() => activeNodes.value.length)
 
-    hubList.value = connectStore.connects
+  const reset = () => {
+    hubStates.value.clear()
+    echoList.value = []
+    existingIds.value.clear()
+    activeNodes.value = []
+    totalNodesCount.value = 0
+    isPreparing.value = true
+    isLoading.value = false
+    hasTriedInitialLoad.value = false
+    hasMore.value = true
   }
 
-  const getHubInfoList = async () => {
-    if (hubList.value.length === 0) {
-      theToast.info(String(i18n.global.t('hub.emptyList')))
+  const fetchHubPage = async (hubUrl: string, signal?: AbortSignal): Promise<void> => {
+    const state = hubStates.value.get(hubUrl)
+    if (!state || state.isLoading || !state.hasMore) return
+
+    state.isLoading = true
+    try {
+      const items = await queryInstancePage(
+        hubUrl,
+        {
+          page: state.currentPage,
+          pageSize: PAGE_SIZE,
+          search: '',
+          tagIds: [],
+          sortBy: '',
+          sortOrder: 'desc',
+        },
+        signal,
+      )
+
+      const mapped = items.map((echo) =>
+        toHubEcho(echo, {
+          url: state.url,
+          instanceId: state.instanceId,
+          serverName: state.serverName,
+          logo: state.logo,
+        }),
+      )
+
+      mapped.sort((a, b) => b.createdTs - a.createdTs)
+      state.buffer.push(...mapped)
+      state.currentPage++
+      state.hasMore = items.length >= PAGE_SIZE
+    } catch (err) {
+      console.warn(`[Hub] fetch failed for ${hubUrl}:`, err)
+      state.hasMore = false
+    } finally {
+      state.isLoading = false
+    }
+  }
+
+  const initGlobalWorld = async (signal?: AbortSignal) => {
+    let rawInstances: HubInstance[] = []
+    try {
+      rawInstances = await loadHubConfig(signal)
+    } catch (e) {
+      console.error('[Hub] loadHubConfig failed:', e)
+    }
+    totalNodesCount.value = rawInstances.length
+
+    if (rawInstances.length === 0) {
       isPreparing.value = false
+      hasTriedInitialLoad.value = true
+      hasMore.value = false
       return
     }
 
-    hubList.value = hubList.value.map((item) => {
-      return typeof item === 'string'
-        ? item.endsWith('/')
-          ? item.slice(0, -1)
-          : item
-        : item.connect_url.endsWith('/')
-          ? {
-              ...item,
-              connect_url: item.connect_url.slice(0, -1),
-            }
-          : item
-    })
+    // 1. Probe healthz and version
+    const probed = await probeInstances(rawInstances, signal)
+    const eligible = probed.eligible
 
-    const fetchWithTimeout = async (
-      url: string,
-      timeout: number = 5000,
-    ): Promise<App.Api.Hub.HubItemInfo | null> => {
-      return new Promise((resolve) => {
-        let isResolved = false
-
-        const timeoutId = setTimeout(() => {
-          if (!isResolved) {
-            isResolved = true
-            console.warn(`[Hub] 请求超时: ${url}`)
-            resolve(null)
-          }
-        }, timeout)
-
-        ;(async () => {
-          try {
-            const { error, data } = await useFetch<App.Api.Response<App.Api.Hub.HubItemInfo>>(
-              `${url}/api/connect`,
-            ).json()
-
-            clearTimeout(timeoutId)
-            if (!isResolved) {
-              isResolved = true
-              if (error.value || data.value?.code !== 1) {
-                console.warn(`[Hub] 请求失败: ${url}`, error.value)
-                resolve(null)
-              } else {
-                resolve(data.value?.data || null)
-              }
-            }
-          } catch (err) {
-            clearTimeout(timeoutId)
-            if (!isResolved) {
-              isResolved = true
-              console.error(`[Hub] 请求异常: ${url}`, err)
-              resolve(null)
-            }
-          }
-        })()
-      })
-    }
-
-    const promises = hubList.value.map(async (hub) => {
-      const url = typeof hub === 'string' ? hub : hub.connect_url
-      return await fetchWithTimeout(url, 5000)
-    })
-
-    const results = await Promise.allSettled(promises)
-
-    const validHubs: typeof hubList.value = []
-    const failedHubs: string[] = []
-
-    results.forEach((result, index) => {
-      const hub = hubList.value[index]
-      if (!hub) return
-
-      const hubUrl = typeof hub === 'string' ? hub : hub.connect_url
-
-      if (result.status === 'fulfilled' && result.value) {
-        hubinfoList.value.push(result.value)
-        validHubs.push(hub)
-
-        if (typeof hubUrl === 'string') {
-          hubInfoMap.value.set(hubUrl, result.value)
-        }
-      } else {
-        if (typeof hubUrl === 'string') {
-          failedHubs.push(hubUrl)
-          console.warn(`[Hub] 实例不可用，已排除: ${hubUrl}`)
-        }
-      }
-    })
-
-    hubList.value = validHubs
-
-    if (hubList.value.length === 0) {
+    if (eligible.length === 0) {
       theToast.info(String(i18n.global.t('hub.noAvailableInstance')))
       isPreparing.value = false
+      hasTriedInitialLoad.value = true
+      hasMore.value = false
       return
     }
 
+    // 2. Fetch connect bundle for logos and names
+    const bundle = await fetchInstancesConnectBundle(eligible, signal)
+    activeNodes.value = bundle.summaries
+    console.info(String(i18n.global.t('hub.connectedCount', { count: eligible.length })))
+
+    // 3. Initialize buffers
     hubStates.value.clear()
-    for (const hub of hubList.value) {
-      const url = typeof hub === 'string' ? hub : hub.connect_url
-      hubStates.value.set(url, {
-        url,
+    for (const inst of eligible) {
+      const urlKey = normalizeHubInstanceUrl(inst.url)
+      const rawLogo = bundle.logos.get(urlKey) ?? ''
+      const logo = resolveHubInstanceLogo(rawLogo, urlKey) || '/Ech0.svg'
+      const summary = bundle.summaries.find((s) => s.urlKey === urlKey)
+      const serverName = summary?.serverName || inst.id
+
+      hubStates.value.set(urlKey, {
+        url: urlKey,
+        instanceId: inst.id,
+        serverName,
+        logo,
         buffer: [],
         currentPage: 1,
         hasMore: true,
@@ -157,55 +186,96 @@ export const useHubStore = defineStore('hubStore', () => {
       })
     }
 
-    isPreparing.value = false
-    console.info(String(i18n.global.t('hub.connectedCount', { count: hubList.value.length })))
+    // 4. Parallel initial page fetch
+    await pMapLimit(Array.from(hubStates.value.keys()), HUB_FAN_OUT_LIMIT, (url) =>
+      fetchHubPage(url, signal),
+    )
 
-    await Promise.all(Array.from(hubStates.value.keys()).map((url) => fetchHubPage(url)))
+    isPreparing.value = false
+    await loadEchoListPage(signal)
   }
 
-  const fetchHubPage = async (hubUrl: string): Promise<void> => {
-    const state = hubStates.value.get(hubUrl)
-    if (!state || state.isLoading || !state.hasMore) return
+  const initPeerWorld = async (signal?: AbortSignal) => {
+    await connectStore.getConnect()
+    const peers = connectStore.connects || []
+    totalNodesCount.value = peers.length
 
-    state.isLoading = true
-    try {
-      const { error, data } = await useFetch<App.Api.Response<App.Api.Ech0.PaginationResult>>(
-        hubUrl + '/api/echo/page',
-      )
-        .post({
-          page: state.currentPage,
-          pageSize: pageSize.value,
-        })
-        .json()
+    if (peers.length === 0) {
+      theToast.info(String(i18n.global.t('hub.emptyList')))
+      isPreparing.value = false
+      hasTriedInitialLoad.value = true
+      hasMore.value = false
+      return
+    }
 
-      if (error.value || data.value?.code !== 1) {
-        console.warn(`[Hub] 请求失败: ${hubUrl}`, error.value)
-        state.hasMore = false
-        return
-      }
+    const peerInstances: HubInstance[] = peers.map((p, idx) => {
+      const url = typeof p === 'string' ? p : p.connect_url
+      const id = typeof p === 'string' ? `peer-${idx}` : p.id || `peer-${idx}`
+      return { id, url: normalizeHubInstanceUrl(url) }
+    })
 
-      const items = (data.value?.data.items || []).map((echo: App.Api.Ech0.Echo) => ({
-        ...echo,
-        createdTs: timeValueToMs(echo.created_at),
-        server_name: hubInfoMap.value.get(hubUrl)?.server_name || 'Ech0',
-        server_url: hubUrl,
-        virtual_key: `${hubUrl}-${echo.id}`,
-        logo: hubInfoMap.value.get(hubUrl)?.logo || '/Ech0.svg',
-      }))
+    const bundle = await fetchInstancesConnectBundle(peerInstances, signal)
+    activeNodes.value = bundle.summaries
 
-      items.sort((a: App.Api.Hub.Echo, b: App.Api.Hub.Echo) => b.createdTs - a.createdTs)
-      state.buffer.push(...items)
-      state.currentPage++
-      state.hasMore = items.length >= pageSize.value
-    } catch (err) {
-      console.error(`[Hub] 请求异常: ${hubUrl}`, err)
-      state.hasMore = false
-    } finally {
-      state.isLoading = false
+    hubStates.value.clear()
+    for (const inst of peerInstances) {
+      const urlKey = normalizeHubInstanceUrl(inst.url)
+      const rawLogo = bundle.logos.get(urlKey) ?? ''
+      const logo = resolveHubInstanceLogo(rawLogo, urlKey) || '/Ech0.svg'
+      const summary = bundle.summaries.find((s) => s.urlKey === urlKey)
+      const serverName = summary?.serverName || inst.id
+
+      hubStates.value.set(urlKey, {
+        url: urlKey,
+        instanceId: inst.id,
+        serverName,
+        logo,
+        buffer: [],
+        currentPage: 1,
+        hasMore: true,
+        isLoading: false,
+      })
+    }
+
+    await pMapLimit(Array.from(hubStates.value.keys()), HUB_FAN_OUT_LIMIT, (url) =>
+      fetchHubPage(url, signal),
+    )
+
+    isPreparing.value = false
+    await loadEchoListPage(signal)
+  }
+
+  const initHubFeed = async (mode?: ExploreWorldMode, forceReload = false) => {
+    if (mode) {
+      worldMode.value = mode
+      localStg.setItem(EXPLORE_WORLD_KEY, mode)
+    }
+
+    if (!forceReload && echoList.value.length > 0) {
+      return
+    }
+
+    reset()
+    if (worldMode.value === 'peer') {
+      await initPeerWorld()
+    } else {
+      await initGlobalWorld()
     }
   }
 
-  const loadEchoListPage = async () => {
+  const setWorldMode = async (mode: ExploreWorldMode) => {
+    if (worldMode.value === mode) return
+    worldMode.value = mode
+    localStg.setItem(EXPLORE_WORLD_KEY, mode)
+    await initHubFeed(mode, true)
+  }
+
+  const flipWorld = async () => {
+    const nextMode: ExploreWorldMode = worldMode.value === 'global' ? 'peer' : 'global'
+    await setWorldMode(nextMode)
+  }
+
+  const loadEchoListPage = async (signal?: AbortSignal): Promise<void> => {
     if (isLoading.value || isPreparing.value) return
 
     const canLoadMore = Array.from(hubStates.value.values()).some(
@@ -221,9 +291,9 @@ export const useHubStore = defineStore('hubStore', () => {
     try {
       const result: App.Api.Hub.Echo[] = []
       let attempts = 0
-      const maxAttempts = batchSize.value * 3
+      const maxAttempts = BATCH_SIZE * 3
 
-      while (result.length < batchSize.value && attempts < maxAttempts) {
+      while (result.length < BATCH_SIZE && attempts < maxAttempts) {
         attempts++
 
         let maxTs = -1
@@ -249,7 +319,7 @@ export const useHubStore = defineStore('hubStore', () => {
             break
           }
 
-          await Promise.all(emptyHubsWithMore.map((s) => fetchHubPage(s.url)))
+          await pMapLimit(emptyHubsWithMore, HUB_FAN_OUT_LIMIT, (s) => fetchHubPage(s.url, signal))
           continue
         }
 
@@ -263,7 +333,7 @@ export const useHubStore = defineStore('hubStore', () => {
         }
 
         if (state.buffer.length < 3 && state.hasMore && !state.isLoading) {
-          fetchHubPage(maxHubUrl)
+          void fetchHubPage(maxHubUrl, signal)
         }
       }
 
@@ -282,20 +352,26 @@ export const useHubStore = defineStore('hubStore', () => {
     }
   }
 
+  // Backwards compatibility helpers
+  const getHubList = async () => initHubFeed()
+  const getHubInfoList = async () => {}
+
   return {
+    worldMode,
+    activeNodes,
+    activeNodesCount,
+    totalNodesCount,
     echoList,
-    hubList,
-    hubInfoMap,
-    hubinfoList,
-    hubStates,
     isLoading,
     isPreparing,
     hasTriedInitialLoad,
-    pageSize,
-    batchSize,
     hasMore,
+    reset,
+    initHubFeed,
+    setWorldMode,
+    flipWorld,
+    loadEchoListPage,
     getHubList,
     getHubInfoList,
-    loadEchoListPage,
   }
 })

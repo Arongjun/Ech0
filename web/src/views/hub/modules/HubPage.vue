@@ -25,6 +25,15 @@
         </div>
       </template>
 
+      <TheHubFlipWorld
+        :world-mode="worldMode"
+        :active-nodes="activeNodes"
+        :total-nodes-count="totalNodesCount"
+        :is-loading="isLoading"
+        :is-preparing="isPreparing"
+        @flip="handleFlipWorld"
+      />
+
       <div v-if="echoList.length > 0 && !isPreparing && !props.embedded">
         <DynamicScroller
           class="hub-dynamic-scroller"
@@ -69,11 +78,19 @@
       </div>
       <div
         v-else-if="echoList.length === 0 && hasTriedInitialLoad && !isPreparing && !isLoading"
-        class="my-6"
+        class="my-8 text-center"
       >
-        <p class="text-[var(--color-text-secondary)] text-center">
-          {{ t('hub.emptyConnectHint') }}
+        <p class="text-[var(--color-text-secondary)] text-center mb-3">
+          {{ worldMode === 'peer' ? t('hub.noPeerHint') : t('hub.emptyConnectHint') }}
         </p>
+        <button
+          v-if="worldMode === 'peer'"
+          type="button"
+          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 active:scale-95 transition-all cursor-pointer border-0"
+          @click="handleFlipWorld"
+        >
+          {{ t('hub.switchToGlobal') }}
+        </button>
       </div>
 
       <div v-if="echoList.length > 0 && !hasMore" class="my-6">
@@ -103,6 +120,7 @@ import TheLoadingIndicator from '@/components/common/TheLoadingIndicator.vue'
 import Arrow from '@/components/icons/arrow.vue'
 import TheBackTop from '@/components/advanced/TheBackTop.vue'
 import TheHubEcho from '@/components/advanced/echo/cards/TheHubEcho.vue'
+import TheHubFlipWorld from '@/components/advanced/hub/TheHubFlipWorld.vue'
 import { onMounted, watch, computed, ref, onBeforeUnmount, nextTick } from 'vue'
 import { useHubStore } from '@/stores'
 import { storeToRefs } from 'pinia'
@@ -144,7 +162,22 @@ const getButtonClasses = (routeName: string, isBackButton = false) => {
 }
 
 const hubStore = useHubStore()
-const { echoList, isLoading, isPreparing, hasMore, hasTriedInitialLoad } = storeToRefs(hubStore)
+const {
+  worldMode,
+  activeNodes,
+  totalNodesCount,
+  echoList,
+  isLoading,
+  isPreparing,
+  hasMore,
+  hasTriedInitialLoad,
+} = storeToRefs(hubStore)
+
+const handleFlipWorld = async () => {
+  await hubStore.flipWorld()
+  await nextTick()
+  setupSentinelObserver()
+}
 
 const mainColumn = ref<HTMLElement | null>(null)
 const sentinelRef = ref<HTMLElement | null>(null)
@@ -304,9 +337,7 @@ onMounted(async () => {
   schedulePositionUpdate()
   window.addEventListener('resize', schedulePositionUpdate)
 
-  await hubStore.getHubList()
-  await hubStore.getHubInfoList()
-  await hubStore.loadEchoListPage()
+  await hubStore.initHubFeed()
 
   restoreHubScrollPosition()
   updateShowBackTop()

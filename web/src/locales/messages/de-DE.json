@@ -302,7 +302,16 @@
     "connectedCount": "Mit {count} Instanz(en) verbunden, Echos werden geladen…",
     "loading": "Wird geladen…",
     "emptyConnectHint": "Noch keine Daten. Füge zuerst einen Connect hinzu.",
-    "noMoreData": "Keine weiteren Daten"
+    "noMoreData": "Keine weiteren Daten",
+    "flipWorld": "Erkundungswelt umdrehen",
+    "globalWorld": "Globaler Platz",
+    "peerWorld": "Peer-Verbindungen",
+    "globalWorldDesc": "Durch alle öffentlichen Ech0-Knoten streifen",
+    "peerWorldDesc": "Aus Ihrem konfigurierten Peer-Netzwerk",
+    "switchToPeer": "Zur Peer-Welt wechseln",
+    "switchToGlobal": "Zum globalen Platz wechseln",
+    "activeNodes": "{count} Online-Knoten",
+    "noPeerHint": "Noch keine Peer-Knoten vorhanden. Drehen Sie um, um den globalen Platz zu erkunden, oder konfigurieren Sie Connects."
   },
   "systemLog": {
     "level": "Log-Level",

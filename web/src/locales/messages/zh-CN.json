@@ -302,7 +302,16 @@
     "connectedCount": "成功连接 {count} 个实例，开始加载 Echos",
     "loading": "加载中...",
     "emptyConnectHint": "暂无数据，快去添加 Connect 吧",
-    "noMoreData": "没有更多数据了"
+    "noMoreData": "没有更多数据了",
+    "flipWorld": "翻转探索世界",
+    "globalWorld": "全网广场",
+    "peerWorld": "对等连接",
+    "globalWorldDesc": "漫游全网 Ech0 公共节点",
+    "peerWorldDesc": "来自本站配置的对等网络",
+    "switchToPeer": "翻转到对等世界",
+    "switchToGlobal": "翻转到全网广场",
+    "activeNodes": "{count} 个在线节点",
+    "noPeerHint": "暂无对等节点，可点击翻转漫游全网广场或在管理后台配置 Connect"
   },
   "systemLog": {
     "level": "日志级别",

@@ -302,7 +302,16 @@
     "connectedCount": "Connected to {count} instance(s), loading Echos...",
     "loading": "Loading...",
     "emptyConnectHint": "No data yet. Add a Connect first.",
-    "noMoreData": "No more data"
+    "noMoreData": "No more data",
+    "flipWorld": "Flip Explore World",
+    "globalWorld": "Global Plaza",
+    "peerWorld": "Peer Connects",
+    "globalWorldDesc": "Roam all public Ech0 nodes",
+    "peerWorldDesc": "From your configured peer network",
+    "switchToPeer": "Flip to Peer World",
+    "switchToGlobal": "Flip to Global Plaza",
+    "activeNodes": "{count} online nodes",
+    "noPeerHint": "No peer nodes yet. Flip to roam Global Plaza or configure Connects in settings."
   },
   "systemLog": {
     "level": "Log level",
