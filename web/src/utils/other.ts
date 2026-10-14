@@ -17,7 +17,7 @@ const normalizeMediaPath = (path: string) => {
   return path
 }
 
-const resolveFileUrlByPath = (rawUrl?: string, baseUrl?: string) => {
+export const resolveFileUrlByPath = (rawUrl?: string, baseUrl?: string) => {
   const candidate = String(rawUrl ?? '').trim()
   if (!candidate || ABSOLUTE_URL_REGEX.test(candidate)) return candidate
   const base = String(baseUrl ?? defaultServiceBaseUrl).trim()

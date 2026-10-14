@@ -116,6 +116,7 @@ type FileTreeNodeDto struct {
 	NodeType    string `json:"node_type"`
 	HasChildren bool   `json:"has_children"`
 	FileID      string `json:"file_id,omitempty"`
+	URL         string `json:"url,omitempty"`
 	Size        int64  `json:"size,omitempty"`
 	ContentType string `json:"content_type,omitempty"`
 	ModifiedAt  int64  `json:"modified_at,omitempty"`

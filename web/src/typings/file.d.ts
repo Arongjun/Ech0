@@ -55,6 +55,7 @@ declare namespace App {
         node_type: 'file' | 'folder'
         has_children: boolean
         file_id?: string
+        url?: string
         size?: number
         content_type?: string
         modified_at?: number

@@ -19,6 +19,7 @@ import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
 import { usePhotoSwipeGallery } from '@/components/advanced/media/image/composables/usePhotoSwipeGallery'
+import { resolveFileUrlByPath } from '@/utils/other'
 
 const EASE_OUT = 'cubic-bezier(0.33, 1, 0.68, 1)'
 const EASE_IN_OUT = 'cubic-bezier(0.65, 0, 0.35, 1)'
@@ -368,50 +369,88 @@ const inferMimeType = (name: string, fallback?: string) => {
   return map[ext] || 'application/octet-stream'
 }
 
+const getImageNodesInScope = (storageType: RootStorageType) => {
+  return getVisibleRows(storageType)
+    .map((r) => r.node)
+    .filter((n) => n.node_type === 'file' && isImageFileName(n.name))
+}
+
+const fetchBlobForNode = async (storageType: RootStorageType, node: TreeNode): Promise<Blob> => {
+  const inferredMime = inferMimeType(node.name, node.content_type)
+  const rawBlob = node.file_id
+    ? await fetchDownloadFileById(node.file_id)
+    : await fetchDownloadFileByPath({
+        storage_type: storageType,
+        path: node.path,
+        name: node.name,
+        content_type: node.content_type || inferredMime,
+      })
+  if (await isErrorLikeBlob(rawBlob)) {
+    throw new Error(String(t('storageFileList.previewFailedResponse')))
+  }
+  const resolvedMime =
+    rawBlob.type && rawBlob.type !== 'application/octet-stream' ? rawBlob.type : inferredMime
+  return rawBlob.type === resolvedMime ? rawBlob : new Blob([rawBlob], { type: resolvedMime })
+}
+
 const triggerPreview = async (storageType: RootStorageType, node: TreeNode) => {
   try {
-    const actionKey = actionKeyOf(storageType, node)
-    previewingId.value = actionKey
-    const inferredMime = inferMimeType(node.name, node.content_type)
-    const rawBlob = node.file_id
-      ? await fetchDownloadFileById(node.file_id)
-      : await fetchDownloadFileByPath({
-          storage_type: storageType,
-          path: node.path,
-          name: node.name,
-          content_type: node.content_type || inferredMime,
-        })
-    if (await isErrorLikeBlob(rawBlob)) {
-      theToast.error(String(t('storageFileList.previewFailedResponse')))
+    if (isImageFileName(node.name)) {
+      const imageNodes = getImageNodesInScope(storageType)
+      const initialIndex = Math.max(
+        0,
+        imageNodes.findIndex((n) => n.path === node.path),
+      )
+
+      if (node.url) {
+        previewGalleryItems.value = imageNodes.map((img) => ({
+          src: img.url ? resolveFileUrlByPath(img.url) : '',
+          alt: img.name,
+        }))
+        openGallery(initialIndex)
+        return
+      }
+
+      const actionKey = actionKeyOf(storageType, node)
+      previewingId.value = actionKey
+      try {
+        const blob = await fetchBlobForNode(storageType, node)
+        if (activePreviewObjectUrl.value) {
+          window.URL.revokeObjectURL(activePreviewObjectUrl.value)
+          activePreviewObjectUrl.value = ''
+        }
+        const objectUrl = window.URL.createObjectURL(blob)
+        activePreviewObjectUrl.value = objectUrl
+        previewGalleryItems.value = imageNodes.map((img, idx) => ({
+          src: idx === initialIndex ? objectUrl : img.url ? resolveFileUrlByPath(img.url) : '',
+          alt: img.name,
+        }))
+        openGallery(initialIndex)
+      } finally {
+        previewingId.value = ''
+      }
       return
     }
 
-    const resolvedMime =
-      rawBlob.type && rawBlob.type !== 'application/octet-stream' ? rawBlob.type : inferredMime
-    const blob =
-      rawBlob.type === resolvedMime ? rawBlob : new Blob([rawBlob], { type: resolvedMime })
-
-    if (activePreviewObjectUrl.value) {
-      window.URL.revokeObjectURL(activePreviewObjectUrl.value)
-      activePreviewObjectUrl.value = ''
-    }
-
-    const objectUrl = window.URL.createObjectURL(blob)
-    activePreviewObjectUrl.value = objectUrl
-
-    if (isImageFileName(node.name)) {
-      previewGalleryItems.value = [{ src: objectUrl, alt: node.name }]
-      openGallery(0)
-    } else {
+    const actionKey = actionKeyOf(storageType, node)
+    previewingId.value = actionKey
+    try {
+      const blob = await fetchBlobForNode(storageType, node)
+      if (activePreviewObjectUrl.value) {
+        window.URL.revokeObjectURL(activePreviewObjectUrl.value)
+        activePreviewObjectUrl.value = ''
+      }
+      const objectUrl = window.URL.createObjectURL(blob)
+      activePreviewObjectUrl.value = objectUrl
       window.open(objectUrl, '_blank', 'noopener,noreferrer')
       window.setTimeout(() => {
         window.URL.revokeObjectURL(objectUrl)
       }, 60_000)
+    } finally {
+      previewingId.value = ''
     }
   } catch {
     theToast.error(String(t('storageFileList.previewFailed')))
-  } finally {
-    previewingId.value = ''
   }
 }
 

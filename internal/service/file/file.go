@@ -712,7 +712,11 @@ func (s *FileService) ListFileTree(
 			item.HasChildren = true
 			item.Size = 0
 			item.ContentType = ""
-		} else if candidates, ok := keyCandidatesByPath[node.Path]; ok {
+		} else {
+			if u, ok := urlByPath[node.Path]; ok {
+				item.URL = u
+			}
+			if candidates, ok := keyCandidatesByPath[node.Path]; ok {
 			for _, key := range candidates {
 				if id := idByKey[key]; id != "" {
 					item.FileID = id
