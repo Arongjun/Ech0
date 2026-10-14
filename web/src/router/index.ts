@@ -10,11 +10,11 @@ import { localStg } from '@/utils/storage'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   scrollBehavior(to, _from, savedPosition) {
-    if (to.name === 'home' || to.name === 'zen') {
-      return false
-    }
     if (savedPosition) {
       return savedPosition
+    }
+    if (to.name === 'home' || to.name === 'zen') {
+      return false
     }
     return { top: 0 }
   },

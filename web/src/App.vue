@@ -27,20 +27,45 @@ const { isBfCacheRestore } = useBfCacheRestore({
   },
 })
 
-router.afterEach((to, from) => {
-  if (isBfCacheRestore.value) {
+let isPopState = false
+
+if (typeof window !== 'undefined') {
+  window.addEventListener(
+    'popstate',
+    () => {
+      isPopState = true
+    },
+    { capture: true },
+  )
+}
+
+router.beforeEach((to, from) => {
+  if (isPopState || isBfCacheRestore.value) {
     transitionName.value = 'none'
     return
   }
 
-  const toName = to.name as string
-  const fromName = from.name as string
-  if (toName?.startsWith('panel-') && fromName?.startsWith('panel-')) {
+  const toName = (to.name as string) || ''
+  const fromName = (from.name as string) || ''
+
+  if (
+    (toName === 'home' && fromName === 'echo') ||
+    (toName === 'echo' && fromName === 'home')
+  ) {
+    transitionName.value = 'none'
+    return
+  }
+
+  if (toName.startsWith('panel-') && fromName.startsWith('panel-')) {
     transitionName.value = 'none'
     return
   }
 
   transitionName.value = 'fade'
+})
+
+router.afterEach(() => {
+  isPopState = false
 })
 
 const settingStore = useSettingStore()
@@ -182,7 +207,7 @@ onMounted(() => {
   <div class="app-stack">
     <TheRouteProgress />
     <RouterView v-slot="{ Component, route }">
-      <Transition :name="transitionName" mode="out-in">
+      <Transition :name="transitionName" :mode="transitionName === 'none' ? undefined : 'out-in'">
         <KeepAlive :include="['HomeView']">
           <component :is="Component" :key="route.name === 'home' ? 'home' : route.fullPath" />
         </KeepAlive>
@@ -238,5 +263,11 @@ onMounted(() => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+.none-enter-active,
+.none-leave-active {
+  transition: none !important;
+  animation: none !important;
 }
 </style>
