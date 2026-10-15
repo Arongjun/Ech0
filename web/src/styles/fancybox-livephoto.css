@@ -22,9 +22,8 @@
   background: transparent;
 }
 
-/* 2. Play state: show video on top of static image without hiding the photo */
-.has-livephoto.is-playing .livephoto-video,
-.has-livephoto.zoom .livephoto-video {
+/* 2. Play state: only reveal video when actively playing AND actual frames are loaded */
+.has-livephoto.is-playing .livephoto-video.is-video-visible {
   opacity: 1 !important;
 }
 

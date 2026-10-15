@@ -78,6 +78,8 @@ describe('useMediaFancybox', () => {
     expect(options.Carousel?.Thumbs?.type).toBe('classic')
     expect(options.Carousel?.Thumbs?.showOnStart).toBe(true)
     expect(options.Carousel?.Thumbs?.minCount).toBe(1)
+    expect(options.Carousel?.Thumbs?.thumbTpl).toContain('src="{{src}}"')
+    expect(options.Carousel?.Thumbs?.thumbTpl).toContain('loading="eager"')
     expect(options.dragToClose).toBe(true)
     expect(options.hideScrollbar).toBe(false)
   })

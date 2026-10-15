@@ -191,7 +191,14 @@ export const useEchoStore = defineStore('echoStore', () => {
           }
           const idx = echoIndexMap.value.get(id)
           if (idx !== undefined) {
-            echoList.value[idx] = item
+            const current = echoList.value[idx]
+            if (
+              !current ||
+              current.fav_count !== item.fav_count ||
+              current.content !== item.content
+            ) {
+              echoList.value[idx] = item
+            }
           }
           return item
         }

@@ -81,7 +81,6 @@ import {
   onDeactivated,
   computed,
   watch,
-  nextTick,
 } from 'vue'
 import { useEchoStore, useUserStore, useSettingStore } from '@/stores'
 import { useRoute, onBeforeRouteLeave } from 'vue-router'
@@ -253,52 +252,39 @@ const restoreTimelineScrollPosition = async () => {
       }
     }
 
-    // Step 2: Accurate element-level alignment
-    const alignActiveCard = (): boolean => {
-      if (!lastEchoId) return false
+    // Step 2: Element-level fine-alignment after DOM settles on next animation frame
+    if (lastEchoId) {
+      await new Promise((resolve) => window.requestAnimationFrame(resolve))
+
       const cardEl =
         document.getElementById(`echo-${lastEchoId}`) ||
         (document.querySelector(`[data-echo-id="${lastEchoId}"]`) as HTMLElement | null)
-      if (!cardEl) return false
 
-      let targetTop: number | null = null
-      if (savedViewportTop !== null && Number.isFinite(savedViewportTop)) {
-        targetTop = savedViewportTop
-      } else if (savedViewportRatio !== null && Number.isFinite(savedViewportRatio)) {
-        const vh = window.innerHeight || document.documentElement.clientHeight || 1
-        targetTop = Math.round(savedViewportRatio * vh)
-      }
+      if (cardEl) {
+        let targetTop: number | null = null
+        if (savedViewportTop !== null && Number.isFinite(savedViewportTop)) {
+          targetTop = savedViewportTop
+        } else if (savedViewportRatio !== null && Number.isFinite(savedViewportRatio)) {
+          const vh = window.innerHeight || document.documentElement.clientHeight || 1
+          targetTop = Math.round(savedViewportRatio * vh)
+        }
 
-      if (targetTop !== null) {
-        const currentRect = cardEl.getBoundingClientRect()
-        const delta = Math.round(currentRect.top - targetTop)
-        // Avoid subpixel/micro-jitter: only adjust if off by >= 6px
-        if (Math.abs(delta) >= 6) {
-          if (isDesktop && mainColumn.value) {
-            mainColumn.value.scrollTop += delta
-          } else if (typeof window !== 'undefined') {
-            window.scrollBy({ top: delta, behavior: 'instant' as ScrollBehavior })
+        if (targetTop !== null) {
+          const currentRect = cardEl.getBoundingClientRect()
+          const delta = Math.round(currentRect.top - targetTop)
+          // Avoid layout thrashing: only adjust for small layout shifts (between 6px and 120px)
+          if (Math.abs(delta) >= 6 && Math.abs(delta) <= 120) {
+            if (isDesktop && mainColumn.value) {
+              mainColumn.value.scrollTop += delta
+            } else if (typeof window !== 'undefined') {
+              window.scrollBy({ top: delta, behavior: 'instant' as ScrollBehavior })
+            }
           }
         }
-        return true
       }
-      return false
     }
-
-    // Try synchronous alignment immediately first (DOM is already mounted due to KeepAlive)
-    let aligned = alignActiveCard()
-
-    if (!aligned && lastEchoId) {
-      // If card was not found immediately (e.g. initial mount), wait nextTick
-      await nextTick()
-      aligned = alignActiveCard()
-    }
-
-    // Step 3: Check once on next frame only if there was a layout shift
-    await new Promise((resolve) => window.requestAnimationFrame(resolve))
-    if (lastEchoId) {
-      alignActiveCard()
-    }
+  } catch (err) {
+    console.warn('[ScrollRestore] Error restoring scroll position:', err)
   } finally {
     // Clean up one-time card alignment keys so future tab-switches or navigations
     // don't mistakenly jump back to an old card
@@ -307,7 +293,7 @@ const restoreTimelineScrollPosition = async () => {
     sessionStg.removeItem(LAST_ACTIVE_VIEWPORT_RATIO_KEY)
     window.setTimeout(() => {
       isRestoringScroll.value = false
-    }, 50)
+    }, 100)
   }
 }
 
@@ -336,10 +322,10 @@ watch(activeTab, (tab, prevTab) => {
 })
 
 onBeforeRouteLeave(() => {
-  isNavigatingAway.value = true
   if (!isRestoringScroll.value) {
     flushScrollPositions()
   }
+  isNavigatingAway.value = true
 })
 
 onMounted(async () => {
@@ -363,10 +349,10 @@ onMounted(async () => {
 })
 
 onDeactivated(() => {
-  isNavigatingAway.value = true
   if (!isRestoringScroll.value) {
     flushScrollPositions()
   }
+  isNavigatingAway.value = true
   unbindScrollListeners()
   window.removeEventListener('keydown', handleGlobalKeydown)
 })

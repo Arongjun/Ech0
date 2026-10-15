@@ -86,16 +86,19 @@ type FancyboxSlideElement = CarouselSlide & LivePhotoSlideData
 
 const playLiveVideo = async (video: HTMLVideoElement, slideEl?: HTMLElement | null) => {
   try {
+    if (video.preload === 'none') {
+      video.preload = 'auto'
+    }
     video.currentTime = 0
-    await video.play()
     slideEl?.classList.add('is-playing', 'zoom')
+    await video.play()
   } catch {
     try {
       video.muted = true
       await video.play()
-      slideEl?.classList.add('is-playing', 'zoom')
     } catch (err) {
       console.warn('Live photo video play error:', err)
+      video.classList.remove('is-video-visible')
       slideEl?.classList.remove('is-playing', 'zoom')
     }
   }
@@ -104,10 +107,11 @@ const playLiveVideo = async (video: HTMLVideoElement, slideEl?: HTMLElement | nu
 const pauseLiveVideo = (video: HTMLVideoElement, slideEl?: HTMLElement | null) => {
   try {
     video.pause()
-    slideEl?.classList.remove('is-playing', 'zoom')
   } catch {
     // ignore
   }
+  video.classList.remove('is-video-visible')
+  slideEl?.classList.remove('is-playing', 'zoom')
 }
 
 function initLivePhotoInteraction(slide: FancyboxSlideElement, shouldAutoPlay = false): void {
@@ -146,7 +150,7 @@ function initLivePhotoInteraction(slide: FancyboxSlideElement, shouldAutoPlay = 
         video = document.createElement('video')
         video.className = 'livephoto-video'
         video.src = String(slide.videoSrc)
-        video.preload = 'metadata'
+        video.preload = 'none'
         video.muted = true
         video.playsInline = true
         video.setAttribute('webkit-playsinline', 'true')
@@ -197,7 +201,25 @@ function initLivePhotoInteraction(slide: FancyboxSlideElement, shouldAutoPlay = 
       const dropdown = controlWrapper.querySelector('.livephoto-dropdown') as HTMLElement | null
       const toggleAutoPlayButton = controlWrapper.querySelector('[data-action="toggle-autoplay"]')
 
+      const onVideoPlaying = () => {
+        video?.classList.add('is-video-visible')
+      }
+      const onVideoTimeUpdate = () => {
+        if (video && video.currentTime > 0.05 && !video.paused) {
+          video.classList.add('is-video-visible')
+        }
+      }
       const handleVideoEnded = () => {
+        video?.classList.remove('is-video-visible')
+        el.classList.remove('is-playing', 'zoom')
+      }
+      const onVideoError = (err: Event) => {
+        console.warn('Live photo video error:', err)
+        video?.classList.remove('is-video-visible')
+        el.classList.remove('is-playing', 'zoom')
+      }
+      const onVideoPause = () => {
+        video?.classList.remove('is-video-visible')
         el.classList.remove('is-playing', 'zoom')
       }
 
@@ -335,7 +357,11 @@ function initLivePhotoInteraction(slide: FancyboxSlideElement, shouldAutoPlay = 
       viewport.addEventListener('touchend', handleTouchEnd, { passive: true })
       viewport.addEventListener('touchcancel', handleTouchCancel, { passive: true })
 
+      video.addEventListener('playing', onVideoPlaying)
+      video.addEventListener('timeupdate', onVideoTimeUpdate)
       video.addEventListener('ended', handleVideoEnded)
+      video.addEventListener('error', onVideoError)
+      video.addEventListener('pause', onVideoPause)
       video.addEventListener('contextmenu', preventContextMenu, { passive: false })
       if (icon) icon.addEventListener('contextmenu', preventContextMenu, { passive: false })
 
@@ -355,7 +381,11 @@ function initLivePhotoInteraction(slide: FancyboxSlideElement, shouldAutoPlay = 
         viewport.removeEventListener('touchstart', handleTouchStart)
         viewport.removeEventListener('touchend', handleTouchEnd)
         viewport.removeEventListener('touchcancel', handleTouchCancel)
+        video.removeEventListener('playing', onVideoPlaying)
+        video.removeEventListener('timeupdate', onVideoTimeUpdate)
         video.removeEventListener('ended', handleVideoEnded)
+        video.removeEventListener('error', onVideoError)
+        video.removeEventListener('pause', onVideoPause)
         video.removeEventListener('contextmenu', preventContextMenu)
         if (icon) icon.removeEventListener('contextmenu', preventContextMenu)
         try {
@@ -522,6 +552,8 @@ export function useMediaFancybox(
             type: thumbsType,
             showOnStart: showThumbs,
             minCount: minThumbsCount,
+            thumbTpl:
+              '<button aria-label="Slide to #{{page}}" tabindex="-1"><img draggable="false" alt="{{alt}}" src="{{src}}" loading="eager" decoding="async" /></button>',
           },
         },
         on: {
@@ -535,7 +567,7 @@ export function useMediaFancybox(
 
             // Only initialize the active slide to avoid exhausting mobile WebKit decoders
             const curSlide = carousel.getSlides()[curIndex] as FancyboxSlideElement
-            if (curSlide?.isLivePhoto) {
+            if (curSlide?.isLivePhoto && !curSlide.livePhotoInitialized) {
               initLivePhotoInteraction(curSlide, true)
             }
 
@@ -547,7 +579,7 @@ export function useMediaFancybox(
                 const isCur = activeSlide
                   ? activeSlide.index === liveSlide.index
                   : liveSlide.index === curIndex
-                if (isCur) {
+                if (isCur && !liveSlide.livePhotoInitialized) {
                   initLivePhotoInteraction(liveSlide, true)
                 }
               }
