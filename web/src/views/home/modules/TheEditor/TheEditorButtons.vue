@@ -504,7 +504,7 @@ const goToTagManager = () => {
   flex: 0 0 auto;
 }
 
-@media (width <= 639.98px) {
+@media (width <= 639px) {
   .editor-actions {
     gap: 0.45rem;
   }

@@ -211,7 +211,7 @@ watch([frequency, hour, minute, weekday, monthday, hourlyInterval, customExpress
   gap: 0.6rem 0.75rem;
 }
 
-@media (width < 480px) {
+@media (width <= 479px) {
   .cron-editor__grid {
     grid-template-columns: minmax(0, 1fr);
   }

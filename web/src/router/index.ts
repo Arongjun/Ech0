@@ -201,25 +201,21 @@ router.beforeEach(async (to) => {
   const initStore = useInitStore()
   const userStore = useUserStore()
 
-  if (!initStore.ready) {
-    await withTimeout(
-      initStore.init().catch(() => undefined),
-      1500,
-      undefined,
-    )
+  // Only redirect away from normal pages to /init if initStore has explicitly finished
+  // checking and confirmed that the site is truly uninitialized with no owner.
+  // Never block or redirect anonymous visitors just because network status is pending or failed.
+  if (initStore.ready && !initStore.initialized && !initStore.ownerExists && to.name !== 'init') {
+    return { name: 'init' }
   }
 
-  const isInitReady =
+  // If already initialized, prevent accessing /init and route to home.
+  const isInitDone =
     initStore.initialized ||
     initStore.ownerExists ||
     localStg.getItem<boolean>('initialized') === true
 
-  if (!isInitReady && to.name !== 'init') {
-    return { name: 'init' }
-  }
-
-  if (isInitReady && to.name === 'init') {
-    return { name: 'auth' }
+  if (isInitDone && to.name === 'init') {
+    return { name: 'home' }
   }
 
   if (to.meta.requiresAuth) {

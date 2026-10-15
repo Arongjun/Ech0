@@ -980,7 +980,7 @@ body:has(.panel-page-wrap) {
 }
 
 /* Mobile polish. */
-@media (width <= 819.98px) {
+@media (width <= 819px) {
   body {
     background:
       radial-gradient(circle at 18% -8%, rgb(255 255 255 / 98%), transparent 18rem),
@@ -1292,7 +1292,7 @@ body::after {
     0 5px 12px rgb(35 45 62 / 4%) !important;
 }
 
-@media (width <= 819.98px) {
+@media (width <= 819px) {
   .home-header {
     border-radius: 26px !important;
   }
@@ -1474,7 +1474,7 @@ img.home-header__logo {
 /* ========================================================
    iOS Segmented Control Navigation (Mobile Header Capsule)
    ======================================================== */
-@media (width <= 819.98px) {
+@media (width <= 819px) {
   .home-aside--mobile {
     display: flex !important;
     width: 100% !important;
@@ -1746,7 +1746,7 @@ img.home-header__logo {
   border-radius: 12px !important;
 }
 
-@media (width <= 819.98px) {
+@media (width <= 819px) {
   .home-header {
     border-radius: 20px !important;
   }

@@ -234,7 +234,7 @@ onMounted(async () => {
   white-space: nowrap;
 }
 
-@media (width < 640px) {
+@media (width <= 639px) {
   .schedule-row {
     flex-direction: column;
     align-items: stretch;

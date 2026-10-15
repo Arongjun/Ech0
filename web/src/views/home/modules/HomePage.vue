@@ -404,7 +404,7 @@ onBeforeUnmount(() => {
   margin-right: auto;
 }
 
-@media (width <= 819.98px) {
+@media (width <= 819px) {
   .home-main-track {
     max-width: 100%;
   }
@@ -508,7 +508,7 @@ onBeforeUnmount(() => {
   }
 }
 
-@media (width <= 819.98px) {
+@media (width <= 819px) {
   .home-banner--mobile-hidden {
     display: none;
   }

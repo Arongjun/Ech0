@@ -83,25 +83,30 @@ async function bootstrap() {
 
   app.component('BaseDialog', BaseDialog)
 
+  app.config.errorHandler = (err, instance, info) => {
+    console.error('[Vue App Error]', err, info)
+  }
+
+  try {
+    await Promise.race([
+      router.isReady(),
+      new Promise<void>((resolve) => window.setTimeout(resolve, 2000)),
+    ])
+  } catch (err) {
+    console.warn('Router isReady error:', err)
+  }
+
   try {
     app.mount('#app')
   } catch (err) {
     console.error('Failed to mount application:', err)
   }
 
-  router
-    .isReady()
-    .then(() => {
-      window.requestAnimationFrame(() => {
-        startLoaderFade()
-      })
-    })
-    .catch((err) => {
-      console.warn('Router isReady error:', err)
-      startLoaderFade()
-    })
+  window.requestAnimationFrame(() => {
+    startLoaderFade()
+  })
 
-  window.setTimeout(startLoaderFade, 3000)
+  window.setTimeout(startLoaderFade, 2500)
 
   initStores()
     .then(() => {

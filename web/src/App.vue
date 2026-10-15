@@ -51,7 +51,7 @@ router.beforeEach((to, from) => {
     }
   }
 
-  if (isPopState || isBfCacheRestore.value) {
+  if (isPopState || isBfCacheRestore.value || !from.name) {
     transitionName.value = 'none'
     return
   }

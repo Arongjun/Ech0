@@ -246,7 +246,7 @@ watch(showSearchTrigger, (visible) => {
   fill: currentColor;
 }
 
-@media (width <= 819.98px) {
+@media (width <= 819px) {
   .home-sidebar-nav__mobile-row {
     background: var(--ag-glass-strong, rgb(255 255 255 / 72%));
     backdrop-filter: blur(24px) saturate(190%);
