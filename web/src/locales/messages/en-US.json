@@ -1065,6 +1065,7 @@
     "poweredBy": "Powered by Ech0"
   },
   "echoPage": {
+    "title": "Post Detail",
     "loadingDetail": "Loading Echo details..."
   },
   "notFound": {

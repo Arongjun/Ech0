@@ -186,7 +186,7 @@ const router = createRouter({
         return true
       },
       meta: {
-        title: 'Echo',
+        title: 'echoPage.title',
         description: 'Read a shared Ech0 post.',
       },
     },

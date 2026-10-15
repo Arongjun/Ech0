@@ -38,13 +38,13 @@ func NewWebHandler(visitorTracker *visitor.Tracker, settingService settingServic
 	}
 }
 
-func (webHandler *WebHandler) getSiteTitle() string {
+func (webHandler *WebHandler) getSiteTitleAndLocale() (string, string) {
 	if webHandler.settingService == nil {
-		return "Ech0"
+		return "Ech0", "zh-CN"
 	}
 	var s settingModel.SystemSetting
 	if err := webHandler.settingService.GetSetting(&s); err != nil {
-		return "Ech0"
+		return "Ech0", "zh-CN"
 	}
 	title := strings.TrimSpace(s.SiteTitle)
 	if title == "" {
@@ -53,6 +53,15 @@ func (webHandler *WebHandler) getSiteTitle() string {
 	if title == "" {
 		title = "Ech0"
 	}
+	locale := strings.TrimSpace(s.DefaultLocale)
+	if locale == "" {
+		locale = "zh-CN"
+	}
+	return title, locale
+}
+
+func (webHandler *WebHandler) getSiteTitle() string {
+	title, _ := webHandler.getSiteTitleAndLocale()
 	return title
 }
 
@@ -61,11 +70,24 @@ func (webHandler *WebHandler) renderIndexHTML(subFS fs.FS, ctx *gin.Context) boo
 	if err != nil {
 		return false
 	}
-	siteTitle := webHandler.getSiteTitle()
+	siteTitle, locale := webHandler.getSiteTitleAndLocale()
 	htmlStr := string(rawHTML)
 	if siteTitle != "Ech0" && siteTitle != "" {
 		escaped := html.EscapeString(siteTitle)
-		htmlStr = strings.Replace(htmlStr, "<title>Ech0</title>", "<title>"+escaped+"</title>", 1)
+		pageTitle := escaped
+		if strings.HasPrefix(ctx.Request.URL.Path, "/echo/") {
+			detailPrefix := "动态详情"
+			switch locale {
+			case "en-US", "en":
+				detailPrefix = "Post Detail"
+			case "de-DE", "de":
+				detailPrefix = "Beitragsdetails"
+			case "ja-JP", "ja":
+				detailPrefix = "投稿詳細"
+			}
+			pageTitle = detailPrefix + " | " + escaped
+		}
+		htmlStr = strings.Replace(htmlStr, "<title>Ech0</title>", "<title>"+pageTitle+"</title>", 1)
 		htmlStr = strings.Replace(htmlStr, `<meta name="apple-mobile-web-app-title" content="Ech0" />`, `<meta name="apple-mobile-web-app-title" content="`+escaped+`" />`, 1)
 		htmlStr = strings.Replace(htmlStr, `<meta property="og:title" content="Ech0" />`, `<meta property="og:title" content="`+escaped+`" />`, 1)
 		htmlStr = strings.Replace(htmlStr, `<meta property="og:site_name" content="Ech0" />`, `<meta property="og:site_name" content="`+escaped+`" />`, 1)

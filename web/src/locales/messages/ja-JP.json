@@ -1065,6 +1065,7 @@
     "poweredBy": "Powered by Ech0"
   },
   "echoPage": {
+    "title": "投稿詳細",
     "loadingDetail": "Echo の詳細を読み込み中..."
   },
   "notFound": {

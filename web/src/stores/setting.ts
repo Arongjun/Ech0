@@ -19,6 +19,9 @@ import {
 import type { ExportFormat, ExportStatusPayload } from '@/service/api'
 import { S3Provider, OAuth2Provider, AgentProtocol } from '@/enums/enums'
 import { useUserStore } from './user'
+import { localStg } from '@/utils/storage'
+
+export const CACHED_SYSTEM_SETTING_KEY = 'ech0:cached_system_setting'
 
 const SNAPSHOT_STATUS_POLL_INTERVAL_MS = 3000
 type SnapshotUIStatus = 'idle' | 'pending' | 'running' | 'success' | 'failed' | 'cancelled'
@@ -26,23 +29,42 @@ type SnapshotUIStatus = 'idle' | 'pending' | 'running' | 'success' | 'failed' | 
 export const useSettingStore = defineStore('settingStore', () => {
   const userStore = useUserStore()
 
+  const cachedSetting = localStg.getItem<App.Api.Setting.SystemSetting>(CACHED_SYSTEM_SETTING_KEY)
+  const docTitle = typeof document !== 'undefined' ? document.title.trim() : ''
+  const hasValidDocTitle =
+    docTitle && docTitle !== 'Ech0' && docTitle !== 'Echo' && !docTitle.startsWith('Ech0 ')
+  let docSiteTitle = ''
+  if (hasValidDocTitle) {
+    const pipeIdx = docTitle.lastIndexOf('|')
+    docSiteTitle = (pipeIdx !== -1 ? docTitle.slice(pipeIdx + 1) : docTitle).trim()
+  }
+
+  const initialSiteTitle =
+    (cachedSetting?.site_title &&
+    cachedSetting.site_title !== 'Ech0' &&
+    cachedSetting.site_title !== 'Echo'
+      ? cachedSetting.site_title
+      : '') ||
+    docSiteTitle ||
+    import.meta.env.VITE_APP_TITLE
+
   const SystemSetting = ref<App.Api.Setting.SystemSetting>({
-    site_title: import.meta.env.VITE_APP_TITLE,
-    server_logo: '/Ech0.svg',
-    server_logo_file_id: '',
-    server_name: import.meta.env.VITE_APP_NAME,
-    server_url: '',
-    allow_register: true,
-    default_locale: 'zh-CN',
-    ICP_number: '',
-    footer_content: '',
-    footer_link: '',
-    home_welcome_text: '欢迎光临',
-    home_signature_text: 'Powered by Ech0',
-    home_signature_url: '',
-    meting_api: '',
-    custom_css: '',
-    custom_js: '',
+    site_title: initialSiteTitle,
+    server_logo: cachedSetting?.server_logo || '/Ech0.svg',
+    server_logo_file_id: cachedSetting?.server_logo_file_id || '',
+    server_name: cachedSetting?.server_name || import.meta.env.VITE_APP_NAME,
+    server_url: cachedSetting?.server_url || '',
+    allow_register: cachedSetting?.allow_register ?? true,
+    default_locale: cachedSetting?.default_locale || 'zh-CN',
+    ICP_number: cachedSetting?.ICP_number || '',
+    footer_content: cachedSetting?.footer_content || '',
+    footer_link: cachedSetting?.footer_link || '',
+    home_welcome_text: cachedSetting?.home_welcome_text || '欢迎光临',
+    home_signature_text: cachedSetting?.home_signature_text || 'Powered by Ech0',
+    home_signature_url: cachedSetting?.home_signature_url || '',
+    meting_api: cachedSetting?.meting_api || '',
+    custom_css: cachedSetting?.custom_css || '',
+    custom_js: cachedSetting?.custom_js || '',
   })
   const S3Setting = ref<App.Api.Setting.S3Setting>({
     enable: false,
@@ -111,10 +133,21 @@ export const useSettingStore = defineStore('settingStore', () => {
     await fetchGetSettings().then((res) => {
       if (res.code === 1) {
         SystemSetting.value = res.data
+        localStg.setItem(CACHED_SYSTEM_SETTING_KEY, res.data)
         loading.value = false
       }
     })
   }
+
+  watch(
+    SystemSetting,
+    (val) => {
+      if (val && val.site_title) {
+        localStg.setItem(CACHED_SYSTEM_SETTING_KEY, val)
+      }
+    },
+    { deep: true },
+  )
 
   let s3SettingLoaded = false
   let s3FetchPromise: Promise<App.Api.Setting.S3Setting> | null = null

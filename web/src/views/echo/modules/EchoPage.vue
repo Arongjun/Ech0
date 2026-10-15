@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import TheEchoDetail from '@/components/advanced/echo/cards/TheEchoDetail.vue'
@@ -37,8 +37,27 @@ const getEchoFromStore = (id: string): App.Api.Ech0.Echo | null => {
   return echoStore.echoList.find((e) => String(e.id).trim() === targetId) ?? null
 }
 
+const updateEchoPageTitle = (targetEcho: App.Api.Ech0.Echo | null) => {
+  if (!targetEcho) {
+    route.meta.title = t('echoPage.title')
+    return
+  }
+  const raw = (targetEcho.content || '').trim()
+  const firstLine = raw
+    .split('\n')[0]
+    .replace(/^[#*`>~-]+\s*/, '')
+    .trim()
+  if (firstLine) {
+    route.meta.title = firstLine.length > 32 ? `${firstLine.slice(0, 32)}...` : firstLine
+  } else {
+    route.meta.title = t('echoPage.title')
+  }
+}
+
 const echo = ref<App.Api.Ech0.Echo | null>(getEchoFromStore(echoId))
 const isLoading = ref(!echo.value)
+
+updateEchoPageTitle(echo.value)
 
 const handleUpdateLikeCount = () => {
   if (echo.value) {
@@ -60,9 +79,11 @@ watch(
       echoStore.prefetchEcho(id, true).then((fullEcho) => {
         if (fullEcho) {
           echo.value = fullEcho
+          updateEchoPageTitle(fullEcho)
         }
       })
     }
+    updateEchoPageTitle(echo.value)
   },
 )
 
@@ -75,8 +96,14 @@ onMounted(async () => {
     echoStore.prefetchEcho(echoId, true).then((fullEcho) => {
       if (fullEcho) {
         echo.value = fullEcho
+        updateEchoPageTitle(fullEcho)
       }
     })
   }
+  updateEchoPageTitle(echo.value)
+})
+
+onBeforeUnmount(() => {
+  route.meta.title = 'echoPage.title'
 })
 </script>

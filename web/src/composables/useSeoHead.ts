@@ -4,6 +4,7 @@
 import type { Ref } from 'vue'
 import { watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { i18n } from '@/locales'
 
 type SeoSystemSetting = {
   site_title?: string
@@ -18,12 +19,24 @@ const DEFAULT_SEO_DESCRIPTION =
 
 const resolvePageTitle = (siteTitle: string, routeTitle: unknown) => {
   if (typeof routeTitle !== 'string') return siteTitle
-  const normalizedRouteTitle = routeTitle.trim()
+  let normalizedRouteTitle = routeTitle.trim()
   if (
     !normalizedRouteTitle ||
     normalizedRouteTitle === siteTitle ||
     normalizedRouteTitle.toLowerCase() === 'home'
   ) {
+    return siteTitle
+  }
+  if (typeof i18n?.global?.te === 'function' && i18n.global.te(normalizedRouteTitle)) {
+    normalizedRouteTitle = String(i18n.global.t(normalizedRouteTitle))
+  } else if (
+    normalizedRouteTitle.toLowerCase() === 'echo' ||
+    normalizedRouteTitle.toLowerCase() === 'ech0'
+  ) {
+    normalizedRouteTitle =
+      typeof i18n?.global?.t === 'function' ? String(i18n.global.t('echoPage.title')) : '动态详情'
+  }
+  if (!normalizedRouteTitle || normalizedRouteTitle === siteTitle) {
     return siteTitle
   }
   return `${normalizedRouteTitle} | ${siteTitle}`
@@ -85,7 +98,19 @@ export const useSeoHead = (systemSetting: Ref<SeoSystemSetting>) => {
   }
 
   const updateSeoMeta = () => {
-    const siteTitle = (systemSetting.value.site_title || DEFAULT_SITE_TITLE).trim()
+    const rawSettingTitle = (systemSetting.value.site_title || '').trim()
+    const currentDocTitle = typeof document !== 'undefined' ? document.title.trim() : ''
+
+    let siteTitle = rawSettingTitle
+    if (!siteTitle || siteTitle === DEFAULT_SITE_TITLE || siteTitle === 'Echo') {
+      if (currentDocTitle && currentDocTitle !== DEFAULT_SITE_TITLE && currentDocTitle !== 'Echo') {
+        const pipeIdx = currentDocTitle.lastIndexOf('|')
+        siteTitle = (pipeIdx !== -1 ? currentDocTitle.slice(pipeIdx + 1) : currentDocTitle).trim()
+      } else {
+        siteTitle = DEFAULT_SITE_TITLE
+      }
+    }
+
     const pageTitle = resolvePageTitle(siteTitle, route.meta.title)
     const routeDescription =
       typeof route.meta.description === 'string' ? route.meta.description.trim() : ''
@@ -95,7 +120,11 @@ export const useSeoHead = (systemSetting: Ref<SeoSystemSetting>) => {
     const noIndex = route.meta.noindex === true
     const ogImage = new URL(DEFAULT_OG_IMAGE, `${baseUrl}/`).toString()
 
-    document.title = pageTitle
+    if (pageTitle !== DEFAULT_SITE_TITLE && pageTitle !== 'Echo') {
+      document.title = pageTitle
+    } else if (!currentDocTitle) {
+      document.title = pageTitle
+    }
     upsertCanonicalLink(canonicalUrl)
     upsertMetaTag('meta[name="apple-mobile-web-app-title"]', {
       name: 'apple-mobile-web-app-title',

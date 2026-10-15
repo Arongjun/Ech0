@@ -1065,6 +1065,7 @@
     "poweredBy": "Powered by Ech0"
   },
   "echoPage": {
+    "title": "动态详情",
     "loadingDetail": "正在加载 Echo 详情..."
   },
   "notFound": {

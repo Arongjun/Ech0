@@ -49,6 +49,29 @@
     <meta name="generator" content="Ech0" />
 
     <title>Ech0</title>
+    <script>
+      ;(function () {
+        try {
+          var item = localStorage.getItem('ech0:cached_system_setting')
+          if (item) {
+            var data = JSON.parse(item)
+            if (
+              data &&
+              data.site_title &&
+              data.site_title !== 'Ech0' &&
+              data.site_title !== 'Echo'
+            ) {
+              var p = window.location.pathname || ''
+              if (p.indexOf('/echo/') === 0) {
+                document.title = '\u52a8\u6001\u8be6\u60c5 | ' + data.site_title
+              } else {
+                document.title = data.site_title
+              }
+            }
+          }
+        } catch (e) {}
+      })()
+    </script>
 
     <script id="website-jsonld" type="application/ld+json">
       {
