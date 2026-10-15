@@ -493,7 +493,6 @@ onBeforeUnmount(() => {
 @media (hover: hover) {
   .echo-timeline:hover .echo-open-btn {
     opacity: 1;
-    animation: echo-open-nudge-left 1200ms ease-out both;
   }
 }
 

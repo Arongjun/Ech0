@@ -81,6 +81,7 @@ import {
   onDeactivated,
   computed,
   watch,
+  nextTick,
 } from 'vue'
 import { useEchoStore, useUserStore, useSettingStore } from '@/stores'
 import { useRoute, onBeforeRouteLeave } from 'vue-router'
@@ -234,70 +235,37 @@ const restoreTimelineScrollPosition = async () => {
 
     const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 820
 
-    // Step 1: If an active card was clicked, align directly to that card's exact viewport top
-    let alignedToCard = false
-
-    if (lastEchoId) {
-      const cardEl =
-        document.getElementById(`echo-${lastEchoId}`) ||
-        (document.querySelector(`[data-echo-id="${lastEchoId}"]`) as HTMLElement | null)
-
-      if (cardEl) {
-        let targetTop: number | null = null
-        if (savedViewportTop !== null && Number.isFinite(savedViewportTop)) {
-          targetTop = savedViewportTop
-        } else if (savedViewportRatio !== null && Number.isFinite(savedViewportRatio)) {
-          const vh = window.innerHeight || document.documentElement.clientHeight || 1
-          targetTop = Math.round(savedViewportRatio * vh)
-        } else {
-          targetTop = Math.round((window.innerHeight || 800) * 0.1)
-        }
-
-        if (targetTop !== null) {
-          if (isDesktop && mainColumn.value) {
-            const colRect = mainColumn.value.getBoundingClientRect()
-            const cardRect = cardEl.getBoundingClientRect()
-            const currentScrollTop = mainColumn.value.scrollTop
-            const cardOffsetInCol = cardRect.top - colRect.top + currentScrollTop
-            const targetScrollTop = Math.max(0, Math.round(cardOffsetInCol - targetTop))
-            mainColumn.value.scrollTop = targetScrollTop
-            alignedToCard = true
-          } else if (typeof window !== 'undefined') {
-            const cardRect = cardEl.getBoundingClientRect()
-            const cardDocTop = cardRect.top + window.scrollY
-            const targetScrollY = Math.max(0, Math.round(cardDocTop - targetTop))
-            window.scrollTo({ top: targetScrollY, behavior: 'instant' as ScrollBehavior })
-            alignedToCard = true
-          }
-        }
+    // Step 0: Ensure base scroll position is restored immediately if container is at 0
+    if (isDesktop && mainColumn.value && Number.isFinite(timelineTop) && timelineTop > 0) {
+      if (Math.abs(mainColumn.value.scrollTop - timelineTop) > 2) {
+        mainColumn.value.scrollTop = timelineTop
+      }
+    } else if (
+      !isDesktop &&
+      typeof window !== 'undefined' &&
+      Number.isFinite(windowTop) &&
+      windowTop > 0
+    ) {
+      if (Math.abs(window.scrollY - windowTop) > 2) {
+        window.scrollTo(0, windowTop)
       }
     }
 
-    // Step 2: If no active card or card not in DOM, restore rough window/timeline scroll
-    if (!alignedToCard) {
-      if (isDesktop && mainColumn.value && Number.isFinite(timelineTop) && timelineTop > 0) {
-        if (Math.abs(mainColumn.value.scrollTop - timelineTop) > 2) {
-          mainColumn.value.scrollTop = timelineTop
-        }
-      } else if (
-        !isDesktop &&
-        typeof window !== 'undefined' &&
-        Number.isFinite(windowTop) &&
-        windowTop > 0
-      ) {
-        if (Math.abs(window.scrollY - windowTop) > 2) {
-          window.scrollTo({ top: windowTop, behavior: 'instant' as ScrollBehavior })
-        }
-      }
-    }
+    // Step 1: Wait for DOM nextTick so KeepAlive-activated elements are attached
+    await nextTick()
 
-    // Step 3: Wait 1 animation frame for any async layout/reflow and do fine-alignment
+    // Step 2: Fine-anchor to the active card that was clicked
     if (lastEchoId) {
-      await new Promise((resolve) => window.requestAnimationFrame(resolve))
+      const id = String(lastEchoId).trim()
+      const getCard = () =>
+        document.getElementById(`echo-${id}`) ||
+        (document.querySelector(`[data-echo-id="${id}"]`) as HTMLElement | null)
 
-      const cardEl =
-        document.getElementById(`echo-${lastEchoId}`) ||
-        (document.querySelector(`[data-echo-id="${lastEchoId}"]`) as HTMLElement | null)
+      let cardEl = getCard()
+      if (!cardEl) {
+        await new Promise((resolve) => window.requestAnimationFrame(resolve))
+        cardEl = getCard()
+      }
 
       if (cardEl) {
         let targetTop: number | null = null
@@ -308,24 +276,30 @@ const restoreTimelineScrollPosition = async () => {
           targetTop = Math.round(savedViewportRatio * vh)
         }
 
-        if (targetTop !== null) {
+        const alignCard = () => {
+          if (!cardEl) return
           const currentRect = cardEl.getBoundingClientRect()
-          const delta = Math.round(currentRect.top - targetTop)
-          if (Math.abs(delta) >= 2) {
+          const expectedTop = targetTop ?? Math.round((window.innerHeight || 800) * 0.1)
+          const delta = Math.round(currentRect.top - expectedTop)
+          if (Math.abs(delta) >= 1) {
             if (isDesktop && mainColumn.value) {
               mainColumn.value.scrollTop += delta
             } else if (typeof window !== 'undefined') {
-              window.scrollBy({ top: delta, behavior: 'instant' as ScrollBehavior })
+              window.scrollBy(0, delta)
             }
           }
         }
+
+        alignCard()
+
+        // Step 3: Run on next animation frame to compensate for any font/avatar/media reflow
+        await new Promise((resolve) => window.requestAnimationFrame(resolve))
+        alignCard()
       }
     }
   } catch (err) {
     console.warn('[ScrollRestore] Error restoring scroll position:', err)
   } finally {
-    // Clean up one-time card alignment keys so future tab-switches or navigations
-    // don't mistakenly jump back to an old card
     sessionStg.removeItem(LAST_ACTIVE_ECHO_KEY)
     sessionStg.removeItem(LAST_ACTIVE_VIEWPORT_TOP_KEY)
     sessionStg.removeItem(LAST_ACTIVE_VIEWPORT_RATIO_KEY)
@@ -395,9 +369,10 @@ onDeactivated(() => {
   window.removeEventListener('keydown', handleGlobalKeydown)
 })
 
-onActivated(() => {
+onActivated(async () => {
   isNavigatingAway.value = false
   window.addEventListener('keydown', handleGlobalKeydown)
+  await nextTick()
   void restoreTimelineScrollPosition().finally(() => {
     bindScrollListeners()
   })
@@ -501,6 +476,8 @@ onBeforeUnmount(() => {
     flex: 0 1 var(--home-main-max);
     max-width: var(--home-main-max);
     padding: 1.5rem 0 2rem;
+    will-change: scroll-position;
+    transform: translateZ(0);
   }
 
   .home-main--unclipped {
