@@ -159,18 +159,14 @@ const flushScrollPositions = () => {
     clearTimeout(scrollDebounceTimer)
     scrollDebounceTimer = null
   }
-  if (isRestoringScroll.value) return
+  if (isRestoringScroll.value || isNavigatingAway.value) return
 
-  if (mainColumn.value && mainColumn.value.scrollTop > 0) {
+  if (mainColumn.value) {
     currentTimelineScrollTop = Math.round(mainColumn.value.scrollTop)
-  }
-  if (typeof window !== 'undefined' && window.scrollY > 0) {
-    currentWindowScrollTop = Math.round(window.scrollY)
-  }
-  if (currentTimelineScrollTop > 0) {
     sessionStg.setItem(TIMELINE_SCROLL_KEY, String(currentTimelineScrollTop))
   }
-  if (currentWindowScrollTop > 0) {
+  if (typeof window !== 'undefined') {
+    currentWindowScrollTop = Math.round(window.scrollY)
     sessionStg.setItem(WINDOW_SCROLL_KEY, String(currentWindowScrollTop))
   }
 }
@@ -241,15 +237,21 @@ const restoreTimelineScrollPosition = async () => {
 
     const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 820
 
-    // Step 1: Immediate rough restoration
+    // Step 1: Immediate rough restoration (if window/timeline is not already at target)
     if (isDesktop && mainColumn.value && Number.isFinite(timelineTop) && timelineTop > 0) {
-      mainColumn.value.scrollTop = timelineTop
-    } else if (!isDesktop && typeof window !== 'undefined' && Number.isFinite(windowTop) && windowTop > 0) {
-      window.scrollTo({ top: windowTop, behavior: 'instant' as ScrollBehavior })
+      if (Math.abs(mainColumn.value.scrollTop - timelineTop) > 2) {
+        mainColumn.value.scrollTop = timelineTop
+      }
+    } else if (
+      !isDesktop &&
+      typeof window !== 'undefined' &&
+      Number.isFinite(windowTop) &&
+      windowTop > 0
+    ) {
+      if (Math.abs(window.scrollY - windowTop) > 2) {
+        window.scrollTo({ top: windowTop, behavior: 'instant' as ScrollBehavior })
+      }
     }
-
-    await nextTick()
-    await new Promise((resolve) => window.requestAnimationFrame(resolve))
 
     // Step 2: Accurate element-level alignment
     const alignActiveCard = (): boolean => {
@@ -270,7 +272,8 @@ const restoreTimelineScrollPosition = async () => {
       if (targetTop !== null) {
         const currentRect = cardEl.getBoundingClientRect()
         const delta = Math.round(currentRect.top - targetTop)
-        if (Math.abs(delta) > 1) {
+        // Avoid subpixel/micro-jitter: only adjust if off by >= 6px
+        if (Math.abs(delta) >= 6) {
           if (isDesktop && mainColumn.value) {
             mainColumn.value.scrollTop += delta
           } else if (typeof window !== 'undefined') {
@@ -278,32 +281,33 @@ const restoreTimelineScrollPosition = async () => {
           }
         }
         return true
-      } else {
-        cardEl.scrollIntoView({ block: 'center', behavior: 'instant' })
-        return true
       }
+      return false
     }
 
-    const aligned = alignActiveCard()
+    // Try synchronous alignment immediately first (DOM is already mounted due to KeepAlive)
+    let aligned = alignActiveCard()
 
-    if (!aligned) {
-      if (isDesktop && mainColumn.value && Number.isFinite(timelineTop) && timelineTop > 0) {
-        mainColumn.value.scrollTop = timelineTop
-      } else if (!isDesktop && typeof window !== 'undefined' && Number.isFinite(windowTop) && windowTop > 0) {
-        window.scrollTo({ top: windowTop, behavior: 'instant' as ScrollBehavior })
-      }
+    if (!aligned && lastEchoId) {
+      // If card was not found immediately (e.g. initial mount), wait nextTick
+      await nextTick()
+      aligned = alignActiveCard()
     }
 
-    // Step 3: Second pass on next frame to compensate for any font/image layout reflow
+    // Step 3: Check once on next frame only if there was a layout shift
     await new Promise((resolve) => window.requestAnimationFrame(resolve))
     if (lastEchoId) {
       alignActiveCard()
     }
   } finally {
-    await new Promise((resolve) => window.requestAnimationFrame(resolve))
+    // Clean up one-time card alignment keys so future tab-switches or navigations
+    // don't mistakenly jump back to an old card
+    sessionStg.removeItem(LAST_ACTIVE_ECHO_KEY)
+    sessionStg.removeItem(LAST_ACTIVE_VIEWPORT_TOP_KEY)
+    sessionStg.removeItem(LAST_ACTIVE_VIEWPORT_RATIO_KEY)
     window.setTimeout(() => {
       isRestoringScroll.value = false
-    }, 100)
+    }, 50)
   }
 }
 

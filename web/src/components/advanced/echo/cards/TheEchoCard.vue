@@ -121,7 +121,12 @@
       >
         <template v-if="isContentLeadingEcho(props.echo)">
           <div class="mx-auto w-11/12 pl-1 mb-3">
-            <TheMdPreview :content="props.echo.content" collapsible :echo-id="props.echo.id" />
+            <TheMdPreview
+              :content="props.echo.content"
+              collapsible
+              :echo-id="props.echo.id"
+              @open-detail="handleExpandEcho(props.echo.id)"
+            />
           </div>
 
           <div :class="{ 'mx-auto w-11/12 pl-1': isAvEcho }">
@@ -143,7 +148,12 @@
           </div>
 
           <div class="mx-auto w-11/12 pl-1 mt-3">
-            <TheMdPreview :content="props.echo.content" collapsible :echo-id="props.echo.id" />
+            <TheMdPreview
+              :content="props.echo.content"
+              collapsible
+              :echo-id="props.echo.id"
+              @open-detail="handleExpandEcho(props.echo.id)"
+            />
           </div>
         </template>
 

@@ -42,12 +42,12 @@ if (typeof window !== 'undefined') {
 
 router.beforeEach((to, from) => {
   if (from.name === 'home') {
-    if (typeof window !== 'undefined' && window.scrollY > 0) {
-      sessionStg.setItem('home:window:scrollTop', String(window.scrollY))
+    if (typeof window !== 'undefined') {
+      sessionStg.setItem('home:window:scrollTop', String(Math.round(window.scrollY)))
     }
     const mainCol = document.querySelector('.home-main') as HTMLElement | null
-    if (mainCol && mainCol.scrollTop > 0) {
-      sessionStg.setItem('home:timeline:scrollTop', String(mainCol.scrollTop))
+    if (mainCol) {
+      sessionStg.setItem('home:timeline:scrollTop', String(Math.round(mainCol.scrollTop)))
     }
   }
 

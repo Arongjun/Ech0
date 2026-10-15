@@ -81,6 +81,7 @@ import { MarkdownRenderer } from '@/editor/preview'
 import ChevronDown from '@/components/icons/chevrondown.vue'
 import ChevronUp from '@/components/icons/chevronup.vue'
 import Linkto from '@/components/icons/linkto.vue'
+import { sessionStg } from '@/utils/storage'
 
 const props = withDefaults(
   defineProps<{
@@ -167,11 +168,41 @@ const handleCollapse = () => {
 
 const handleOpenDetail = () => {
   emit('openDetail')
+  if (attrs.onOpenDetail) {
+    return
+  }
   if (props.echoId) {
-    router.push({
-      name: 'echo',
-      params: { echoId: String(props.echoId) },
-    })
+    const id = String(props.echoId).trim()
+    if (id) {
+      try {
+        sessionStg.setItem('home:lastActiveEchoId', id)
+        const cardEl =
+          document.getElementById(`echo-${id}`) ||
+          (document.querySelector(`[data-echo-id="${id}"]`) as HTMLElement | null)
+        if (cardEl) {
+          const rect = cardEl.getBoundingClientRect()
+          sessionStg.setItem('home:lastActiveEcho:viewportTop', String(Math.round(rect.top)))
+          const vh = window.innerHeight || document.documentElement.clientHeight || 1
+          sessionStg.setItem(
+            'home:lastActiveEcho:viewportRatio',
+            String((rect.top / vh).toFixed(4)),
+          )
+        }
+        if (typeof window !== 'undefined') {
+          sessionStg.setItem('home:window:scrollTop', String(Math.round(window.scrollY)))
+          const mainCol = document.querySelector('.home-main') as HTMLElement | null
+          if (mainCol) {
+            sessionStg.setItem('home:timeline:scrollTop', String(Math.round(mainCol.scrollTop)))
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to save echo position state in mdPreview:', err)
+      }
+      router.push({
+        name: 'echo',
+        params: { echoId: id },
+      })
+    }
   }
 }
 </script>
