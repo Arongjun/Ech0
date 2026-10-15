@@ -115,6 +115,7 @@ const ENTER_STAGGER_CAP = 600
 const ENTER_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)'
 
 const onBeforeEnter = (el: Element) => {
+  if (hasInitialRendered.value) return
   const element = el as HTMLElement
   element.style.opacity = '0'
   element.style.transform = 'translateY(-18px)'
@@ -122,6 +123,13 @@ const onBeforeEnter = (el: Element) => {
 
 const onEnter = (el: Element, done: () => void) => {
   const element = el as HTMLElement
+  if (hasInitialRendered.value) {
+    element.style.opacity = '1'
+    element.style.transform = 'translateY(0)'
+    done()
+    return
+  }
+
   const indexInBatch = enterBatchIndex++
   if (enterBatchResetTimer !== null) {
     window.clearTimeout(enterBatchResetTimer)
@@ -131,7 +139,7 @@ const onEnter = (el: Element, done: () => void) => {
     enterBatchResetTimer = null
   }, 400)
 
-  const baseDelay = hasInitialRendered.value ? 80 : 0
+  const baseDelay = 0
   const staggerDelay = Math.min(indexInBatch * ENTER_STAGGER, ENTER_STAGGER_CAP)
 
   window.setTimeout(() => {

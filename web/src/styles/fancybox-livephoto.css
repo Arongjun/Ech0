@@ -4,110 +4,81 @@
 
 /**
  * Fancybox Live Photo global styling
+ * Unified with Fancybox image slide & Panzoom viewport
  */
 
-/* 1. Fancybox container adaptation */
-.fancybox__slide.has-livephoto {
-  --f-html-bg: transparent;
-  --f-html-color: inherit;
-  --f-carousel-slide-padding: 64px 24px 24px;
-}
-
-.has-livephoto .fancybox__content,
-.has-livephoto .f-html {
-  background: transparent !important;
-  padding: 0 !important;
-  border-radius: 8px !important;
-  overflow: visible !important;
-  box-shadow: none !important;
-}
-
-/* 2. Live Photo media container */
-.fancybox-livephoto-container {
-  position: relative;
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  margin: 0 auto;
-  background: transparent !important;
-}
-
-.fancybox-livephoto-container .livephoto-content {
-  position: relative;
-  display: inline-grid;
-  grid-template-areas: 'media-stack';
-  vertical-align: middle;
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: 100%;
-  border-radius: 8px;
-  overflow: hidden;
-  background: transparent;
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  mask-image: radial-gradient(white, black);
-  backface-visibility: hidden;
-  transform: scale(1);
-}
-
-/* 3. Image and video stack */
-.fancybox-livephoto-container .livephoto-content img,
-.fancybox-livephoto-container .livephoto-content video {
-  grid-area: media-stack;
-  display: block;
-  max-width: 100%;
-  max-height: min(75vh, calc(100vh - 180px));
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  border-radius: 8px;
-}
-
-.fancybox-livephoto-container .livephoto-content img {
-  position: relative;
-  z-index: 1;
-  transition: opacity 0.5s ease;
-  user-select: none;
-  pointer-events: none;
-}
-
-.fancybox-livephoto-container .livephoto-content video {
+/* 1. Live Photo video positioned inside Panzoom viewport */
+.has-livephoto .livephoto-video {
+  position: absolute !important;
+  inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
+  object-fit: contain !important;
   opacity: 0;
-  transition:
-    opacity 0.5s ease,
-    transform 0.5s ease;
-  z-index: 2;
   pointer-events: none;
+  z-index: 2;
+  transition: opacity 0.3s ease;
+  border-radius: inherit;
+  background: transparent;
+}
+
+/* 2. Play state: show video, hide static image underneath */
+.has-livephoto.is-playing .livephoto-video,
+.has-livephoto.zoom .livephoto-video {
+  opacity: 1 !important;
+}
+
+.has-livephoto.is-playing img.f-panzoom__content,
+.has-livephoto.zoom img.f-panzoom__content {
+  opacity: 0 !important;
 }
 
 /* Hide native controls */
-.fancybox-livephoto-container .livephoto-content video::-webkit-media-controls,
-.fancybox-livephoto-container .livephoto-content video::-webkit-media-controls-enclosure,
-.fancybox-livephoto-container .livephoto-content video::-webkit-media-controls-panel,
-.fancybox-livephoto-container
-  .livephoto-content
-  video::-webkit-media-controls-picture-in-picture-button {
+.has-livephoto .livephoto-video::-webkit-media-controls,
+.has-livephoto .livephoto-video::-webkit-media-controls-enclosure,
+.has-livephoto .livephoto-video::-webkit-media-controls-panel,
+.has-livephoto .livephoto-video::-webkit-media-controls-picture-in-picture-button {
   display: none !important;
 }
 
-/* 4. Play state interactions */
-.fancybox-livephoto-container.zoom .livephoto-content {
-  transform: scale(1.03);
+/* 3. Live Photo UI overlay controls (LIVE badge) */
+.has-livephoto .livephoto-control-wrapper {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 30;
+  pointer-events: auto;
 }
 
-.fancybox-livephoto-container.zoom .livephoto-content video {
-  opacity: 1;
+.has-livephoto .livephoto-icon {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  border-radius: 20px;
+  background: rgb(0 0 0 / 55%);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  user-select: none;
+  pointer-events: auto;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: fit-content;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 25%);
 }
 
-.fancybox-livephoto-container.zoom .livephoto-content img {
-  opacity: 0;
+.has-livephoto .livephoto-icon:hover {
+  background: rgb(0 0 0 / 75%);
 }
 
-.fancybox-livephoto-container.zoom .livephoto-icon-svg {
+.has-livephoto .livephoto-icon-svg {
+  width: 16px;
+  height: 16px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.has-livephoto.is-playing .livephoto-icon-svg,
+.has-livephoto.zoom .livephoto-icon-svg {
   animation: livephoto-spin 3s linear infinite;
 }
 
@@ -121,49 +92,15 @@
   }
 }
 
-/* 5. Live Photo UI overlay controls */
-.fancybox-livephoto-container .livephoto-content .livephoto-control-wrapper {
-  position: absolute;
-  left: 8px;
-  top: 8px;
-  z-index: 10;
-}
-
-.fancybox-livephoto-container .livephoto-content .livephoto-icon {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  border-radius: 20px;
-  background: rgb(0 0 0 / 50%);
-  backdrop-filter: blur(4px);
-  cursor: pointer;
-  user-select: none;
-  pointer-events: auto;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  width: fit-content;
-}
-
-.fancybox-livephoto-container .livephoto-content .livephoto-icon:hover {
-  background: rgb(0 0 0 / 70%);
-}
-
-.fancybox-livephoto-container .livephoto-content .livephoto-icon-svg {
-  width: 16px;
-  height: 16px;
+.has-livephoto .livephoto-label {
   color: #fff;
-  flex-shrink: 0;
-}
-
-.fancybox-livephoto-container .livephoto-content .livephoto-label {
-  color: #fff;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.5px;
   white-space: nowrap;
 }
 
-/* Chevron and Dropdown Menu */
+/* 4. Chevron and Dropdown Menu */
 .livephoto-chevron {
   opacity: 0;
   width: 0;
@@ -192,25 +129,25 @@
     margin-left: 4px;
   }
 
-  .fancybox-livephoto-container .livephoto-content .livephoto-icon {
+  .has-livephoto .livephoto-icon {
     padding-right: 12px;
   }
 }
 
 .livephoto-dropdown {
   position: absolute;
-  top: 30px;
+  top: 32px;
   left: 0;
-  background: rgb(40 40 40 / 85%);
-  backdrop-filter: blur(10px);
+  background: rgb(30 30 35 / 88%);
+  backdrop-filter: blur(12px);
   border-radius: 14px;
   padding: 0;
   opacity: 0;
   visibility: hidden;
-  transform: scale(0.9);
+  transform: scale(0.92);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
-  box-shadow: 0 4px 16px rgb(0 0 0 / 40%);
+  box-shadow: 0 4px 18px rgb(0 0 0 / 40%);
   transform-origin: top left;
 }
 
@@ -225,20 +162,20 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: 8px 14px;
   border-radius: 14px;
   cursor: pointer;
   transition: background 0.2s ease;
   color: #fff;
-  gap: 8px;
+  gap: 10px;
 }
 
 .livephoto-dropdown-item:hover {
-  background: rgb(255 255 255 / 10%);
+  background: rgb(255 255 255 / 12%);
 }
 
 .dropdown-text {
-  font-size: 14px;
+  font-size: 13px;
   white-space: nowrap;
   font-weight: 500;
 }
@@ -249,38 +186,39 @@
   flex-shrink: 0;
 }
 
-/* 6. Mobile responsiveness */
+/* 5. Mobile responsiveness */
 @media (width <= 768px) {
-  .fancybox__slide.has-livephoto {
-    --f-carousel-slide-padding: 48px 8px 8px;
+  .has-livephoto .livephoto-control-wrapper {
+    top: 10px;
+    left: 10px;
   }
 
-  .fancybox-livephoto-container .livephoto-content .livephoto-icon {
+  .has-livephoto .livephoto-icon {
     padding: 4px 8px;
   }
 
-  .fancybox-livephoto-container .livephoto-content .livephoto-icon-svg {
+  .has-livephoto .livephoto-icon-svg {
     width: 14px;
     height: 14px;
   }
 }
 
 @media (width <= 480px) {
-  .fancybox-livephoto-container .livephoto-content .livephoto-icon {
+  .has-livephoto .livephoto-icon {
     padding: 3px 6px;
   }
 
-  .fancybox-livephoto-container .livephoto-content .livephoto-label {
+  .has-livephoto .livephoto-label {
     font-size: 9px;
   }
 
-  .fancybox-livephoto-container .livephoto-content .livephoto-icon-svg {
+  .has-livephoto .livephoto-icon-svg {
     width: 12px;
     height: 12px;
   }
 }
 
-/* 7. Hide navigation arrows on mobile & touch devices to prevent obstructing photos */
+/* 6. Hide navigation arrows on touch mobile to prevent obstructing photos */
 @media (hover: none) and (pointer: coarse) {
   .fancybox__container .f-button.is-prev,
   .fancybox__container .f-button.is-next {

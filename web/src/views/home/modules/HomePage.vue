@@ -121,8 +121,9 @@ const mainColumn = ref<HTMLElement | null>(null)
 const TIMELINE_SCROLL_KEY = 'home:timeline:scrollTop'
 const WINDOW_SCROLL_KEY = 'home:window:scrollTop'
 const LAST_ACTIVE_ECHO_KEY = 'home:lastActiveEchoId'
-let timelineScrollRaf: number | null = null
-let windowScrollRaf: number | null = null
+let currentTimelineScrollTop = 0
+let currentWindowScrollTop = 0
+let scrollDebounceTimer: ReturnType<typeof setTimeout> | null = null
 const isNavigatingAway = ref(false)
 const isRestoringScroll = ref(false)
 let scrollListenersBound = false
@@ -151,35 +152,42 @@ const handleGlobalKeydown = (event: KeyboardEvent) => {
   }
 }
 
-const saveTimelineScrollPosition = () => {
-  if (
-    isNavigatingAway.value ||
-    isRestoringScroll.value ||
-    !mainColumn.value ||
-    timelineScrollRaf !== null
-  )
-    return
+const flushScrollPositions = () => {
+  if (scrollDebounceTimer !== null) {
+    clearTimeout(scrollDebounceTimer)
+    scrollDebounceTimer = null
+  }
+  if (mainColumn.value && mainColumn.value.scrollTop > 0) {
+    currentTimelineScrollTop = mainColumn.value.scrollTop
+  }
+  if (typeof window !== 'undefined' && window.scrollY > 0) {
+    currentWindowScrollTop = window.scrollY
+  }
+  if (currentTimelineScrollTop > 0) {
+    sessionStg.setItem(TIMELINE_SCROLL_KEY, String(currentTimelineScrollTop))
+  }
+  if (currentWindowScrollTop > 0) {
+    sessionStg.setItem(WINDOW_SCROLL_KEY, String(currentWindowScrollTop))
+  }
+}
 
-  timelineScrollRaf = window.requestAnimationFrame(() => {
-    timelineScrollRaf = null
-    if (isNavigatingAway.value || isRestoringScroll.value || !mainColumn.value) return
-    const top = mainColumn.value.scrollTop
-    if (top > 0) {
-      sessionStg.setItem(TIMELINE_SCROLL_KEY, String(top))
-    }
-  })
+const scheduleScrollSave = () => {
+  if (scrollDebounceTimer !== null) {
+    clearTimeout(scrollDebounceTimer)
+  }
+  scrollDebounceTimer = setTimeout(flushScrollPositions, 200)
+}
+
+const saveTimelineScrollPosition = () => {
+  if (isNavigatingAway.value || isRestoringScroll.value || !mainColumn.value) return
+  currentTimelineScrollTop = mainColumn.value.scrollTop
+  scheduleScrollSave()
 }
 
 const saveWindowScrollPosition = () => {
-  if (isNavigatingAway.value || isRestoringScroll.value || windowScrollRaf !== null) return
-  windowScrollRaf = window.requestAnimationFrame(() => {
-    windowScrollRaf = null
-    if (isNavigatingAway.value || isRestoringScroll.value) return
-    const top = window.scrollY
-    if (top > 0) {
-      sessionStg.setItem(WINDOW_SCROLL_KEY, String(top))
-    }
-  })
+  if (isNavigatingAway.value || isRestoringScroll.value || typeof window === 'undefined') return
+  currentWindowScrollTop = window.scrollY
+  scheduleScrollSave()
 }
 
 const bindScrollListeners = () => {
@@ -194,6 +202,7 @@ const bindScrollListeners = () => {
 }
 
 const unbindScrollListeners = () => {
+  flushScrollPositions()
   if (!scrollListenersBound) return
   if (typeof window !== 'undefined') {
     window.removeEventListener('scroll', saveWindowScrollPosition)
@@ -201,13 +210,9 @@ const unbindScrollListeners = () => {
   if (mainColumn.value) {
     mainColumn.value.removeEventListener('scroll', saveTimelineScrollPosition)
   }
-  if (timelineScrollRaf !== null) {
-    window.cancelAnimationFrame(timelineScrollRaf)
-    timelineScrollRaf = null
-  }
-  if (windowScrollRaf !== null) {
-    window.cancelAnimationFrame(windowScrollRaf)
-    windowScrollRaf = null
+  if (scrollDebounceTimer !== null) {
+    clearTimeout(scrollDebounceTimer)
+    scrollDebounceTimer = null
   }
   scrollListenersBound = false
 }
@@ -287,12 +292,7 @@ const prefetchHeavyChunks = () => {
 
 onBeforeRouteLeave(() => {
   isNavigatingAway.value = true
-  if (mainColumn.value && mainColumn.value.scrollTop > 0) {
-    sessionStg.setItem(TIMELINE_SCROLL_KEY, String(mainColumn.value.scrollTop))
-  }
-  if (typeof window !== 'undefined' && window.scrollY > 0) {
-    sessionStg.setItem(WINDOW_SCROLL_KEY, String(window.scrollY))
-  }
+  flushScrollPositions()
 })
 
 onMounted(async () => {
@@ -317,12 +317,7 @@ onMounted(async () => {
 
 onDeactivated(() => {
   isNavigatingAway.value = true
-  if (mainColumn.value && mainColumn.value.scrollTop > 0) {
-    sessionStg.setItem(TIMELINE_SCROLL_KEY, String(mainColumn.value.scrollTop))
-  }
-  if (typeof window !== 'undefined' && window.scrollY > 0) {
-    sessionStg.setItem(WINDOW_SCROLL_KEY, String(window.scrollY))
-  }
+  flushScrollPositions()
   unbindScrollListeners()
   window.removeEventListener('keydown', handleGlobalKeydown)
 })

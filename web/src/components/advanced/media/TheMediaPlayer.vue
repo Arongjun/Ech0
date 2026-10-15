@@ -13,14 +13,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent } from 'vue'
+import { computed } from 'vue'
 import { getEchoFiles } from '@/utils/echo'
 import { pairEchoFiles } from '@/utils/livephoto'
 import { getHubFileUrl, getFileUrl } from '@/utils/other'
 import TheAudioPlayer from './audio/TheAudioPlayer.vue'
 import TheVideoPlayer from './video/TheVideoPlayer.vue'
-
-const TheImageGallery = defineAsyncComponent(() => import('./image/TheImageGallery.vue'))
+import TheImageGallery from './image/TheImageGallery.vue'
 
 const props = withDefaults(
   defineProps<{

@@ -155,7 +155,7 @@ describe('useMediaFancybox', () => {
     expect(slides[0].caption).toBe('Custom')
   })
 
-  it('renders live photo items as custom html slides with has-livephoto class', () => {
+  it('renders live photo items as unified image slides with has-livephoto class and videoSrc', () => {
     const wrapper = mount(
       defineComponent({
         setup() {
@@ -179,12 +179,12 @@ describe('useMediaFancybox', () => {
 
     expect(mockFancyboxShow).toHaveBeenCalledTimes(1)
     const [slides] = mockFancyboxShow.mock.calls[0] as [Array<Record<string, unknown>>]
-    expect(slides[0].type).toBe('html')
+    expect(slides[0].type).toBe('image')
     expect(slides[0].class).toBe('has-livephoto')
+    expect(slides[0].isLivePhoto).toBe(true)
+    expect(slides[0].videoSrc).toBe('https://example.com/live.mov')
     expect(slides[0].thumbSrc).toBe('https://example.com/live-thumb.png')
-    expect(String(slides[0].html)).toContain('fancybox-livephoto-container')
-    expect(String(slides[0].html)).toContain('https://example.com/live.mov')
-    expect(String(slides[0].html)).toContain('https://example.com/live.png')
+    expect(slides[0].src).toBe('https://example.com/live.png')
   })
 })
 

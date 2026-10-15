@@ -202,7 +202,11 @@ router.beforeEach(async (to) => {
   const userStore = useUserStore()
 
   if (!initStore.ready) {
-    await withTimeout(initStore.init().catch(() => undefined), 1500, undefined)
+    await withTimeout(
+      initStore.init().catch(() => undefined),
+      1500,
+      undefined,
+    )
   }
 
   const isInitReady =
@@ -220,7 +224,11 @@ router.beforeEach(async (to) => {
 
   if (to.meta.requiresAuth) {
     if (!userStore.initialized) {
-      await withTimeout(userStore.init().catch(() => undefined), 2000, undefined)
+      await withTimeout(
+        userStore.init().catch(() => undefined),
+        2000,
+        undefined,
+      )
     }
     if (!userStore.isLogin) {
       return { name: 'auth' }
