@@ -92,21 +92,21 @@ const handleClick = (event: MouseEvent) => {
   gap: 4px;
   padding: 3px 7px;
   border-radius: 9999px;
-  background: rgb(0 0 0 / 55%);
-  backdrop-filter: blur(4px);
+  background: rgb(0 0 0 / 68%);
   color: #fff;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.05em;
   pointer-events: none;
   z-index: 3;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
   transition:
     opacity 0.2s ease,
     background 0.2s ease;
 }
 
 button:hover .livephoto-badge {
-  background: rgb(0 0 0 / 72%);
+  background: rgb(0 0 0 / 82%);
 }
 
 @media (width <= 480px) {
@@ -126,11 +126,6 @@ button:hover .livephoto-badge {
 
 .echoimg {
   border-radius: 8px;
-  box-shadow:
-    0 1px 2px rgb(0 0 0 / 2%),
-    0 2px 4px rgb(0 0 0 / 2%),
-    0 4px 8px rgb(0 0 0 / 2%),
-    0 8px 16px rgb(0 0 0 / 2%);
 }
 
 .gallery-image-frame {

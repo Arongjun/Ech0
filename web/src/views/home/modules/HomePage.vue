@@ -171,10 +171,8 @@ const flushScrollPositions = () => {
 }
 
 const scheduleScrollSave = () => {
-  if (isRestoringScroll.value) return
-  if (scrollDebounceTimer !== null) {
-    clearTimeout(scrollDebounceTimer)
-  }
+  if (isRestoringScroll.value || isNavigatingAway.value) return
+  if (scrollDebounceTimer !== null) return
   scrollDebounceTimer = setTimeout(flushScrollPositions, 150)
 }
 

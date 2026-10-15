@@ -25,7 +25,7 @@
         :class="{ 'is-loaded': isLoaded(idx) }"
         :src="posterSrc(item.src)"
         :aria-label="t('videoPlayer.play')"
-        preload="metadata"
+        preload="none"
         muted
         playsinline
         tabindex="-1"
@@ -479,10 +479,9 @@ function open(idx: number, event?: MouseEvent) {
   letter-spacing: 0.02em;
   line-height: 1.4;
   color: #fff;
-  background: rgb(0 0 0 / 42%);
+  background: rgb(0 0 0 / 65%);
   border: 1px solid rgb(255 255 255 / 20%);
   border-radius: var(--radius-sm);
-  backdrop-filter: blur(6px);
   pointer-events: none;
 
   opacity: 1;
@@ -516,10 +515,9 @@ function open(idx: number, event?: MouseEvent) {
   letter-spacing: 0.02em;
   line-height: 1.4;
   color: #fff;
-  background: rgb(0 0 0 / 42%);
+  background: rgb(0 0 0 / 65%);
   border: 1px solid rgb(255 255 255 / 20%);
   border-radius: var(--radius-sm);
-  backdrop-filter: blur(6px);
   cursor: pointer;
 
   opacity: 0;
