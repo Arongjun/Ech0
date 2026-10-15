@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
-  <div class="py-4">
+  <div class="pt-0.5 pb-2">
     <h2 class="text-[var(--color-text-secondary)] font-bold mb-2">
       {{ t('editor.tagManagerTitle') }}
     </h2>

@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
-  <div class="hub-flip-wrapper w-full max-w-sm mx-auto my-3 select-none">
+  <div class="hub-flip-wrapper w-full mx-auto mb-3 mt-0.5 select-none">
     <div
       class="hub-flip-card relative w-full transition-transform duration-600"
       :class="{ 'is-flipped': props.worldMode === 'peer' }"

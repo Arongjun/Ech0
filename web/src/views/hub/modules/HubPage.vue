@@ -2,9 +2,18 @@
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
   <div
-    class="w-full px-2 pb-4 py-2 mt-4 sm:mt-0 mb-10 sm:mb-0 mx-auto flex justify-center items-start"
+    class="w-full mx-auto"
+    :class="
+      embedded
+        ? 'px-0 py-0 mt-0 mb-4'
+        : 'px-2 pb-4 py-2 mt-4 sm:mt-0 mb-10 sm:mb-0 flex justify-center items-start'
+    "
   >
-    <div ref="mainColumn" class="mx-auto px-2 text-[var(--color-text-muted)] w-full">
+    <div
+      ref="mainColumn"
+      class="w-full text-[var(--color-text-muted)]"
+      :class="embedded ? 'px-0' : 'mx-auto px-2'"
+    >
       <template v-if="!embedded">
         <h1
           class="text-4xl md:text-6xl italic font-bold font-serif text-center text-[var(--color-text-muted)]"
@@ -56,7 +65,7 @@
             ]"
             :data-index="index"
           >
-            <div class="hub-item-wrap flex justify-center items-center py-3">
+            <div class="hub-item-wrap w-full flex justify-center items-center mb-3">
               <TheHubEcho :echo="item" />
             </div>
           </DynamicScrollerItem>
@@ -67,7 +76,7 @@
         <div
           v-for="item in echoList"
           :key="item.virtual_key"
-          class="hub-item-wrap flex justify-center items-center py-3"
+          class="hub-item-wrap w-full flex justify-center items-center mb-3"
         >
           <TheHubEcho :echo="item" />
         </div>
