@@ -234,23 +234,64 @@ const restoreTimelineScrollPosition = async () => {
 
     const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 820
 
-    // Step 1: Immediate rough restoration (if window/timeline is not already at target)
-    if (isDesktop && mainColumn.value && Number.isFinite(timelineTop) && timelineTop > 0) {
-      if (Math.abs(mainColumn.value.scrollTop - timelineTop) > 2) {
-        mainColumn.value.scrollTop = timelineTop
-      }
-    } else if (
-      !isDesktop &&
-      typeof window !== 'undefined' &&
-      Number.isFinite(windowTop) &&
-      windowTop > 0
-    ) {
-      if (Math.abs(window.scrollY - windowTop) > 2) {
-        window.scrollTo({ top: windowTop, behavior: 'instant' as ScrollBehavior })
+    // Step 1: If an active card was clicked, align directly to that card's exact viewport top
+    let alignedToCard = false
+
+    if (lastEchoId) {
+      const cardEl =
+        document.getElementById(`echo-${lastEchoId}`) ||
+        (document.querySelector(`[data-echo-id="${lastEchoId}"]`) as HTMLElement | null)
+
+      if (cardEl) {
+        let targetTop: number | null = null
+        if (savedViewportTop !== null && Number.isFinite(savedViewportTop)) {
+          targetTop = savedViewportTop
+        } else if (savedViewportRatio !== null && Number.isFinite(savedViewportRatio)) {
+          const vh = window.innerHeight || document.documentElement.clientHeight || 1
+          targetTop = Math.round(savedViewportRatio * vh)
+        } else {
+          targetTop = Math.round((window.innerHeight || 800) * 0.1)
+        }
+
+        if (targetTop !== null) {
+          if (isDesktop && mainColumn.value) {
+            const colRect = mainColumn.value.getBoundingClientRect()
+            const cardRect = cardEl.getBoundingClientRect()
+            const currentScrollTop = mainColumn.value.scrollTop
+            const cardOffsetInCol = cardRect.top - colRect.top + currentScrollTop
+            const targetScrollTop = Math.max(0, Math.round(cardOffsetInCol - targetTop))
+            mainColumn.value.scrollTop = targetScrollTop
+            alignedToCard = true
+          } else if (typeof window !== 'undefined') {
+            const cardRect = cardEl.getBoundingClientRect()
+            const cardDocTop = cardRect.top + window.scrollY
+            const targetScrollY = Math.max(0, Math.round(cardDocTop - targetTop))
+            window.scrollTo({ top: targetScrollY, behavior: 'instant' as ScrollBehavior })
+            alignedToCard = true
+          }
+        }
       }
     }
 
-    // Step 2: Element-level fine-alignment after DOM settles on next animation frame
+    // Step 2: If no active card or card not in DOM, restore rough window/timeline scroll
+    if (!alignedToCard) {
+      if (isDesktop && mainColumn.value && Number.isFinite(timelineTop) && timelineTop > 0) {
+        if (Math.abs(mainColumn.value.scrollTop - timelineTop) > 2) {
+          mainColumn.value.scrollTop = timelineTop
+        }
+      } else if (
+        !isDesktop &&
+        typeof window !== 'undefined' &&
+        Number.isFinite(windowTop) &&
+        windowTop > 0
+      ) {
+        if (Math.abs(window.scrollY - windowTop) > 2) {
+          window.scrollTo({ top: windowTop, behavior: 'instant' as ScrollBehavior })
+        }
+      }
+    }
+
+    // Step 3: Wait 1 animation frame for any async layout/reflow and do fine-alignment
     if (lastEchoId) {
       await new Promise((resolve) => window.requestAnimationFrame(resolve))
 
@@ -270,8 +311,7 @@ const restoreTimelineScrollPosition = async () => {
         if (targetTop !== null) {
           const currentRect = cardEl.getBoundingClientRect()
           const delta = Math.round(currentRect.top - targetTop)
-          // Avoid layout thrashing: only adjust for small layout shifts (between 6px and 120px)
-          if (Math.abs(delta) >= 6 && Math.abs(delta) <= 120) {
+          if (Math.abs(delta) >= 2) {
             if (isDesktop && mainColumn.value) {
               mainColumn.value.scrollTop += delta
             } else if (typeof window !== 'undefined') {
