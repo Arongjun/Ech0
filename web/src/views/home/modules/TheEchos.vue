@@ -22,7 +22,7 @@
     <Transition name="fade">
       <div
         v-if="!echoStore.isLoading && echoStore.total > 0 && echoStore.totalPages > 1"
-        class="echos-toolbar mb-2 mt-1 -ml-1 flex items-center justify-between"
+        class="echos-toolbar mb-2 mt-2 px-1 sm:px-2 flex items-center justify-between"
       >
         <button
           v-if="canGoOlder"
