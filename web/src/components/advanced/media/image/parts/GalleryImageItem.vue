@@ -75,6 +75,8 @@ const effectiveLoading = computed(() => (props.priority ? 'eager' : props.loadin
 const isLive = computed(() => isLivePhoto(props.image))
 
 const handleClick = (event: MouseEvent) => {
+  event.stopPropagation()
+  event.preventDefault()
   const sourceElement = event.currentTarget
   emit('click', sourceElement instanceof HTMLElement ? sourceElement : null)
 }

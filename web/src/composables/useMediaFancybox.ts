@@ -2,6 +2,7 @@
 // Copyright (C) 2025-2026 lin-snow
 
 import { onBeforeUnmount, ref, shallowRef, unref, type MaybeRef } from 'vue'
+import router from '@/router'
 import {
   Fancybox,
   type CarouselSlide,
@@ -85,13 +86,14 @@ type FancyboxSlideElement = CarouselSlide & LivePhotoSlideData
 
 const playLiveVideo = async (video: HTMLVideoElement, slideEl?: HTMLElement | null) => {
   try {
-    slideEl?.classList.add('is-playing', 'zoom')
     video.currentTime = 0
     await video.play()
+    slideEl?.classList.add('is-playing', 'zoom')
   } catch {
     try {
       video.muted = true
       await video.play()
+      slideEl?.classList.add('is-playing', 'zoom')
     } catch (err) {
       console.warn('Live photo video play error:', err)
       slideEl?.classList.remove('is-playing', 'zoom')
@@ -144,7 +146,7 @@ function initLivePhotoInteraction(slide: FancyboxSlideElement, shouldAutoPlay = 
         video = document.createElement('video')
         video.className = 'livephoto-video'
         video.src = String(slide.videoSrc)
-        video.preload = 'auto'
+        video.preload = 'metadata'
         video.muted = true
         video.playsInline = true
         video.setAttribute('webkit-playsinline', 'true')
@@ -356,10 +358,16 @@ function initLivePhotoInteraction(slide: FancyboxSlideElement, shouldAutoPlay = 
         video.removeEventListener('ended', handleVideoEnded)
         video.removeEventListener('contextmenu', preventContextMenu)
         if (icon) icon.removeEventListener('contextmenu', preventContextMenu)
-        video.pause()
-        video.src = ''
+        try {
+          video.pause()
+          video.removeAttribute('src')
+          video.load()
+        } catch {
+          // ignore
+        }
         video.remove()
         controlWrapper?.remove()
+        el.classList.remove('is-playing', 'zoom')
         slide.livePhotoInitialized = false
         slide.livePhotoVideo = null
       }
@@ -384,11 +392,14 @@ function cleanupLivePhoto(slide: FancyboxSlideElement): void {
   if (slide?.livePhotoCleanup) {
     try {
       slide.livePhotoCleanup()
-      slide.livePhotoCleanup = null
     } catch {
       // ignore
     }
   }
+  slide.livePhotoCleanup = null
+  slide.livePhotoPause = null
+  slide.livePhotoInitialized = false
+  slide.livePhotoVideo = null
 }
 
 export function useMediaFancybox(
@@ -396,6 +407,9 @@ export function useMediaFancybox(
   options?: UseMediaFancyboxOptions,
 ) {
   const activeInstance = shallowRef<ReturnType<typeof Fancybox.show> | null>(null)
+
+  const unregisterRouterHook =
+    typeof router?.afterEach === 'function' ? router.afterEach(() => close()) : null
 
   const close = () => {
     try {
@@ -472,6 +486,7 @@ export function useMediaFancybox(
 
     try {
       const fancyboxOptions: Partial<FancyboxOptions> = {
+        Hash: false,
         theme: options?.theme || 'auto',
         zoomEffect: options?.zoomEffect ?? false,
         fadeEffect: true,
@@ -517,34 +532,39 @@ export function useMediaFancybox(
               typeof fancybox.getSlide === 'function'
                 ? (fancybox.getSlide()?.index ?? startIndex)
                 : startIndex
-            carousel.getSlides().forEach((slide: CarouselSlide, index: number) => {
-              const liveSlide = slide as FancyboxSlideElement
-              if (liveSlide.isLivePhoto) {
-                initLivePhotoInteraction(liveSlide, index === curIndex)
-              }
-            })
+
+            // Only initialize the active slide to avoid exhausting mobile WebKit decoders
+            const curSlide = carousel.getSlides()[curIndex] as FancyboxSlideElement
+            if (curSlide?.isLivePhoto) {
+              initLivePhotoInteraction(curSlide, true)
+            }
+
             carousel.on('contentReady', (_c: CarouselInstance, slide: CarouselSlide) => {
               const liveSlide = slide as FancyboxSlideElement
               if (liveSlide?.isLivePhoto) {
-                const isCur =
-                  typeof fancybox.getSlide === 'function'
-                    ? fancybox.getSlide()?.index === liveSlide.index
-                    : liveSlide.index === curIndex
-                initLivePhotoInteraction(liveSlide, isCur)
+                const activeSlide =
+                  typeof fancybox.getSlide === 'function' ? fancybox.getSlide() : null
+                const isCur = activeSlide
+                  ? activeSlide.index === liveSlide.index
+                  : liveSlide.index === curIndex
+                if (isCur) {
+                  initLivePhotoInteraction(liveSlide, true)
+                }
               }
             })
+
             carousel.on('change', (c: CarouselInstance, to: number, from?: number) => {
               if (from !== undefined) {
                 const prevSlide = c.getSlides()[from] as FancyboxSlideElement
-                if (prevSlide?.livePhotoPause) {
-                  prevSlide.livePhotoPause()
+                if (prevSlide?.isLivePhoto) {
+                  cleanupLivePhoto(prevSlide)
                 }
               }
               const curSlide = c.getSlides()[to] as FancyboxSlideElement
               if (curSlide?.isLivePhoto) {
                 setTimeout(() => {
                   initLivePhotoInteraction(curSlide, true)
-                }, 50)
+                }, 60)
               }
             })
           },
@@ -569,6 +589,7 @@ export function useMediaFancybox(
   }
 
   onBeforeUnmount(() => {
+    unregisterRouterHook?.()
     close()
   })
 

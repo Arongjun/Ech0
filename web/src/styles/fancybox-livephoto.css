@@ -22,15 +22,15 @@
   background: transparent;
 }
 
-/* 2. Play state: show video, hide static image underneath */
+/* 2. Play state: show video on top of static image without hiding the photo */
 .has-livephoto.is-playing .livephoto-video,
 .has-livephoto.zoom .livephoto-video {
   opacity: 1 !important;
 }
 
-.has-livephoto.is-playing img.f-panzoom__content,
-.has-livephoto.zoom img.f-panzoom__content {
-  opacity: 0 !important;
+.has-livephoto img.f-panzoom__content {
+  position: relative;
+  z-index: 1;
 }
 
 /* Hide native controls */
