@@ -121,6 +121,8 @@ const mainColumn = ref<HTMLElement | null>(null)
 const TIMELINE_SCROLL_KEY = 'home:timeline:scrollTop'
 const WINDOW_SCROLL_KEY = 'home:window:scrollTop'
 const LAST_ACTIVE_ECHO_KEY = 'home:lastActiveEchoId'
+const LAST_ACTIVE_VIEWPORT_TOP_KEY = 'home:lastActiveEcho:viewportTop'
+const LAST_ACTIVE_VIEWPORT_RATIO_KEY = 'home:lastActiveEcho:viewportRatio'
 let currentTimelineScrollTop = 0
 let currentWindowScrollTop = 0
 let scrollDebounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -157,11 +159,13 @@ const flushScrollPositions = () => {
     clearTimeout(scrollDebounceTimer)
     scrollDebounceTimer = null
   }
+  if (isRestoringScroll.value) return
+
   if (mainColumn.value && mainColumn.value.scrollTop > 0) {
-    currentTimelineScrollTop = mainColumn.value.scrollTop
+    currentTimelineScrollTop = Math.round(mainColumn.value.scrollTop)
   }
   if (typeof window !== 'undefined' && window.scrollY > 0) {
-    currentWindowScrollTop = window.scrollY
+    currentWindowScrollTop = Math.round(window.scrollY)
   }
   if (currentTimelineScrollTop > 0) {
     sessionStg.setItem(TIMELINE_SCROLL_KEY, String(currentTimelineScrollTop))
@@ -172,21 +176,22 @@ const flushScrollPositions = () => {
 }
 
 const scheduleScrollSave = () => {
+  if (isRestoringScroll.value) return
   if (scrollDebounceTimer !== null) {
     clearTimeout(scrollDebounceTimer)
   }
-  scrollDebounceTimer = setTimeout(flushScrollPositions, 200)
+  scrollDebounceTimer = setTimeout(flushScrollPositions, 150)
 }
 
 const saveTimelineScrollPosition = () => {
   if (isNavigatingAway.value || isRestoringScroll.value || !mainColumn.value) return
-  currentTimelineScrollTop = mainColumn.value.scrollTop
+  currentTimelineScrollTop = Math.round(mainColumn.value.scrollTop)
   scheduleScrollSave()
 }
 
 const saveWindowScrollPosition = () => {
   if (isNavigatingAway.value || isRestoringScroll.value || typeof window === 'undefined') return
-  currentWindowScrollTop = window.scrollY
+  currentWindowScrollTop = Math.round(window.scrollY)
   scheduleScrollSave()
 }
 
@@ -202,7 +207,9 @@ const bindScrollListeners = () => {
 }
 
 const unbindScrollListeners = () => {
-  flushScrollPositions()
+  if (!isRestoringScroll.value) {
+    flushScrollPositions()
+  }
   if (!scrollListenersBound) return
   if (typeof window !== 'undefined') {
     window.removeEventListener('scroll', saveWindowScrollPosition)
@@ -225,54 +232,78 @@ const restoreTimelineScrollPosition = async () => {
     const rawWindow = sessionStg.getItem(WINDOW_SCROLL_KEY)
     const windowTop = rawWindow ? Number(rawWindow) : 0
     const lastEchoId = sessionStg.getItem(LAST_ACTIVE_ECHO_KEY)
+    const rawViewportTop = sessionStg.getItem(LAST_ACTIVE_VIEWPORT_TOP_KEY)
+    const savedViewportTop =
+      rawViewportTop !== null && rawViewportTop !== undefined ? Number(rawViewportTop) : null
+    const rawViewportRatio = sessionStg.getItem(LAST_ACTIVE_VIEWPORT_RATIO_KEY)
+    const savedViewportRatio =
+      rawViewportRatio !== null && rawViewportRatio !== undefined ? Number(rawViewportRatio) : null
+
+    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 820
+
+    // Step 1: Immediate rough restoration
+    if (isDesktop && mainColumn.value && Number.isFinite(timelineTop) && timelineTop > 0) {
+      mainColumn.value.scrollTop = timelineTop
+    } else if (!isDesktop && typeof window !== 'undefined' && Number.isFinite(windowTop) && windowTop > 0) {
+      window.scrollTo({ top: windowTop, behavior: 'instant' as ScrollBehavior })
+    }
 
     await nextTick()
     await new Promise((resolve) => window.requestAnimationFrame(resolve))
 
-    let restored = false
-
-    if (mainColumn.value && Number.isFinite(timelineTop) && timelineTop > 0) {
-      mainColumn.value.scrollTop = timelineTop
-      restored = true
-    }
-    if (typeof window !== 'undefined' && Number.isFinite(windowTop) && windowTop > 0) {
-      window.scrollTo({ top: windowTop, behavior: 'instant' as ScrollBehavior })
-      restored = true
-    }
-
-    if (lastEchoId) {
+    // Step 2: Accurate element-level alignment
+    const alignActiveCard = (): boolean => {
+      if (!lastEchoId) return false
       const cardEl =
         document.getElementById(`echo-${lastEchoId}`) ||
         (document.querySelector(`[data-echo-id="${lastEchoId}"]`) as HTMLElement | null)
-      if (cardEl) {
-        if (!restored) {
-          cardEl.scrollIntoView({ block: 'center', behavior: 'instant' })
-          restored = true
+      if (!cardEl) return false
+
+      let targetTop: number | null = null
+      if (savedViewportTop !== null && Number.isFinite(savedViewportTop)) {
+        targetTop = savedViewportTop
+      } else if (savedViewportRatio !== null && Number.isFinite(savedViewportRatio)) {
+        const vh = window.innerHeight || document.documentElement.clientHeight || 1
+        targetTop = Math.round(savedViewportRatio * vh)
+      }
+
+      if (targetTop !== null) {
+        const currentRect = cardEl.getBoundingClientRect()
+        const delta = Math.round(currentRect.top - targetTop)
+        if (Math.abs(delta) > 1) {
+          if (isDesktop && mainColumn.value) {
+            mainColumn.value.scrollTop += delta
+          } else if (typeof window !== 'undefined') {
+            window.scrollBy({ top: delta, behavior: 'instant' as ScrollBehavior })
+          }
         }
+        return true
+      } else {
+        cardEl.scrollIntoView({ block: 'center', behavior: 'instant' })
+        return true
       }
     }
 
-    await new Promise((resolve) => window.requestAnimationFrame(resolve))
-    if (
-      mainColumn.value &&
-      Number.isFinite(timelineTop) &&
-      timelineTop > 0 &&
-      Math.abs(mainColumn.value.scrollTop - timelineTop) > 10
-    ) {
-      mainColumn.value.scrollTop = timelineTop
+    const aligned = alignActiveCard()
+
+    if (!aligned) {
+      if (isDesktop && mainColumn.value && Number.isFinite(timelineTop) && timelineTop > 0) {
+        mainColumn.value.scrollTop = timelineTop
+      } else if (!isDesktop && typeof window !== 'undefined' && Number.isFinite(windowTop) && windowTop > 0) {
+        window.scrollTo({ top: windowTop, behavior: 'instant' as ScrollBehavior })
+      }
     }
-    if (
-      typeof window !== 'undefined' &&
-      Number.isFinite(windowTop) &&
-      windowTop > 0 &&
-      Math.abs(window.scrollY - windowTop) > 10
-    ) {
-      window.scrollTo({ top: windowTop, behavior: 'instant' as ScrollBehavior })
+
+    // Step 3: Second pass on next frame to compensate for any font/image layout reflow
+    await new Promise((resolve) => window.requestAnimationFrame(resolve))
+    if (lastEchoId) {
+      alignActiveCard()
     }
   } finally {
-    window.requestAnimationFrame(() => {
+    await new Promise((resolve) => window.requestAnimationFrame(resolve))
+    window.setTimeout(() => {
       isRestoringScroll.value = false
-    })
+    }, 100)
   }
 }
 
@@ -290,9 +321,21 @@ const prefetchHeavyChunks = () => {
   }
 }
 
+watch(activeTab, (tab, prevTab) => {
+  if (tab === 'home' && prevTab !== 'home') {
+    void restoreTimelineScrollPosition()
+  } else if (prevTab === 'home' && tab !== 'home') {
+    if (!isRestoringScroll.value) {
+      flushScrollPositions()
+    }
+  }
+})
+
 onBeforeRouteLeave(() => {
   isNavigatingAway.value = true
-  flushScrollPositions()
+  if (!isRestoringScroll.value) {
+    flushScrollPositions()
+  }
 })
 
 onMounted(async () => {
@@ -317,16 +360,19 @@ onMounted(async () => {
 
 onDeactivated(() => {
   isNavigatingAway.value = true
-  flushScrollPositions()
+  if (!isRestoringScroll.value) {
+    flushScrollPositions()
+  }
   unbindScrollListeners()
   window.removeEventListener('keydown', handleGlobalKeydown)
 })
 
 onActivated(() => {
   isNavigatingAway.value = false
-  bindScrollListeners()
   window.addEventListener('keydown', handleGlobalKeydown)
-  void restoreTimelineScrollPosition()
+  void restoreTimelineScrollPosition().finally(() => {
+    bindScrollListeners()
+  })
 })
 
 onBeforeUnmount(() => {

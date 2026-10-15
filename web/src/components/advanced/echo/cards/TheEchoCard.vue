@@ -243,20 +243,38 @@ const handleUpdateEcho = async () => {
   })
 }
 
-const handleExpandEcho = (echoId: string) => {
-  sessionStg.setItem('home:lastActiveEchoId', echoId)
-  if (typeof window !== 'undefined') {
-    if (window.scrollY > 0) {
-      sessionStg.setItem('home:window:scrollTop', String(window.scrollY))
+const handleExpandEcho = (echoId: string | number) => {
+  const normalizedId = String(echoId ?? '').trim()
+  if (!normalizedId) return
+
+  try {
+    sessionStg.setItem('home:lastActiveEchoId', normalizedId)
+
+    const cardEl =
+      document.getElementById(`echo-${normalizedId}`) ||
+      (document.querySelector(`[data-echo-id="${normalizedId}"]`) as HTMLElement | null)
+
+    if (cardEl) {
+      const rect = cardEl.getBoundingClientRect()
+      sessionStg.setItem('home:lastActiveEcho:viewportTop', String(Math.round(rect.top)))
+      const vh = window.innerHeight || document.documentElement.clientHeight || 1
+      sessionStg.setItem('home:lastActiveEcho:viewportRatio', String((rect.top / vh).toFixed(4)))
     }
-    const mainCol = document.querySelector('.home-main') as HTMLElement | null
-    if (mainCol && mainCol.scrollTop > 0) {
-      sessionStg.setItem('home:timeline:scrollTop', String(mainCol.scrollTop))
+
+    if (typeof window !== 'undefined') {
+      sessionStg.setItem('home:window:scrollTop', String(Math.round(window.scrollY)))
+      const mainCol = document.querySelector('.home-main') as HTMLElement | null
+      if (mainCol) {
+        sessionStg.setItem('home:timeline:scrollTop', String(Math.round(mainCol.scrollTop)))
+      }
     }
+  } catch (err) {
+    console.warn('Failed to save echo position state:', err)
   }
+
   router.push({
     name: 'echo',
-    params: { echoId: echoId },
+    params: { echoId: normalizedId },
   })
 }
 

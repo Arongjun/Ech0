@@ -132,8 +132,8 @@ const router = useRouter()
 const { t } = useI18n()
 
 const goBack = () => {
-  if (window.history.length > 2) {
-    window.history.back()
+  if (window.history.length > 1) {
+    router.back()
   } else {
     router.push({ name: 'home' })
   }

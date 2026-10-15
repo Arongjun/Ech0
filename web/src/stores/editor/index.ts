@@ -76,6 +76,10 @@ export const useEditorStore = defineStore('editorStore', () => {
     echoStore.filteredTag = null
     echoStore.isFilteringMode = false
     sessionStg.removeItem(HOME_TIMELINE_SCROLL_KEY)
+    sessionStg.removeItem('home:window:scrollTop')
+    sessionStg.removeItem('home:lastActiveEchoId')
+    sessionStg.removeItem('home:lastActiveEcho:viewportTop')
+    sessionStg.removeItem('home:lastActiveEcho:viewportRatio')
   }
 
   const jumpToHomeTimeline = () => {

@@ -20,6 +20,10 @@ import { setupI18n } from './locales'
 
 import BaseDialog from '@/components/common/BaseDialog.vue'
 
+if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+  window.history.scrollRestoration = 'manual'
+}
+
 const appLoader = document.getElementById('app-loader')
 let loaderCleared = false
 const clearStartupLoader = () => {

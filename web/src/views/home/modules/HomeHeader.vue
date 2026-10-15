@@ -195,6 +195,8 @@ const handleGoExplore = async () => {
     sessionStg.removeItem('home:timeline:scrollTop')
     sessionStg.removeItem('home:window:scrollTop')
     sessionStg.removeItem('home:lastActiveEchoId')
+    sessionStg.removeItem('home:lastActiveEcho:viewportTop')
+    sessionStg.removeItem('home:lastActiveEcho:viewportRatio')
     return
   }
   await router.push({ name: 'home' })
