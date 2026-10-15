@@ -50,7 +50,7 @@
           <button
             type="button"
             class="hub-flip-btn flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 active:scale-95 transition-all shrink-0 cursor-pointer border-0"
-            :title="t('hub.switchToPeer')"
+            :title="t('hub.switchToPeerTitle')"
             @click.stop="emit('flip')"
           >
             <svg
@@ -67,7 +67,7 @@
               <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
               <path d="M16 21h5v-5" />
             </svg>
-            <span>{{ t('hub.flipWorld') }}</span>
+            <span>{{ t('hub.switchToPeer') }}</span>
           </button>
         </div>
 
@@ -151,7 +151,7 @@
           <button
             type="button"
             class="hub-flip-btn flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 active:scale-95 transition-all shrink-0 cursor-pointer border-0"
-            :title="t('hub.switchToGlobal')"
+            :title="t('hub.switchToGlobalTitle')"
             @click.stop="emit('flip')"
           >
             <svg
@@ -168,7 +168,7 @@
               <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
               <path d="M16 21h5v-5" />
             </svg>
-            <span>{{ t('hub.flipWorld') }}</span>
+            <span>{{ t('hub.switchToGlobal') }}</span>
           </button>
         </div>
 

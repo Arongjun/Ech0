@@ -303,15 +303,17 @@
     "loading": "Wird geladen…",
     "emptyConnectHint": "Noch keine Daten. Füge zuerst einen Connect hinzu.",
     "noMoreData": "Keine weiteren Daten",
-    "flipWorld": "Erkundungswelt umdrehen",
     "globalWorld": "Globaler Platz",
-    "peerWorld": "Peer-Verbindungen",
+    "peerWorld": "Gefolgte Seiten",
     "globalWorldDesc": "Durch alle öffentlichen Ech0-Knoten streifen",
-    "peerWorldDesc": "Aus Ihrem konfigurierten Peer-Netzwerk",
-    "switchToPeer": "Zur Peer-Welt wechseln",
-    "switchToGlobal": "Zum globalen Platz wechseln",
+    "peerWorldDesc": "Beiträge von Seiten, denen du folgst",
+    "switchToPeer": "Gefolgte Seiten",
+    "switchToPeerTitle": "Zu gefolgten Seiten wechseln",
+    "switchToGlobal": "Globaler Platz",
+    "switchToGlobalTitle": "Zum globalen Platz wechseln",
+    "exploreGlobal": "Globalen Platz erkunden",
     "activeNodes": "{count} Online-Knoten",
-    "noPeerHint": "Noch keine Peer-Knoten vorhanden. Drehen Sie um, um den globalen Platz zu erkunden, oder konfigurieren Sie Connects."
+    "noPeerHint": "Noch keine gefolgten Seiten vorhanden. Erkunde den globalen Platz oder füge Connect in den Einstellungen hinzu."
   },
   "systemLog": {
     "level": "Log-Level",

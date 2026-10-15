@@ -303,15 +303,17 @@
     "loading": "読み込み中...",
     "emptyConnectHint": "データはありません。Connect を追加しましょう",
     "noMoreData": "これ以上データはありません",
-    "flipWorld": "探索ワールドを反転",
     "globalWorld": "グローバル広場",
-    "peerWorld": "ピア接続",
+    "peerWorld": "フォロー一覧",
     "globalWorldDesc": "すべてのパブリックEch0ノードを巡る",
-    "peerWorldDesc": "設定されたピアネットワークから",
-    "switchToPeer": "ピアワールドに反転",
-    "switchToGlobal": "グローバル広場に反転",
+    "peerWorldDesc": "フォロー中のサイトからの投稿",
+    "switchToPeer": "フォロー一覧",
+    "switchToPeerTitle": "フォロー一覧へ切り替え",
+    "switchToGlobal": "全体広場",
+    "switchToGlobalTitle": "全体広場へ切り替え",
+    "exploreGlobal": "全体広場を探索",
     "activeNodes": "{count} 個のオンラインノード",
-    "noPeerHint": "ピアノードがありません。反転してグローバル広場を巡るか、設定でConnectを追加してください。"
+    "noPeerHint": "フォロー中のサイトがありません。全体広場を探索するか、設定でConnectを追加してください。"
   },
   "systemLog": {
     "level": "ログレベル",

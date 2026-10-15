@@ -98,7 +98,7 @@
           class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 active:scale-95 transition-all cursor-pointer border-0"
           @click="handleFlipWorld"
         >
-          {{ t('hub.switchToGlobal') }}
+          {{ t('hub.exploreGlobal') }}
         </button>
       </div>
 
