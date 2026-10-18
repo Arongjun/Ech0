@@ -13,6 +13,7 @@
             :apply-title="t('commonUi.done')"
             :cancel-title="t('commonUi.cancel')"
             :edit-title="t('commonUi.edit')"
+            :save-shortcut="false"
             @apply="accessTokenEdit = false"
             @toggle="accessTokenEdit = !accessTokenEdit"
           />
@@ -342,7 +343,7 @@ import Clipboard from '@/components/icons/clipboard.vue'
 import Trashbin from '@/components/icons/trashbin.vue'
 import Close from '@/components/icons/close.vue'
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSettingStore } from '@/stores'
 import { storeToRefs } from 'pinia'
@@ -634,9 +635,21 @@ const handleDeleteAccessToken = async (item: App.Api.Setting.AccessToken) => {
   })
 }
 
+const handleSaveShortcut = (event: KeyboardEvent) => {
+  if (!accessTokenEdit.value) return
+  if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return
+  if (event.key.toLowerCase() !== 's' && event.code !== 'KeyS') return
+
+  event.preventDefault()
+  if (event.isComposing || event.repeat || isSubmitting.value) return
+  void handleAddAccessToken()
+}
+
 onMounted(async () => {
+  window.addEventListener('keydown', handleSaveShortcut)
   await useSetting.getAllAccessTokens()
 })
+onBeforeUnmount(() => window.removeEventListener('keydown', handleSaveShortcut))
 </script>
 
 <style scoped></style>

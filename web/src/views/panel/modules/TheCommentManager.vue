@@ -18,7 +18,7 @@
           <BaseButton
             class="comment-btn comment-btn-primary whitespace-nowrap px-2.5 py-1 text-xs"
             @click="saveSetting"
-            :disabled="settingSaving"
+            :disabled="settingSaving || !settingLoaded"
           >
             {{ settingSaving ? t('common.saving') : t('common.save') }}
           </BaseButton>
@@ -339,7 +339,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, onBeforeUnmount, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -387,6 +387,7 @@ const setting = reactive<App.Api.Comment.SystemSetting>({
   },
 })
 const settingSaving = ref(false)
+const settingLoaded = ref(false)
 const testingEmail = ref(false)
 
 const query = reactive<App.Api.Comment.PanelListQuery>({
@@ -446,6 +447,7 @@ const loadSetting = async () => {
       ...(res.data.email_notify || {}),
       smtp_password: '',
     }
+    settingLoaded.value = true
   }
 }
 
@@ -594,9 +596,21 @@ const hotClass = (hot: boolean) => {
   return 'status-normal'
 }
 
+const handleSaveShortcut = (event: KeyboardEvent) => {
+  if (tab.value !== 'setting' || !settingLoaded.value) return
+  if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return
+  if (event.key.toLowerCase() !== 's' && event.code !== 'KeyS') return
+
+  event.preventDefault()
+  if (event.isComposing || event.repeat || settingSaving.value) return
+  void saveSetting()
+}
+
 onMounted(async () => {
+  window.addEventListener('keydown', handleSaveShortcut)
   await Promise.all([loadSetting(), loadList()])
 })
+onBeforeUnmount(() => window.removeEventListener('keydown', handleSaveShortcut))
 </script>
 
 <style scoped>
