@@ -279,11 +279,12 @@ import InfoIcon from '@/components/icons/info.vue'
 import Trashbin from '@/components/icons/trashbin.vue'
 import PanelCard from '@/layout/PanelCard.vue'
 import { useBaseDialog } from '@/composables/useBaseDialog'
+import { useSaveShortcut } from '@/composables/useSaveShortcut'
 import { fetchCreateWebhook, fetchDeleteWebhook, fetchUpdateWebhook } from '@/service/api'
 import { useSettingStore } from '@/stores'
 import { theToast } from '@/utils/toast'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 type FormMode = 'create' | 'edit'
@@ -520,21 +521,15 @@ const statusClass = (status: string) => {
   return 'status-unknown'
 }
 
-const handleSaveShortcut = (event: KeyboardEvent) => {
-  if (!isFormOpen.value) return
-  if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return
-  if (event.key.toLowerCase() !== 's' && event.code !== 'KeyS') return
-
-  event.preventDefault()
-  if (event.isComposing || event.repeat || formSubmitting.value) return
-  void submitForm()
-}
+useSaveShortcut({
+  active: () => isFormOpen.value,
+  busy: () => formSubmitting.value,
+  onSave: () => void submitForm(),
+})
 
 onMounted(async () => {
-  window.addEventListener('keydown', handleSaveShortcut)
   await refreshWebhooks()
 })
-onBeforeUnmount(() => window.removeEventListener('keydown', handleSaveShortcut))
 </script>
 
 <style scoped>

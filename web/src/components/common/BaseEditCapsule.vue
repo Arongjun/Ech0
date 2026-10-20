@@ -9,7 +9,7 @@
       type="button"
       v-tooltip="applyTooltip"
       :aria-label="applyTooltip"
-      aria-keyshortcuts="Control+S Meta+S"
+      :aria-keyshortcuts="saveShortcut ? 'Control+S Meta+S' : undefined"
       class="w-7 h-7 flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-border-subtle)] transition-colors duration-200"
       @click="$emit('apply')"
     >
@@ -29,10 +29,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted } from 'vue'
+import { computed } from 'vue'
 import Edit from '@/components/icons/edit.vue'
 import Close from '@/components/icons/close.vue'
 import Saveupdate from '@/components/icons/saveupdate.vue'
+import { useSaveShortcut } from '@/composables/useSaveShortcut'
+import { isMac } from '@/utils/platform'
 
 const props = withDefaults(
   defineProps<{
@@ -41,12 +43,14 @@ const props = withDefaults(
     cancelTitle?: string
     applyTitle?: string
     saveShortcut?: boolean
+    busy?: boolean
   }>(),
   {
     editTitle: '编辑',
     cancelTitle: '取消',
     applyTitle: '应用',
     saveShortcut: true,
+    busy: false,
   },
 )
 
@@ -55,34 +59,16 @@ const emit = defineEmits<{
   toggle: []
 }>()
 
-const isMac = typeof navigator !== 'undefined' && /mac|iphone|ipad|ipod/i.test(navigator.userAgent)
 const saveShortcutLabel = isMac ? '⌘S' : 'Ctrl+S'
 const applyTooltip = computed(() =>
   props.saveShortcut ? `${props.applyTitle} (${saveShortcutLabel})` : props.applyTitle,
 )
 
-// Stops a double-tap from submitting twice, without blocking a retry after a failed save.
-const SAVE_SHORTCUT_THROTTLE_MS = 500
-let lastApplyAt = 0
-
-const handleSaveShortcut = (event: KeyboardEvent) => {
-  if (!props.editing || !props.saveShortcut) return
-  if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return
-  if (event.key.toLowerCase() !== 's' && event.code !== 'KeyS') return
-
-  // Suppress the browser's "Save page" dialog.
-  event.preventDefault()
-  // An open IME composition has not reached v-model yet, so the value would be stale.
-  if (event.isComposing || event.repeat) return
-
-  const now = Date.now()
-  if (now - lastApplyAt < SAVE_SHORTCUT_THROTTLE_MS) return
-  lastApplyAt = now
-  emit('apply')
-}
-
-onMounted(() => window.addEventListener('keydown', handleSaveShortcut))
-onBeforeUnmount(() => window.removeEventListener('keydown', handleSaveShortcut))
+useSaveShortcut({
+  active: () => props.editing && props.saveShortcut,
+  busy: () => props.busy,
+  onSave: () => emit('apply'),
+})
 
 const handleSecondaryClick = () => {
   emit('toggle')

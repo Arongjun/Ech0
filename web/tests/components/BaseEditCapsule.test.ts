@@ -2,12 +2,13 @@
 // Copyright (C) 2025-2026 lin-snow
 
 import { mount, type VueWrapper } from '@vue/test-utils'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import BaseEditCapsule from '@/components/common/BaseEditCapsule.vue'
 
 type CapsuleProps = {
   editing?: boolean
   saveShortcut?: boolean
+  busy?: boolean
 }
 
 const wrappers: VueWrapper[] = []
@@ -25,7 +26,6 @@ const pressSave = (init: KeyboardEventInit = {}) => {
   const event = new KeyboardEvent('keydown', {
     key: 's',
     ctrlKey: true,
-    bubbles: true,
     cancelable: true,
     ...init,
   })
@@ -35,11 +35,10 @@ const pressSave = (init: KeyboardEventInit = {}) => {
 
 afterEach(() => {
   wrappers.splice(0).forEach((wrapper) => wrapper.unmount())
-  vi.restoreAllMocks()
 })
 
-describe('BaseEditCapsule Ctrl+S', () => {
-  it('emits apply and prevents the browser save dialog while editing', () => {
+describe('BaseEditCapsule save shortcut', () => {
+  it('emits apply and suppresses the browser save dialog while editing', () => {
     const wrapper = mountCapsule()
 
     const event = pressSave()
@@ -48,7 +47,7 @@ describe('BaseEditCapsule Ctrl+S', () => {
     expect(wrapper.emitted('apply')).toHaveLength(1)
   })
 
-  it('does nothing when not editing', () => {
+  it('stays inert when not editing', () => {
     const wrapper = mountCapsule({ editing: false })
 
     const event = pressSave()
@@ -65,42 +64,39 @@ describe('BaseEditCapsule Ctrl+S', () => {
     expect(wrapper.emitted('apply')).toHaveLength(1)
   })
 
-  it('ignores extra modifier keys', () => {
+  it('ignores extra modifiers, key repeat and IME composition', () => {
     const wrapper = mountCapsule()
 
     pressSave({ altKey: true })
     pressSave({ ctrlKey: true, shiftKey: true })
-
-    expect(wrapper.emitted('apply')).toBeUndefined()
-  })
-
-  it('ignores key repeat and IME composition', () => {
-    const wrapper = mountCapsule()
-
     pressSave({ repeat: true })
     pressSave({ isComposing: true })
 
     expect(wrapper.emitted('apply')).toBeUndefined()
   })
 
-  it('can opt out with saveShortcut=false', () => {
+  it('does not run while a save is in flight', () => {
+    const wrapper = mountCapsule({ busy: true })
+
+    const event = pressSave()
+
+    expect(event.defaultPrevented).toBe(true)
+    expect(wrapper.emitted('apply')).toBeUndefined()
+  })
+
+  it('can opt out and no longer advertises the shortcut', () => {
     const wrapper = mountCapsule({ saveShortcut: false })
 
     pressSave()
 
     expect(wrapper.emitted('apply')).toBeUndefined()
+    expect(wrapper.get('button').attributes('aria-keyshortcuts')).toBeUndefined()
   })
 
-  it('throttles rapid repeated presses', () => {
+  it('advertises the shortcut on the apply button', () => {
     const wrapper = mountCapsule()
-    const now = vi.spyOn(Date, 'now').mockReturnValue(1_000_000)
 
-    pressSave()
-    pressSave()
-    expect(wrapper.emitted('apply')).toHaveLength(1)
-
-    now.mockReturnValue(1_000_600)
-    pressSave()
-    expect(wrapper.emitted('apply')).toHaveLength(2)
+    expect(wrapper.get('button').attributes('aria-keyshortcuts')).toBe('Control+S Meta+S')
+    expect(wrapper.get('button').attributes('aria-label')).toMatch(/\((⌘S|Ctrl\+S)\)$/)
   })
 })

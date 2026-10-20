@@ -339,7 +339,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -362,6 +362,7 @@ import BaseSegmented from '@/components/common/BaseSegmented.vue'
 import BaseAvatar from '@/components/common/BaseAvatar.vue'
 import { theToast } from '@/utils/toast'
 import { formatDate } from '@/utils/other'
+import { useSaveShortcut } from '@/composables/useSaveShortcut'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -596,21 +597,15 @@ const hotClass = (hot: boolean) => {
   return 'status-normal'
 }
 
-const handleSaveShortcut = (event: KeyboardEvent) => {
-  if (tab.value !== 'setting' || !settingLoaded.value) return
-  if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return
-  if (event.key.toLowerCase() !== 's' && event.code !== 'KeyS') return
-
-  event.preventDefault()
-  if (event.isComposing || event.repeat || settingSaving.value) return
-  void saveSetting()
-}
+useSaveShortcut({
+  active: () => tab.value === 'setting' && settingLoaded.value,
+  busy: () => settingSaving.value,
+  onSave: () => void saveSetting(),
+})
 
 onMounted(async () => {
-  window.addEventListener('keydown', handleSaveShortcut)
   await Promise.all([loadSetting(), loadList()])
 })
-onBeforeUnmount(() => window.removeEventListener('keydown', handleSaveShortcut))
 </script>
 
 <style scoped>
