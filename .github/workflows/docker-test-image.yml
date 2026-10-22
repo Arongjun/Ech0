@@ -1,6 +1,8 @@
 name: Build Docker Test Image
 
 on:
+  push:
+    branches: [arong]
   workflow_dispatch:
     inputs:
       image_tag:
@@ -64,7 +66,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v7
         with:
-          go-version: "1.27.1"
+          go-version: "1.27.3"
           cache-dependency-path: "**/go.sum"
 
       - name: Set Go proxy
@@ -142,7 +144,9 @@ jobs:
             echo "tag=${TAG}"
             echo "tags<<EOF"
             echo "${IMAGE}:${TAG}"
-            echo "${IMAGE}:arong"
+            if [ "${TAG}" != "arong" ]; then
+              echo "${IMAGE}:arong"
+            fi
             if [ "${{ inputs.push_test_latest }}" = "true" ]; then
               echo "${IMAGE}:test-latest"
             fi

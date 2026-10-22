@@ -763,23 +763,23 @@ func TestFileService_GetFilePresignURL(t *testing.T) {
 	t.Run("derivePairKey validates and derives key prefix", func(t *testing.T) {
 		fix := newFileFix(t)
 		// Valid pairKey matching user ID
-		key := fix.svc.derivePairKey("1", "clip.mov", "1_1765048483_7bea621a.jpg")
+		key := fix.svc.DerivePairKeyForTest("1", "clip.mov", "1_1765048483_7bea621a.jpg")
 		assert.Equal(t, "1_1765048483_7bea621a.mov", key)
 
 		// Strips query parameter
-		keyWithQuery := fix.svc.derivePairKey("1", "clip.MOV", "1_1765048483_7bea621a.jpg?sign=xyz")
+		keyWithQuery := fix.svc.DerivePairKeyForTest("1", "clip.MOV", "1_1765048483_7bea621a.jpg?sign=xyz")
 		assert.Equal(t, "1_1765048483_7bea621a.mov", keyWithQuery)
 
 		// Mismatched user ID returns empty
-		mismatched := fix.svc.derivePairKey("2", "clip.mov", "1_1765048483_7bea621a.jpg")
+		mismatched := fix.svc.DerivePairKeyForTest("2", "clip.mov", "1_1765048483_7bea621a.jpg")
 		assert.Empty(t, mismatched)
 
 		// Malformed key returns empty
-		malformed := fix.svc.derivePairKey("1", "clip.mov", "random_string.jpg")
+		malformed := fix.svc.DerivePairKeyForTest("1", "clip.mov", "random_string.jpg")
 		assert.Empty(t, malformed)
 
 		// Path traversal returns empty
-		traversal := fix.svc.derivePairKey("1", "clip.mov", "../../etc/passwd")
+		traversal := fix.svc.DerivePairKeyForTest("1", "clip.mov", "../../etc/passwd")
 		assert.Empty(t, traversal)
 	})
 }
