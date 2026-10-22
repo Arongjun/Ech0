@@ -75,7 +75,7 @@ func (l *LocalFS) fullPath(key string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", ErrInvalidKey, err)
 	}
-	if !strings.HasPrefix(abs, l.root) {
+	if !l.withinRoot(abs) {
 		return "", fmt.Errorf("%w: resolved path escapes root", ErrInvalidKey)
 	}
 	return abs, nil
@@ -117,7 +117,7 @@ func (l *LocalFS) GetByStoragePath(ctx context.Context, storagePath string) (io.
 	}
 	p := filepath.Join(l.root, filepath.FromSlash(cleaned))
 	abs, err := filepath.Abs(p)
-	if err != nil || !strings.HasPrefix(abs, l.root) {
+	if err != nil || !l.withinRoot(abs) {
 		return nil, &OpError{Op: "GetByStoragePath", Key: storagePath, Err: ErrInvalidKey}
 	}
 	f, err := os.Open(abs)
@@ -146,7 +146,7 @@ func (l *LocalFS) DeleteByStoragePath(ctx context.Context, storagePath string) e
 	}
 	p := filepath.Join(l.root, filepath.FromSlash(cleaned))
 	abs, err := filepath.Abs(p)
-	if err != nil || !strings.HasPrefix(abs, l.root) {
+	if err != nil || !l.withinRoot(abs) {
 		return &OpError{Op: "DeleteByStoragePath", Key: storagePath, Err: ErrInvalidKey}
 	}
 	err = os.Remove(abs)
@@ -386,4 +386,13 @@ func mapOSError(err error) error {
 		return ErrPermission
 	}
 	return err
+}
+
+// withinRoot 判断 abs 是否位于 root 之内（按路径分隔符判断，避免 /root2 被当作 /root 的子路径）。
+func (l *LocalFS) withinRoot(abs string) bool {
+	rel, err := filepath.Rel(l.root, abs)
+	if err != nil {
+		return false
+	}
+	return rel == "." || (rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) && !filepath.IsAbs(rel))
 }
