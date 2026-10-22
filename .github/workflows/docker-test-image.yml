@@ -1,6 +1,8 @@
 name: Build Docker Test Image
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       image_tag:
@@ -128,7 +130,7 @@ jobs:
             echo "tag=${TAG}"
             echo "tags<<EOF"
             echo "${IMAGE}:${TAG}"
-            if [ "${{ inputs.push_test_latest }}" = "true" ]; then
+            if [ "${{ inputs.push_test_latest }}" != "false" ]; then
               echo "${IMAGE}:test-latest"
             fi
             echo "EOF"
