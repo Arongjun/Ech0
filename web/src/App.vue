@@ -72,9 +72,13 @@ router.beforeEach((to, from) => {
   transitionName.value = 'fade'
 })
 
-router.afterEach(() => {
+// afterEach 对被取消/重复的导航也会触发；导航抛错时不会，需在 onError 中同样复位，
+// 否则残留的 popstate 标记会让下一次普通跳转被误判为“返回”。
+const resetPopState = () => {
   isPopState = false
-})
+}
+router.afterEach(resetPopState)
+router.onError(resetPopState)
 
 const settingStore = useSettingStore()
 const { SystemSetting } = storeToRefs(settingStore)
