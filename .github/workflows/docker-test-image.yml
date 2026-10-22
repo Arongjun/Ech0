@@ -10,7 +10,7 @@ on:
         required: false
         type: string
       push_test_latest:
-        description: "额外推送 test-latest 标签"
+        description: "额外推送 arong 标签"
         required: true
         type: boolean
         default: true
@@ -131,7 +131,7 @@ jobs:
             echo "tags<<EOF"
             echo "${IMAGE}:${TAG}"
             if [ "${{ inputs.push_test_latest }}" != "false" ]; then
-              echo "${IMAGE}:test-latest"
+              echo "${IMAGE}:arong"
             fi
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
