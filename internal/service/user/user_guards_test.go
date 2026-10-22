@@ -443,3 +443,36 @@ func TestGetAllUsers_RepoError(t *testing.T) {
 	require.ErrorIs(t, err, sentinel)
 	assert.Nil(t, got)
 }
+
+func TestAdminResetPassword_OwnerProtection(t *testing.T) {
+	owner := helpers.NewUser(withID("owner"), helpers.AsOwner)
+	admin := helpers.NewUser(withID("admin"), helpers.AsAdmin)
+	member := helpers.NewUser(withID("member"))
+
+	t.Run("admin cannot reset owner password", func(t *testing.T) {
+		svc, m := newUserSvc(t)
+		m.repo.EXPECT().GetUserByID(mock.Anything, "admin").Return(admin, nil).Once()
+		m.repo.EXPECT().GetUserByID(mock.Anything, "owner").Return(owner, nil).Once()
+
+		err := svc.AdminResetPassword(helpers.CtxAsUser("admin"), "owner", "newpassword123")
+		require.Error(t, err)
+		assert.Equal(t, commonModel.ONLY_OWNER_CAN_MANAGE, err.Error())
+	})
+
+	t.Run("admin can reset regular user password", func(t *testing.T) {
+		svc, m := newUserSvc(t)
+		m.repo.EXPECT().GetUserByID(mock.Anything, "admin").Return(admin, nil).Once()
+		m.repo.EXPECT().GetUserByID(mock.Anything, "member").Return(member, nil).Once()
+		m.repo.EXPECT().UpsertLocalAuth(mock.Anything, mock.Anything).Return(nil).Once()
+
+		require.NoError(t, svc.AdminResetPassword(helpers.CtxAsUser("admin"), "member", "newpassword123"))
+	})
+
+	t.Run("owner can reset own password", func(t *testing.T) {
+		svc, m := newUserSvc(t)
+		m.repo.EXPECT().GetUserByID(mock.Anything, "owner").Return(owner, nil).Twice()
+		m.repo.EXPECT().UpsertLocalAuth(mock.Anything, mock.Anything).Return(nil).Once()
+
+		require.NoError(t, svc.AdminResetPassword(helpers.CtxAsUser("owner"), "owner", "newpassword123"))
+	})
+}

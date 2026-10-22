@@ -396,8 +396,13 @@ func (userService *UserService) AdminResetPassword(ctx context.Context, targetUs
 	if err := ensurePasswordLength(newPassword); err != nil {
 		return err
 	}
-	if _, err := userService.userRepository.GetUserByID(ctx, targetUserID); err != nil {
+	target, err := userService.userRepository.GetUserByID(ctx, targetUserID)
+	if err != nil {
 		return err
+	}
+	// 站长密码只能由站长本人重置，防止其他管理员借此接管站长账号
+	if target.IsOwner && caller.ID != target.ID {
+		return errors.New(commonModel.ONLY_OWNER_CAN_MANAGE)
 	}
 	hashed, err := cryptoUtil.HashPassword(newPassword)
 	if err != nil {
