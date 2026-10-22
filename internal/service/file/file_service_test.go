@@ -966,3 +966,26 @@ func TestFileService_CleanupOrphanFiles(t *testing.T) {
 		assert.Equal(t, int64(0), countTemps(t, fix.db))
 	})
 }
+
+func TestFileService_DeleteFileByPath(t *testing.T) {
+	t.Run("removes blob then record", func(t *testing.T) {
+		fix := newFileFix(t)
+		dto := fix.uploadPNG(t, "photo.png", 3, 3)
+		require.True(t, storedExists(t, fix.mgr, dto.Key))
+
+		fix.expectAdmin()
+		require.NoError(t, fix.svc.DeleteFileByPath(fix.adminCtx(), string(storage.StorageTypeLocal), dto.Key))
+		assert.Equal(t, int64(0), countFiles(t, fix.db))
+		assert.False(t, storedExists(t, fix.mgr, dto.Key))
+	})
+
+	t.Run("missing blob still cleans record", func(t *testing.T) {
+		fix := newFileFix(t)
+		dto := fix.uploadPNG(t, "photo.png", 3, 3)
+		require.NoError(t, fix.mgr.GetSelector().Delete(context.Background(), storage.StorageTypeLocal, dto.Key))
+
+		fix.expectAdmin()
+		require.NoError(t, fix.svc.DeleteFileByPath(fix.adminCtx(), string(storage.StorageTypeLocal), dto.Key))
+		assert.Equal(t, int64(0), countFiles(t, fix.db))
+	})
+}

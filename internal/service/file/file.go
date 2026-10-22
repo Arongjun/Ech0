@@ -453,7 +453,7 @@ func (s *FileService) DeleteFile(ctx context.Context, id string) error {
 
 func (s *FileService) DeleteFileByPath(ctx context.Context, storageType string, filePath string) error {
 	userid := viewer.MustFromContext(ctx).UserID()
-	user, err := s.commonRepository.GetUserByUserId(context.Background(), userid)
+	user, err := s.commonRepository.GetUserByUserId(ctx, userid)
 	if err != nil {
 		return err
 	}
@@ -472,30 +472,49 @@ func (s *FileService) DeleteFileByPath(ctx context.Context, storageType string, 
 
 	selector := s.getSelector()
 
-	candidates := selector.ResolveKeyCandidatesByPath(normalizedStorageType, cleanPath)
-	if len(candidates) > 0 {
-		dbFiles, err := s.fileRepository.ListByStorageTypeAndKeys(context.Background(), string(normalizedStorageType), candidates)
-		if err == nil && len(dbFiles) > 0 {
-			for _, f := range dbFiles {
-				_ = s.transactor.Run(context.Background(), func(c context.Context) error {
-					return s.DeleteFileRecord(c, f.ID)
-				})
+	// 先收集关联记录，再删除物理文件；物理文件删除成功（或本就不存在）后才删除记录，
+	// 避免记录已删但文件残留的不一致状态。
+	recordIDs := make([]string, 0)
+	seen := make(map[string]struct{})
+	collect := func(files []fileModel.File) {
+		for _, f := range files {
+			if _, ok := seen[f.ID]; ok {
+				continue
 			}
+			seen[f.ID] = struct{}{}
+			recordIDs = append(recordIDs, f.ID)
 		}
 	}
-	url := selector.ResolveURLByPath(normalizedStorageType, cleanPath)
-	if url != "" {
-		dbFiles, err := s.fileRepository.ListByStorageTypeAndURLs(context.Background(), string(normalizedStorageType), []string{url})
-		if err == nil && len(dbFiles) > 0 {
-			for _, f := range dbFiles {
-				_ = s.transactor.Run(context.Background(), func(c context.Context) error {
-					return s.DeleteFileRecord(c, f.ID)
-				})
-			}
+	if candidates := selector.ResolveKeyCandidatesByPath(normalizedStorageType, cleanPath); len(candidates) > 0 {
+		dbFiles, err := s.fileRepository.ListByStorageTypeAndKeys(ctx, string(normalizedStorageType), candidates)
+		if err != nil {
+			return err
 		}
+		collect(dbFiles)
+	}
+	if url := selector.ResolveURLByPath(normalizedStorageType, cleanPath); url != "" {
+		dbFiles, err := s.fileRepository.ListByStorageTypeAndURLs(ctx, string(normalizedStorageType), []string{url})
+		if err != nil {
+			return err
+		}
+		collect(dbFiles)
 	}
 
-	return selector.DeleteByStoragePath(ctx, normalizedStorageType, cleanPath)
+	if err := selector.DeleteByStoragePath(ctx, normalizedStorageType, cleanPath); err != nil && !errors.Is(err, virefs.ErrNotFound) {
+		return err
+	}
+
+	var errs []error
+	for _, id := range recordIDs {
+		if err := s.transactor.Run(ctx, func(c context.Context) error {
+			return s.DeleteFileRecord(c, id)
+		}); err != nil {
+			logUtil.GetLogger().Error("delete file record after storage delete failed",
+				slog.String("file_id", id), slog.String("error", err.Error()))
+			errs = append(errs, err)
+		}
+	}
+	return errors.Join(errs...)
 }
 
 func (s *FileService) GetFileByID(ctx context.Context, id string) (commonModel.FileDto, error) {
