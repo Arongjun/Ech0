@@ -95,6 +95,10 @@ func (s *FileService) derivePairKey(userID string, filename string, pairKey stri
 	if targetExt == "" {
 		targetExt = ".bin"
 	}
+	// 同扩展名会与配对文件生成完全相同的 key，导致覆盖已有文件
+	if strings.ToLower(ext) == targetExt {
+		return ""
+	}
 
 	return strings.ToLower(baseWithoutExt + targetExt)
 }
@@ -176,6 +180,16 @@ func (s *FileService) UploadFile(
 	var key string
 	if pairKey := pairKeyFromContext(ctx); pairKey != "" {
 		key = s.derivePairKey(user.ID, file.Filename, pairKey)
+		if key != "" {
+			pairStorageType := storage.NormalizeStorageType(string(storageType))
+			if pairStorageType == storage.StorageTypeExternal {
+				pairStorageType = storage.StorageTypeLocal
+			}
+			// 目标 key 已存在（例如重复上传同一实况照片）时退回随机命名，避免覆盖
+			if s.getSelector().Exists(ctx, pairStorageType, key) {
+				key = ""
+			}
+		}
 	}
 	if key == "" {
 		gen := s.keyGenForCategory(category, file.Filename)

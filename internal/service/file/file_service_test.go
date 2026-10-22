@@ -12,6 +12,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -781,7 +782,34 @@ func TestFileService_GetFilePresignURL(t *testing.T) {
 		// Path traversal returns empty
 		traversal := fix.svc.DerivePairKeyForTest("1", "clip.mov", "../../etc/passwd")
 		assert.Empty(t, traversal)
+
+		// Same extension as the pair would reuse the pair's key -> rejected
+		sameExt := fix.svc.DerivePairKeyForTest("1", "photo.JPG", "1_1765048483_7bea621a.jpg")
+		assert.Empty(t, sameExt)
 	})
+}
+
+func TestFileService_UploadFile_PairKeyNoOverwrite(t *testing.T) {
+	fix := newFileFix(t)
+	first := fix.uploadPNG(t, "first.png", 2, 2)
+	base := strings.TrimSuffix(first.Key, filepath.Ext(first.Key))
+	pair := base + ".jpg"
+	require.NotEmpty(t, fix.svc.DerivePairKeyForTest(fileTestUserID, "x.png", pair), "pair key must be valid for this test")
+
+	upload := func(name string) commonModel.FileDto {
+		fix.expectAdmin()
+		header := makeFileHeader(t, name, pngBytes(t, 3, 3))
+		ctx := fileService.WithPairKey(fix.adminCtx(), pair)
+		dto, err := fix.svc.UploadFile(ctx, header, storage.CategoryImage, storage.StorageTypeLocal)
+		require.NoError(t, err)
+		return dto
+	}
+
+	// 目标 key（base.png）已被 first 占用：必须退回随机命名，不能覆盖
+	second := upload("second.png")
+	assert.NotEqual(t, first.Key, second.Key)
+	assert.True(t, storedExists(t, fix.mgr, first.Key))
+	assert.True(t, storedExists(t, fix.mgr, second.Key))
 }
 
 func TestFileService_DeleteFile(t *testing.T) {

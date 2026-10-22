@@ -336,6 +336,18 @@ func (r *StorageSelector) PresignPutURL(ctx context.Context, key string, expires
 	return req.URL, nil
 }
 
+// Exists 报告 key 是否已存在；无法确认时保守地返回 true。
+func (r *StorageSelector) Exists(ctx context.Context, storageType StorageType, key string) bool {
+	fsys, err := r.getFS(storageType)
+	if err != nil || fsys == nil {
+		return true
+	}
+	if _, err := fsys.Stat(ctx, key); err != nil {
+		return !errors.Is(err, virefs.ErrNotFound)
+	}
+	return true
+}
+
 func (r *StorageSelector) getFS(storageType StorageType) (virefs.FS, error) {
 	if r == nil {
 		return nil, errors.New("storage selector is not initialized")
