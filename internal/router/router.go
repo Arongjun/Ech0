@@ -52,11 +52,10 @@ func setupStaticFiles(r *gin.Engine) {
 	}
 	r.Group("api/files", middleware.StaticFileSecurity()).StaticFS("/", http.Dir(root))
 
-	imagesRoot := filepath.Join(root, "images")
-	if _, err := os.Stat(imagesRoot); err == nil {
+	// 兼容旧版 /images 图片链接：依次尝试 <DataRoot>/images 和旧默认的 data/images，
+	// 启动时解析为绝对路径并确认是目录，避免之后受工作目录变化影响或误挂载普通文件。
+	if imagesRoot := resolveLegacyImagesRoot(root); imagesRoot != "" {
 		r.Group("images", middleware.StaticFileSecurity()).StaticFS("/", http.Dir(imagesRoot))
-	} else if _, err := os.Stat("data/images"); err == nil {
-		r.Group("images", middleware.StaticFileSecurity()).StaticFS("/", http.Dir("data/images"))
 	}
 }
 
@@ -87,4 +86,18 @@ func setupRouterGroup(r *gin.Engine, mwDeps *middleware.Deps) *AppRouterGroup {
 		WSRouterGroup:           ws,
 		MCPRouterGroup:          mcpGroup,
 	}
+}
+
+func resolveLegacyImagesRoot(dataRoot string) string {
+	candidates := []string{filepath.Join(dataRoot, "images"), filepath.Join("data", "images")}
+	for _, c := range candidates {
+		abs, err := filepath.Abs(c)
+		if err != nil {
+			continue
+		}
+		if info, err := os.Stat(abs); err == nil && info.IsDir() {
+			return abs
+		}
+	}
+	return ""
 }
