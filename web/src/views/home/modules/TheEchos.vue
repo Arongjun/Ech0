@@ -77,7 +77,7 @@
 
 <script setup lang="ts">
 import TheEchoCard from '@/components/advanced/echo/cards/TheEchoCard.vue'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, ref, watch } from 'vue'
 import { useEchoStore, useSettingStore } from '@/stores'
 import TheLoadingIndicator from '@/components/common/TheLoadingIndicator.vue'
 import { storeToRefs } from 'pinia'
@@ -223,6 +223,13 @@ watch(
 
 watch(isFilteringMode, () => {
   echoStore.refreshEchos()
+})
+
+// 首页处于 KeepAlive 缓存中，被重新激活时若列表已被清空（如登录/登出后），需要重新加载。
+onActivated(() => {
+  if (echoStore.echoList.length === 0 && !echoStore.isLoading) {
+    void echoStore.fetchCurrentPage()
+  }
 })
 
 onMounted(async () => {

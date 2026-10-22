@@ -26,8 +26,10 @@ export const useUserStore = defineStore('userStore', () => {
 
       theToast.success(String(i18n.global.t('auth.loginSuccess')))
 
+      // 首页被 KeepAlive 缓存时不会重新挂载，只清空列表会导致首页空白（"没有更多数据"），
+      // 因此登录后直接带新 token 重新拉取第一页。
       const echoStore = useEchoStore()
-      echoStore.clearEchos()
+      void echoStore.refreshEchos()
 
       router.push({ name: 'home' })
     }
@@ -41,8 +43,10 @@ export const useUserStore = defineStore('userStore', () => {
 
       theToast.success(String(i18n.global.t('auth.loginSuccess')))
 
+      // 首页被 KeepAlive 缓存时不会重新挂载，只清空列表会导致首页空白（"没有更多数据"），
+      // 因此登录后直接带新 token 重新拉取第一页。
       const echoStore = useEchoStore()
-      echoStore.clearEchos()
+      void echoStore.refreshEchos()
 
       router.push({ name: 'home' })
     }
