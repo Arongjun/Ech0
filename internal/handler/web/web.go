@@ -4,7 +4,6 @@
 package handler
 
 import (
-	"encoding/json"
 	"html"
 	"io/fs"
 	"mime"
@@ -60,6 +59,15 @@ func (webHandler *WebHandler) getSiteTitleAndLocale() (string, string) {
 	return title, locale
 }
 
+func (webHandler *WebHandler) getBranding() siteBranding {
+	title, _ := webHandler.getSiteTitleAndLocale()
+	var s settingModel.SystemSetting
+	if webHandler.settingService != nil {
+		_ = webHandler.settingService.GetSetting(&s)
+	}
+	return brandingFromSetting(s, title)
+}
+
 func (webHandler *WebHandler) getSiteTitle() string {
 	title, _ := webHandler.getSiteTitleAndLocale()
 	return title
@@ -93,6 +101,7 @@ func (webHandler *WebHandler) renderIndexHTML(subFS fs.FS, ctx *gin.Context) boo
 		htmlStr = strings.Replace(htmlStr, `<meta property="og:site_name" content="Ech0" />`, `<meta property="og:site_name" content="`+escaped+`" />`, 1)
 		htmlStr = strings.Replace(htmlStr, `<meta name="twitter:title" content="Ech0" />`, `<meta name="twitter:title" content="`+escaped+`" />`, 1)
 		htmlStr = strings.Replace(htmlStr, `<h1 class="loader-brand">Ech0</h1>`, `<h1 class="loader-brand">`+escaped+`</h1>`, 1)
+		htmlStr = brandIndexHTML(htmlStr, webHandler.getBranding())
 	}
 	webHandler.visitorTracker.Record(ctx.Request, ctx.ClientIP())
 	ctx.Header("Content-Type", "text/html; charset=utf-8")
@@ -106,12 +115,9 @@ func (webHandler *WebHandler) renderManifest(subFS fs.FS, ctx *gin.Context) bool
 	if err != nil {
 		return false
 	}
-	siteTitle := webHandler.getSiteTitle()
 	manifestStr := string(rawManifest)
-	if siteTitle != "Ech0" && siteTitle != "" {
-		titleBytes, _ := json.Marshal(siteTitle)
-		manifestStr = strings.Replace(manifestStr, `"name": "Ech0"`, `"name": `+string(titleBytes), 1)
-		manifestStr = strings.Replace(manifestStr, `"short_name": "Ech0"`, `"short_name": `+string(titleBytes), 1)
+	if branded, err := brandManifest(rawManifest, webHandler.getBranding()); err == nil {
+		manifestStr = string(branded)
 	}
 	setNoStoreHeaders(ctx)
 	ctx.Data(http.StatusOK, "application/manifest+json", []byte(manifestStr))
