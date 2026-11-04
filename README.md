@@ -14,7 +14,7 @@
 [![Go Version](https://img.shields.io/github/go-mod/go-version/lin-snow/Ech0?logo=go&logoColor=white&labelColor=%20%235FD4EC&color=%20%2300ADD8)](./go.mod)
 [![Release Build](https://img.shields.io/github/actions/workflow/status/lin-snow/Ech0/release.yml?logo=github&logoColor=white&label=build&labelColor=%20%2332B583&color=%20%2312B76A)](https://github.com/lin-snow/Ech0/actions/workflows/release.yml)
 [![i18n](https://img.shields.io/badge/i18n-4_locales-7A5AF8?logo=googletranslate&logoColor=white&labelColor=%20%239B8AFB)](./web/src/locales/messages)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/lin-snow/Ech0)
+[![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-6E56CF)](https://deepwiki.com/lin-snow/Ech0)
 [![Docker Pulls](https://img.shields.io/docker/pulls/sn0wl1n/ech0?logo=docker&logoColor=white&labelColor=%20%235CADF6&color=%20%232496ED)](https://hub.docker.com/r/sn0wl1n/ech0)
 [![Docker Image Size](https://img.shields.io/docker/image-size/sn0wl1n/ech0/latest?logo=docker&logoColor=white&labelColor=%20%235CADF6&color=%20%231570EF)](https://hub.docker.com/r/sn0wl1n/ech0)
 [![Stars](https://img.shields.io/github/stars/lin-snow/Ech0?logo=github&logoColor=white&labelColor=%20%23FDB022&color=%20%23DC6803)](https://github.com/lin-snow/Ech0/stargazers)
@@ -86,6 +86,16 @@ Then open `http://ip:6277`:
 3. By default, publishing is restricted to privileged accounts.
 
 See [Quick Deployment](./DEPLOYMENT.md#quick-deployment) for Docker Compose and Helm options.
+
+### CLI
+
+Install the `ech0` command-line client (macOS / Linux; separate from the server binary):
+
+```shell
+npm install -g @useech0/cli
+```
+
+Or download `ech0-cli-<os>-<arch>.tar.gz` from [Releases](https://github.com/lin-snow/Ech0/releases). Usage and commands live in [`apps/cli`](./apps/cli).
 
 ## Full Feature List
 
@@ -214,7 +224,7 @@ For the simplest path, the [Try in 60 Seconds](#try-in-60-seconds) snippet above
     Third-party integration platforms or services that are not officially authorized by Ech0 are outside the official support scope. Any security incidents, data loss, account issues, or other risks caused by using such services are the sole responsibility of the user and the third-party provider.
 
 15. **How do I post comments via a third-party integration (AI / automation)?**
-    Ech0 provides a dedicated integration comment endpoint at `POST /api/comments/integration` that bypasses captcha and form-token verification. Create an access token with the `comment:write` scope and `integration` audience from "Access Token" management, then include it in the `Authorization: Bearer <token>` header. For request body fields and responses, use the OpenAPI docs served by your instance at `/swagger/index.html` (for local development, typically `http://localhost:6277/swagger/index.html`). This endpoint has its own rate limits, and comments are tagged with `source=integration` so they are identifiable in the admin panel.
+    Ech0 provides a dedicated integration comment endpoint at `POST /api/comments/integration` that bypasses captcha and form-token verification. Create an access token with the `comment:write` scope and `integration` audience from "Access Token" management, then include it in the `Authorization: Bearer <token>` header. Tokens minted by `ech0 auth login` (`audience=cli`) are accepted by the same route. For request body fields and responses, use the OpenAPI docs served by your instance at `/swagger/index.html` (for local development, typically `http://localhost:6277/swagger/index.html`). This endpoint has its own rate limits, and comments are tagged with `source=integration` so they are identifiable in the admin panel.
 
 16. **Where can I find detailed documentation on local vs S3 storage rules, object keys, and migration?**
     See the in-repo [Storage migration guide](./docs/usage/storage-migration.md). It explains how flat `key` values map to on-disk paths and S3 object keys (including `schema.Resolve` and `PathPrefix`), how stored `File.url` snapshots relate to the UI, the difference between static `/api/files` access and authenticated `stream` routes, and practical guidance for switching S3 providers or moving data between local disk and object storage.

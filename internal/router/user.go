@@ -7,16 +7,16 @@ import (
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/lin-snow/ech0/internal/authz"
 	"github.com/lin-snow/ech0/internal/handler"
 	"github.com/lin-snow/ech0/internal/middleware"
-	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	authService "github.com/lin-snow/ech0/internal/service/auth"
 )
 
 func setupUserRoutes(appRouterGroup *AppRouterGroup, h *handler.Bundle) {
 	appRouterGroup.AuthRouterGroup.PUT(
 		"/users/:id/password",
-		middleware.RequireScopes(authModel.ScopeAdminUser),
+		middleware.RequireScopes(authz.ScopeAdminUser),
 		h.UserHandler.AdminResetPassword(),
 	)
 }
@@ -31,7 +31,7 @@ func registerUser(api huma.API, h *handler.Bundle, revoker authService.TokenRevo
 		Middlewares: noCache(),
 	}, h.UserHandler.Register)
 
-	route(api, secured(revoker, authModel.ScopeAdminUser), huma.Operation{
+	route(api, secured(revoker, authz.ScopeAdminUser), huma.Operation{
 		OperationID: "user-list",
 		Method:      http.MethodGet,
 		Path:        "/users",
@@ -39,7 +39,7 @@ func registerUser(api huma.API, h *handler.Bundle, revoker authService.TokenRevo
 		Tags:        []string{"User"},
 	}, h.UserHandler.GetAllUsers)
 
-	route(api, secured(revoker, authModel.ScopeProfileRead), huma.Operation{
+	route(api, secured(revoker, authz.ScopeProfileRead), huma.Operation{
 		OperationID: "user-info",
 		Method:      http.MethodGet,
 		Path:        "/user",
@@ -47,7 +47,7 @@ func registerUser(api huma.API, h *handler.Bundle, revoker authService.TokenRevo
 		Tags:        []string{"User"},
 	}, h.UserHandler.GetUserInfo)
 
-	route(api, secured(revoker, authModel.ScopeProfileWrite), huma.Operation{
+	route(api, secured(revoker, authz.ScopeProfileWrite), huma.Operation{
 		OperationID: "user-update",
 		Method:      http.MethodPut,
 		Path:        "/user",
@@ -55,7 +55,7 @@ func registerUser(api huma.API, h *handler.Bundle, revoker authService.TokenRevo
 		Tags:        []string{"User"},
 	}, h.UserHandler.UpdateUser)
 
-	route(api, secured(revoker, authModel.ScopeAdminUser), huma.Operation{
+	route(api, secured(revoker, authz.ScopeAdminUser), huma.Operation{
 		OperationID: "user-delete",
 		Method:      http.MethodDelete,
 		Path:        "/user/{id}",
@@ -63,7 +63,7 @@ func registerUser(api huma.API, h *handler.Bundle, revoker authService.TokenRevo
 		Tags:        []string{"User"},
 	}, h.UserHandler.DeleteUser)
 
-	route(api, secured(revoker, authModel.ScopeAdminUser), huma.Operation{
+	route(api, secured(revoker, authz.ScopeAdminUser), huma.Operation{
 		OperationID: "user-set-admin",
 		Method:      http.MethodPut,
 		Path:        "/user/admin/{id}",

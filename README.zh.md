@@ -14,7 +14,7 @@
 [![Go Version](https://img.shields.io/github/go-mod/go-version/lin-snow/Ech0?logo=go&logoColor=white&labelColor=%20%235FD4EC&color=%20%2300ADD8)](./go.mod)
 [![Release Build](https://img.shields.io/github/actions/workflow/status/lin-snow/Ech0/release.yml?logo=github&logoColor=white&label=build&labelColor=%20%2332B583&color=%20%2312B76A)](https://github.com/lin-snow/Ech0/actions/workflows/release.yml)
 [![i18n](https://img.shields.io/badge/i18n-4_locales-7A5AF8?logo=googletranslate&logoColor=white&labelColor=%20%239B8AFB)](./web/src/locales/messages)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/lin-snow/Ech0)
+[![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-6E56CF)](https://deepwiki.com/lin-snow/Ech0)
 [![Docker Pulls](https://img.shields.io/docker/pulls/sn0wl1n/ech0?logo=docker&logoColor=white&labelColor=%20%235CADF6&color=%20%232496ED)](https://hub.docker.com/r/sn0wl1n/ech0)
 [![Docker Image Size](https://img.shields.io/docker/image-size/sn0wl1n/ech0/latest?logo=docker&logoColor=white&labelColor=%20%235CADF6&color=%20%231570EF)](https://hub.docker.com/r/sn0wl1n/ech0)
 [![Stars](https://img.shields.io/github/stars/lin-snow/Ech0?logo=github&logoColor=white&labelColor=%20%23FDB022&color=%20%23DC6803)](https://github.com/lin-snow/Ech0/stargazers)
@@ -87,6 +87,16 @@ docker run -d \
 3. 默认仅高权限账号可发布内容。
 
 更多部署方式见 [极速部署](./DEPLOYMENT.md#quick-deployment)。
+
+### CLI
+
+安装 `ech0` 命令行客户端（macOS / Linux，独立于服务端二进制）：
+
+```shell
+npm install -g @useech0/cli
+```
+
+也可从 [Releases](https://github.com/lin-snow/Ech0/releases) 下载 `ech0-cli-<os>-<arch>.tar.gz`。用法与命令见 [`apps/cli`](./apps/cli)。
 
 ## 完整能力清单
 
@@ -252,7 +262,7 @@ docker run -d \
 
 **开发**
 
-本地开发环境、依赖安装与前后端联调说明请见 **[docs/dev/development.md](./docs/dev/development.md)**。更高层的项目架构与代码规范请参考 [`CLAUDE.md`](./CLAUDE.md) 与 [`CONTRIBUTING.md`](./CONTRIBUTING.md)。交互式架构图见 **[ech0.app/arch](https://www.ech0.app/arch)**。
+本地开发环境、依赖安装与前后端联调说明请见 **[docs/dev/development.md](./docs/dev/development.md)**。更高层的项目架构与代码规范请参考 [`AGENTS.md`](./AGENTS.md) 与 [`CONTRIBUTING.md`](./CONTRIBUTING.md)。交互式架构图见 **[ech0.app/arch](https://www.ech0.app/arch)**。
 
 ---
 

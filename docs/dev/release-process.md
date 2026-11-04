@@ -142,11 +142,100 @@ After the workflow completes:
 
 2. **Promote the draft release to published.** GitHub release notes default to auto-generated PR titles since the last release; replace them with the relevant `[X.Y.Z]` section from `CHANGELOG.md`.
 
+   Publishing this release does not touch the CLI; the CLI has its own version line and release tags
+   (see [CLI release](#cli-release-independent) below).
+
 3. **Pull the Docker image** to confirm:
    ```bash
    docker pull ghcr.io/lin-snow/ech0:vX.Y.Z
    docker run --rm ghcr.io/lin-snow/ech0:vX.Y.Z version
    ```
+
+## CLI release (independent)
+
+The `ech0` CLI (`apps/cli`) is versioned independently from the server, starting at `0.1.0`.
+[`apps/cli/package.json`](../../apps/cli/package.json) is the source of truth; server releases do
+not build or publish the CLI.
+
+To cut a CLI release:
+
+1. Update `CHANGELOG.md` (rename `[Unreleased]` to `[X.Y.Z]`) and commit it.
+2. From a clean working tree on the release branch, run:
+
+   ```bash
+   just cli release X.Y.Z
+   ```
+
+   The recipe typechecks, tests, checks for generated-type drift, bumps
+   `apps/cli/package.json`, commits `chore(cli-release): vX.Y.Z`, creates the
+   annotated `cli-vX.Y.Z` tag, and pushes the branch and tag. Set
+   `ECH0_CLI_DRY=1` to run the checks and print the planned steps without
+   changing anything.
+
+   To bump only and commit/tag by hand, use `just cli bump X.Y.Z` and follow the
+   steps it prints.
+
+The tag pushes [`release-cli.yml`](../../.github/workflows/release-cli.yml), which:
+
+- Verifies `cli-vX.Y.Z` matches `apps/cli/package.json`, then compiles
+  `darwin/{arm64,x64}` and `linux/{arm64,x64}` with `bun build --compile`.
+- Creates the `cli-vX.Y.Z` GitHub Release when it does not exist and uploads
+  `ech0-cli-<os>-<arch>.tar.gz` plus `SHA256SUMS`.
+- Publishes `@useech0/cli` and one `@useech0/cli-<os>-<arch>` package per platform to npm. Prerelease
+  versions publish to npm's `next` dist-tag, stable ones to `latest`; already-published versions
+  are skipped.
+- Does not touch the repo-wide "Latest" release pointer (`gh release create --latest=false`): the
+  CLI is not the application.
+
+### npm authentication (trusted publishing)
+
+npm publishing uses **trusted publishing (OIDC)**, not a token — there is no `NPM_TOKEN` secret.
+Tokens that bypass 2FA are being retired for publishing, and a 2FA-guarded one fails the publish
+step with `EOTP`, which is why the workflow no longer reads a token. For each of the five packages
+(`@useech0/cli`, `@useech0/cli-darwin-arm64`, `@useech0/cli-darwin-x64`, `@useech0/cli-linux-arm64`,
+`@useech0/cli-linux-x64`) add a trusted publisher on npmjs.com → package → Settings → Trusted
+publishing, or from the CLI (npm ≥ 11.15.0, account 2FA on, package already published):
+
+```bash
+npm trust github @useech0/cli --repo lin-snow/Ech0 --file release-cli.yml --allow-publish
+# ...one call per platform package; `--allow-publish` is required — configurations created after
+# 2026-09-03 default to staged publishing only.
+```
+
+The workflow's `release-cli.yml` name, the `lin-snow/Ech0` repository and the `id-token: write`
+permission must all match. A new trust configuration expires after 2 days unless the first publish
+succeeds, and provenance is then generated automatically.
+
+Bootstrapping a package that does not exist yet (trust needs an existing package): publish the
+first version by hand from the CI artifact, with interactive 2FA. This version has no provenance.
+
+```bash
+gh run download <run-id> -n npm-packages -D /tmp/ech0-npm
+cd /tmp/ech0-npm
+for d in cli-darwin-arm64 cli-darwin-x64 cli-linux-arm64 cli-linux-x64 cli; do
+  (cd "$d" && npm publish --access public)   # platform packages before the launcher
+done
+```
+
+After that, configure the five trusted publishers. A skipped publish does not validate a trust
+configuration, so the first real publish after configuring must be a *new* version: bump
+`apps/cli/package.json` to the next patch and push its `cli-vX.Y.Z` tag. The workflow then publishes
+that version through OIDC, which validates all five configurations.
+
+To rebuild an existing CLI tag, run the workflow manually with its `tag` input (e.g.
+`cli-v0.1.1`). The tag must still match `apps/cli/package.json`, so only the current version can be
+re-run.
+
+Verify after it finishes:
+
+```bash
+gh release view cli-vX.Y.Z                 # ech0-cli-*.tar.gz + SHA256SUMS present
+npm view @useech0/cli@X.Y.Z version           # package on npm
+npx -y @useech0/cli --version                 # matches X.Y.Z
+```
+
+To reproduce locally, run `just cli dist X.Y.Z` (outputs binaries, tarballs and publishable npm
+directories under `apps/cli/dist/release/`).
 
 ## Hot-fix releases
 

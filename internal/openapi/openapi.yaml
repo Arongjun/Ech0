@@ -47,6 +47,15 @@ components:
             - array
             - "null"
       type: object
+    AddConnectDto:
+      additionalProperties: true
+      properties:
+        connect_url:
+          description: Peer instance root URL; the server calls <url>/api/connect
+          type: string
+      required:
+        - connect_url
+      type: object
     AgentSetting:
       additionalProperties: true
       properties:
@@ -330,17 +339,23 @@ components:
       additionalProperties: true
       properties:
         category:
+          description: "File category: image, video, audio, pdf, markdown, or file"
           type: string
         content_type:
+          description: MIME type; inferred from the URL when omitted
           type: string
         height:
+          description: Pixel height, for images
           format: int64
           type: integer
         name:
+          description: Display name; defaults to the URL's last segment
           type: string
         url:
+          description: Public HTTP(S) URL to register; no bytes are uploaded
           type: string
         width:
+          description: Pixel width, for images
           format: int64
           type: integer
       type: object
@@ -348,18 +363,26 @@ components:
       additionalProperties: true
       properties:
         content:
+          description: Comment body, at most 200 characters
           type: string
         echo_id:
+          description: Echo ID the comment belongs to
           type: string
         metadata:
+          description: Caller-defined audit string; recorded in server logs only
           type: string
         nickname:
+          description: Display name; defaults to Integration
           type: string
+      required:
+        - echo_id
+        - content
       type: object
     CreateTagDto:
       additionalProperties: true
       properties:
         name:
+          description: 标签名
           type: string
       type: object
     DayStat:
@@ -436,22 +459,29 @@ components:
       properties:
         payload:
           additionalProperties: {}
+          description: Arbitrary fields the card needs to render
           type: object
         type:
+          description: Card type, e.g. weather or music
           type: string
       type: object
     EchoFile:
       additionalProperties: true
       properties:
         echo_id:
+          description: 所属 Echo ID，提交时忽略
           type: string
         file:
           $ref: "#/components/schemas/File"
+          description: 文件元数据，提交时忽略（服务端按 file_id 填充）
         file_id:
+          description: 已上传文件的 ID（上传接口返回）
           type: string
         id:
+          description: 关联记录 ID，提交时忽略
           type: string
         sort_order:
+          description: 同一 Echo 内的排序，从 0 开始
           format: int64
           type: integer
       type: object
@@ -469,26 +499,41 @@ components:
       additionalProperties: true
       properties:
         dateFrom:
+          description: Only Echoes created at or after this Unix time (seconds)
           format: int64
           type: integer
         dateTo:
+          description: Only Echoes created at or before this Unix time (seconds)
           format: int64
           type: integer
         page:
+          description: Page number, 1-based (default 1)
           format: int64
           type: integer
         pageSize:
+          description: Items per page, 1-100 (default 10)
           format: int64
           type: integer
         private:
+          description: "Visibility filter: true for private only, false for public only; omit for both"
           type: boolean
         search:
+          description: Substring match on Echo content
           type: string
         sortBy:
+          description: Sort field (default created_at)
+          enum:
+            - created_at
+            - fav_count
           type: string
         sortOrder:
+          description: Sort direction (default desc)
+          enum:
+            - asc
+            - desc
           type: string
         tagIds:
+          description: Tag IDs to match; an Echo qualifies if it carries any listed tag
           items:
             type: string
           type:
@@ -499,11 +544,14 @@ components:
       additionalProperties: true
       properties:
         content:
+          description: Markdown body; supply at least one of content, files, or extension
           type: string
         created_at:
+          description: Publish time in Unix seconds; defaults to now
           format: int64
           type: integer
         echo_files:
+          description: Attachments as {file_id, sort_order}; upload files first to get file_id
           items:
             $ref: "#/components/schemas/EchoFile"
           type:
@@ -511,13 +559,18 @@ components:
             - "null"
         extension:
           $ref: "#/components/schemas/EchoExtensionDto"
+          description: "Card payload: {type, payload}"
         id:
+          description: Echo ID to update; ignored on create
           type: string
         layout:
+          description: "Layout: waterfall / grid / horizontal / carousel / stack / none"
           type: string
         private:
+          description: Visible only to the owner
           type: boolean
         tags:
+          description: Tags as {name}; an existing tag with the same name is reused
           items:
             $ref: "#/components/schemas/Tag"
           type:
@@ -2341,13 +2394,17 @@ components:
       additionalProperties: true
       properties:
         created_at:
+          description: 创建时间，提交时忽略
           format: int64
           type: integer
         id:
+          description: 标签 ID，提交时忽略
           type: string
         name:
+          description: 标签名；同名标签复用
           type: string
         usage_count:
+          description: 引用次数，提交时忽略
           format: int64
           type: integer
       type: object
@@ -2449,13 +2506,20 @@ components:
       additionalProperties: true
       properties:
         is_active:
+          description: Enabled; defaults to true on create, while omitting it on update disables the webhook
           type: boolean
         name:
+          description: Display name
           type: string
         secret:
+          description: Optional signing secret; the server signs payloads with X-Ech0-Signature
           type: string
         url:
+          description: HTTP(S) endpoint that receives events
           type: string
+      required:
+        - name
+        - url
       type: object
   securitySchemes:
     bearerAuth:
@@ -2484,8 +2548,7 @@ paths:
                 $ref: "#/components/schemas/ErrorBody"
           description: Error
       security:
-        - bearerAuth:
-            - admin:token
+        - bearerAuth: []
       summary: 列出访问令牌
       tags:
         - Setting
@@ -2511,8 +2574,7 @@ paths:
                 $ref: "#/components/schemas/ErrorBody"
           description: Error
       security:
-        - bearerAuth:
-            - admin:token
+        - bearerAuth: []
       summary: 创建访问令牌
       tags:
         - Setting
@@ -2542,8 +2604,7 @@ paths:
                 $ref: "#/components/schemas/ErrorBody"
           description: Error
       security:
-        - bearerAuth:
-            - admin:token
+        - bearerAuth: []
       summary: 删除访问令牌
       tags:
         - Setting
@@ -2603,7 +2664,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:agent
       summary: 获取 Agent 设置
       tags:
         - Setting
@@ -2630,7 +2691,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:agent
       summary: 更新 Agent 设置
       tags:
         - Setting
@@ -2658,7 +2719,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:agent
       summary: 测试 Copilot 连接
       tags:
         - Setting
@@ -2686,7 +2747,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:agent
       summary: 回答 Copilot 正在等待的提问/确认
       tags:
         - Copilot
@@ -2708,7 +2769,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:agent
       summary: 清除持久化 Chat 会话
       tags:
         - Copilot
@@ -2729,7 +2790,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:agent
       summary: 获取持久化 Chat 会话
       tags:
         - Copilot
@@ -2906,7 +2967,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Connected"
+              $ref: "#/components/schemas/AddConnectDto"
         required: true
       responses:
         "200":
@@ -2972,12 +3033,12 @@ paths:
     delete:
       operationId: connect-delete
       parameters:
-        - description: 连接 ID（UUID）
+        - description: Connection ID (UUID)
           in: path
           name: id
           required: true
           schema:
-            description: 连接 ID（UUID）
+            description: Connection ID (UUID)
             format: uuid
             type: string
       responses:
@@ -2995,7 +3056,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - connect:write
+            - connect:delete
       summary: 删除连接
       tags:
         - Connect
@@ -3013,7 +3074,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResultInterface {}"
+                $ref: "#/components/schemas/ResultEcho"
           description: OK
         default:
           content:
@@ -3040,7 +3101,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResultInterface {}"
+                $ref: "#/components/schemas/ResultEcho"
           description: OK
         default:
           content:
@@ -3058,13 +3119,13 @@ paths:
     get:
       operationId: echo-hot
       parameters:
-        - description: 返回条数，默认 5，最大 20
+        - description: Number of Echoes to return; default 5, maximum 20
           explode: false
           in: query
           name: limit
           schema:
             default: 5
-            description: 返回条数，默认 5，最大 20
+            description: Number of Echoes to return; default 5, maximum 20
             format: int64
             type: integer
       responses:
@@ -3200,7 +3261,7 @@ paths:
         - Echo
   /echo/query:
     post:
-      operationId: echo-query
+      operationId: echo-list
       requestBody:
         content:
           application/json:
@@ -3220,7 +3281,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorBody"
           description: Error
-      summary: 统一查询 Echo 列表
+      summary: 分页/筛选 Echo 列表
       tags:
         - Echo
   /echo/random:
@@ -3246,12 +3307,12 @@ paths:
     get:
       operationId: echo-by-tag
       parameters:
-        - description: 标签 ID
+        - description: Tag ID
           in: path
           name: tagid
           required: true
           schema:
-            description: 标签 ID
+            description: Tag ID
             format: uuid
             type: string
         - explode: false
@@ -3340,7 +3401,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - echo:write
+            - echo:delete
       summary: 删除 Echo
       tags:
         - Echo
@@ -3390,7 +3451,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:agent
       summary: 触发全量向量索引重建
       tags:
         - Embedding
@@ -3413,7 +3474,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:agent
       summary: 取消进行中的重建索引作业
       tags:
         - Embedding
@@ -3436,7 +3497,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:agent
       summary: 查询重建索引作业状态
       tags:
         - Embedding
@@ -3458,7 +3519,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:agent
       summary: 获取 Embedding 设置
       tags:
         - Setting
@@ -3485,7 +3546,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:agent
       summary: 更新 Embedding 设置
       tags:
         - Setting
@@ -3493,20 +3554,20 @@ paths:
     get:
       operationId: file-tree
       parameters:
-        - description: 存储类型
+        - description: "Storage type: local or object (s3 maps to object)"
           explode: false
           in: query
           name: storage_type
           required: true
           schema:
-            description: 存储类型
+            description: "Storage type: local or object (s3 maps to object)"
             type: string
-        - description: 路径前缀
+        - description: Path prefix to list under
           explode: false
           in: query
           name: prefix
           schema:
-            description: 路径前缀
+            description: Path prefix to list under
             type: string
       responses:
         "200":
@@ -3531,12 +3592,12 @@ paths:
     delete:
       operationId: file-delete
       parameters:
-        - description: 文件 ID
+        - description: File ID
           in: path
           name: id
           required: true
           schema:
-            description: 文件 ID
+            description: File ID
             type: string
       responses:
         "200":
@@ -3553,19 +3614,19 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - file:write
+            - file:delete
       summary: 删除文件
       tags:
         - File
     get:
       operationId: file-get
       parameters:
-        - description: 文件 ID
+        - description: File ID
           in: path
           name: id
           required: true
           schema:
-            description: 文件 ID
+            description: File ID
             type: string
       responses:
         "200":
@@ -3590,12 +3651,12 @@ paths:
     put:
       operationId: file-update-meta
       parameters:
-        - description: 文件 ID
+        - description: File ID
           in: path
           name: id
           required: true
           schema:
-            description: 文件 ID
+            description: File ID
             type: string
       requestBody:
         content:
@@ -3626,35 +3687,35 @@ paths:
     get:
       operationId: file-list
       parameters:
-        - description: 页码
+        - description: Page number, 1-based (default 1)
           explode: false
           in: query
           name: page
           schema:
-            description: 页码
+            description: Page number, 1-based (default 1)
             format: int64
             type: integer
-        - description: 每页数量
+        - description: Items per page, 1-100 (default 20)
           explode: false
           in: query
           name: pageSize
           schema:
-            description: 每页数量
+            description: Items per page, 1-100 (default 20)
             format: int64
             type: integer
-        - description: 搜索关键词
+        - description: Substring match on file name
           explode: false
           in: query
           name: search
           schema:
-            description: 搜索关键词
+            description: Substring match on file name
             type: string
-        - description: 存储类型
+        - description: "Storage type: local or object (s3 maps to object)"
           explode: false
           in: query
           name: storage_type
           schema:
-            description: 存储类型
+            description: "Storage type: local or object (s3 maps to object)"
             type: string
       responses:
         "200":
@@ -3840,7 +3901,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:token
+            - mcp:read
       summary: 获取 MCP 端点信息与能力清单
       tags:
         - MCP
@@ -3862,7 +3923,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:data
       summary: 取消进行中的全局迁移
       tags:
         - Migration
@@ -3884,7 +3945,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:data
       summary: 清理迁移中间产物
       tags:
         - Migration
@@ -3912,7 +3973,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:data
       summary: 提交导出作业
       tags:
         - Migration
@@ -3934,7 +3995,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:data
       summary: 取消导出作业
       tags:
         - Migration
@@ -3956,7 +4017,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:data
       summary: 查询导出作业状态
       tags:
         - Migration
@@ -3984,7 +4045,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:data
       summary: 启动全局数据迁移
       tags:
         - Migration
@@ -4006,7 +4067,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:data
       summary: 查询全局迁移状态
       tags:
         - Migration
@@ -4071,8 +4132,7 @@ paths:
                 $ref: "#/components/schemas/ErrorBody"
           description: Error
       security:
-        - bearerAuth:
-            - profile:write
+        - bearerAuth: []
       summary: 绑定 OAuth2 账号到当前用户
       tags:
         - Auth
@@ -4094,7 +4154,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:auth
       summary: 获取 OAuth2 设置
       tags:
         - Setting
@@ -4121,7 +4181,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:auth
       summary: 更新 OAuth2 设置
       tags:
         - Setting
@@ -4199,7 +4259,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - comment:moderate
+            - comment:review
       summary: 管理面板列出评论
       tags:
         - Comment
@@ -4227,7 +4287,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - comment:moderate
+            - comment:review
       summary: 批量操作评论
       tags:
         - Comment
@@ -4249,7 +4309,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - comment:moderate
+            - comment:settings
       summary: 获取评论系统设置
       tags:
         - Comment
@@ -4276,7 +4336,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - comment:moderate
+            - comment:settings
       summary: 更新评论系统设置
       tags:
         - Comment
@@ -4304,7 +4364,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - comment:moderate
+            - comment:settings
       summary: 发送评论通知测试邮件
       tags:
         - Comment
@@ -4334,7 +4394,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - comment:moderate
+            - comment:delete
       summary: 删除评论
       tags:
         - Comment
@@ -4363,7 +4423,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - comment:moderate
+            - comment:review
       summary: 获取单条评论
       tags:
         - Comment
@@ -4399,7 +4459,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - comment:moderate
+            - comment:review
       summary: 置顶/取消置顶评论
       tags:
         - Comment
@@ -4435,7 +4495,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - comment:moderate
+            - comment:review
       summary: 更新评论审核状态
       tags:
         - Comment
@@ -4457,7 +4517,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:auth
       summary: 获取 Passkey 设置
       tags:
         - Setting
@@ -4484,7 +4544,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:auth
       summary: 更新 Passkey 设置
       tags:
         - Setting
@@ -4555,8 +4615,7 @@ paths:
                 $ref: "#/components/schemas/ErrorBody"
           description: Error
       security:
-        - bearerAuth:
-            - profile:write
+        - bearerAuth: []
       summary: 删除 Passkey 设备
       tags:
         - Auth
@@ -4591,8 +4650,7 @@ paths:
                 $ref: "#/components/schemas/ErrorBody"
           description: Error
       security:
-        - bearerAuth:
-            - profile:write
+        - bearerAuth: []
       summary: 更新 Passkey 设备名称
       tags:
         - Auth
@@ -4639,7 +4697,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:storage
       summary: 获取 S3 存储设置
       tags:
         - Setting
@@ -4666,7 +4724,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:storage
       summary: 更新 S3 存储设置
       tags:
         - Setting
@@ -4694,7 +4752,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:storage
       summary: 测试 S3 存储连接
       tags:
         - Setting
@@ -4740,7 +4798,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:site
       summary: 更新系统全局设置
       tags:
         - Setting
@@ -4762,7 +4820,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:data
       summary: 获取定时快照计划
       tags:
         - Setting
@@ -4789,7 +4847,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:data
       summary: 设置定时快照计划
       tags:
         - Setting
@@ -4811,7 +4869,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:ops
       summary: 检查 Ech0 版本更新
       tags:
         - Dashboard
@@ -4855,7 +4913,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:ops
       summary: 获取系统历史日志
       tags:
         - Dashboard
@@ -4877,7 +4935,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:ops
       summary: 获取近七天访客统计
       tags:
         - Dashboard
@@ -4913,12 +4971,12 @@ paths:
     delete:
       operationId: tag-delete
       parameters:
-        - description: 标签 ID
+        - description: Tag ID
           in: path
           name: id
           required: true
           schema:
-            description: 标签 ID
+            description: Tag ID
             format: uuid
             type: string
       responses:
@@ -4936,7 +4994,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - echo:write
+            - echo:delete
       summary: 删除标签
       tags:
         - Echo
@@ -5110,7 +5168,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:webhook
       summary: 获取所有 Webhook
       tags:
         - Setting
@@ -5137,7 +5195,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:webhook
       summary: 创建 Webhook
       tags:
         - Setting
@@ -5145,12 +5203,12 @@ paths:
     delete:
       operationId: webhook-delete
       parameters:
-        - description: 资源 ID（UUID）
+        - description: Webhook ID (UUID)
           in: path
           name: id
           required: true
           schema:
-            description: 资源 ID（UUID）
+            description: Webhook ID (UUID)
             format: uuid
             type: string
       responses:
@@ -5168,19 +5226,19 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:webhook
       summary: 删除 Webhook
       tags:
         - Setting
     put:
       operationId: webhook-update
       parameters:
-        - description: Webhook ID（UUID）
+        - description: Webhook ID (UUID)
           in: path
           name: id
           required: true
           schema:
-            description: Webhook ID（UUID）
+            description: Webhook ID (UUID)
             format: uuid
             type: string
       requestBody:
@@ -5204,7 +5262,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:webhook
       summary: 更新 Webhook
       tags:
         - Setting
@@ -5212,12 +5270,12 @@ paths:
     post:
       operationId: webhook-test
       parameters:
-        - description: 资源 ID（UUID）
+        - description: Webhook ID (UUID)
           in: path
           name: id
           required: true
           schema:
-            description: 资源 ID（UUID）
+            description: Webhook ID (UUID)
             format: uuid
             type: string
       responses:
@@ -5235,7 +5293,7 @@ paths:
           description: Error
       security:
         - bearerAuth:
-            - admin:settings
+            - admin:webhook
       summary: 测试 Webhook
       tags:
         - Setting

@@ -1,16 +1,11 @@
-# =================== 前端构建阶段 ===================
-FROM node:26-alpine AS frontend-builder
 
+FROM node:26-alpine AS frontend-builder
 
 WORKDIR /web
 
 COPY web/package.json web/pnpm-lock.yaml ./
 
-RUN if command -v corepack >/dev/null 2>&1; then \
-      corepack enable; \
-    else \
-      npm install -g pnpm@10.33.2; \
-    fi
+RUN npm install -g pnpm@12.16.1
 
 RUN pnpm install --frozen-lockfile
 

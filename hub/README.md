@@ -25,8 +25,6 @@ Want **your** public Ech0 instance to appear on [hub.ech0.app](https://hub.ech0.
 | **PWA** | `vite-plugin-pwa` provides the Web App Manifest and Service Worker (installable on desktop/home screen, static asset caching per `vite.config.ts`). |
 
 
-For a detailed task list as the implementation evolves, see the repo root: `docs/superpowers/plans/2026-04-05-ech0-hub-csr-spa-pwa.md`.
-
 ## Registration automation workflow
 
 The workflow file is `.github/workflows/hub-register-from-issue.yml`. It automates issue-to-PR registration with these triggers:

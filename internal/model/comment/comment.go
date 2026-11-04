@@ -109,10 +109,10 @@ type CreateCommentResult struct {
 }
 
 type CreateIntegrationCommentDto struct {
-	EchoID   string `json:"echo_id" binding:"required"`
-	Content  string `json:"content" binding:"required"`
-	Nickname string `json:"nickname"`
-	Metadata string `json:"metadata"`
+	EchoID   string `json:"echo_id" binding:"required" required:"true" doc:"Echo ID the comment belongs to"`
+	Content  string `json:"content" binding:"required" required:"true" doc:"Comment body, at most 200 characters"`
+	Nickname string `json:"nickname" doc:"Display name; defaults to Integration"`
+	Metadata string `json:"metadata" doc:"Caller-defined audit string; recorded in server logs only"`
 }
 
 type UpdateCommentStatusDto struct {

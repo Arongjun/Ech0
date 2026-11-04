@@ -16,6 +16,11 @@ permissions:
 jobs:
   release-helm:
     name: Publish Helm Repo
+    # Only app releases (v*) publish the chart. Publishing the independent CLI
+    # release (cli-v*) fires `release: published` too, and this job derives both
+    # the chart version and the "latest" pointer from the release tag — a
+    # cli-v* tag would write a non-semver chart version and claim Latest.
+    if: ${{ github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -72,7 +77,7 @@ jobs:
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Run Chart Releaser
-        uses: helm/chart-releaser-action@v1.7.0
+        uses: helm/chart-releaser-action@v1.8.0
         with:
           charts_dir: ./charts
           skip_existing: true

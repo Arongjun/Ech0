@@ -1,0 +1,207 @@
+name: Release CLI
+
+# Builds the standalone `ech0` CLI (Bun cross-compiled binaries) and publishes the
+# npm packages. The CLI is versioned independently from the Ech0 server: the
+# source of truth is `apps/cli/package.json`, and a release is cut by pushing a
+# `cli-vX.Y.Z` tag. `workflow_dispatch` rebuilds an existing CLI tag.
+#
+# Publishing authenticates with npm trusted publishing (OIDC), not a token: every
+# package (`@useech0/cli` + the four `@useech0/cli-<os>-<arch>`) must have a trusted
+# publisher pointing at this workflow, with `npm publish` allowed. See
+# docs/dev/release-process.md ("CLI release"). Tokens that bypass 2FA are being
+# retired for publishing; a 2FA-guarded token fails here with EOTP.
+
+on:
+  push:
+    tags:
+      - "cli-v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "CLI release tag to build from (e.g. cli-v0.1.0). Must already exist."
+        required: true
+        type: string
+      publish_npm:
+        description: "Publish the npm packages"
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: write # create the CLI release and upload assets
+  id-token: write # npm provenance (OIDC)
+
+concurrency:
+  group: release-cli-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  BUN_VERSION: "1.4.3"
+  NODE_VERSION: "26"
+
+jobs:
+  build:
+    name: Build CLI binaries
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+      version: ${{ steps.meta.outputs.version }}
+      dist_tag: ${{ steps.meta.outputs.dist_tag }}
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref_name }}
+
+      - name: Resolve version
+        id: meta
+        env:
+          REF_TAG: ${{ github.ref_name }}
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+        run: |
+          set -euo pipefail
+          tag="${INPUT_TAG:-${REF_TAG}}"
+          case "${tag}" in
+            cli-v*) version="${tag#cli-v}" ;;
+            *)
+              echo "::error::Tag ${tag} is not a CLI release tag (expected cli-vX.Y.Z[-prerelease])."
+              exit 1
+              ;;
+          esac
+          if ! printf '%s' "${version}" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+            echo "::error::Tag ${tag} is not a semver CLI release tag (expected cli-vX.Y.Z[-prerelease])."
+            exit 1
+          fi
+
+          package_version="$(node -p "require('./apps/cli/package.json').version")"
+          if [ "${package_version}" != "${version}" ]; then
+            echo "::error title=Version mismatch::Tag ${tag} implies ${version}, but apps/cli/package.json declares ${package_version}. Bump the package version before tagging."
+            exit 1
+          fi
+
+          # Prerelease versions go to `next` so `npm i -g @useech0/cli` keeps resolving
+          # the latest stable release.
+          dist_tag="latest"
+          case "${version}" in *-*) dist_tag="next" ;; esac
+
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          echo "dist_tag=${dist_tag}" >> "${GITHUB_OUTPUT}"
+          echo "Building ech0 CLI ${version} (${tag}), npm dist-tag: ${dist_tag}"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        working-directory: apps/cli
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck and test
+        working-directory: apps/cli
+        run: |
+          bun run typecheck
+          bun test
+
+      - name: Build binaries, release tarballs and npm packages
+        working-directory: apps/cli
+        run: bun run scripts/dist.ts --version "${{ steps.meta.outputs.version }}" --out dist/release
+
+      - name: Verify binary reports the release version
+        run: |
+          set -euo pipefail
+          ./apps/cli/dist/release/bin/ech0-linux-x64 --version
+          test "$(./apps/cli/dist/release/bin/ech0-linux-x64 --version)" = "${{ steps.meta.outputs.version }}"
+
+      - name: Create GitHub Release when missing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.meta.outputs.tag }}
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          set -euo pipefail
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            echo "release ${TAG} already exists"
+            exit 0
+          fi
+          # The CLI is not the application: never take the repo-wide "Latest"
+          # pointer from the server release.
+          args=(--verify-tag --latest=false --title "ech0 CLI ${VERSION}" --generate-notes)
+          case "${VERSION}" in *-*) args+=(--prerelease) ;; esac
+          gh release create "${TAG}" "${args[@]}"
+
+      - name: Upload assets to the GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          set -euo pipefail
+          gh release upload "${TAG}" \
+            apps/cli/dist/release/ech0-cli-*.tar.gz \
+            apps/cli/dist/release/SHA256SUMS \
+            --clobber
+
+      - name: Upload npm packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: npm-packages
+          path: apps/cli/dist/release/npm
+          retention-days: 7
+
+  npm:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: ${{ github.event_name == 'push' || inputs.publish_npm }}
+    steps:
+      - name: Download npm packages
+        uses: actions/download-artifact@v8
+        with:
+          name: npm-packages
+          path: npm-packages
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: https://registry.npmjs.org
+
+      - name: Ensure npm supports trusted publishing
+        run: |
+          set -euo pipefail
+          # OIDC publishing needs npm >= 11.5.1. No NODE_AUTH_TOKEN: the CLI sees
+          # GitHub's id-token and exchanges it for a short-lived publish credential.
+          current="$(npm --version)"
+          if [ "$(printf '%s\n' "${current}" 11.5.1 | sort -V | head -n1)" != "11.5.1" ]; then
+            npm install -g npm@^11.15.0
+          fi
+          npm --version
+
+      - name: Publish packages
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+          DIST_TAG: ${{ needs.build.outputs.dist_tag }}
+        run: |
+          set -euo pipefail
+
+          publish() {
+            local dir="$1" name published
+            name="$(node -p "require('./${dir}/package.json').name")"
+            published="$(npm view "${name}@${VERSION}" version 2>/dev/null || true)"
+            if [ "${published}" = "${VERSION}" ]; then
+              echo "skip ${name}@${VERSION} (already published)"
+              return 0
+            fi
+            echo "publish ${name}@${VERSION} (dist-tag: ${DIST_TAG})"
+            if ! (cd "${dir}" && npm publish --provenance --access public --tag "${DIST_TAG}"); then
+              echo "::error title=npm publish failed::${name}@${VERSION} was rejected. Publishing is OIDC-only: add a trusted publisher for it (lin-snow/Ech0, release-cli.yml, allow npm publish). A token with 2FA fails here with EOTP."
+              exit 1
+            fi
+          }
+
+          # Platform packages first: the launcher depends on them.
+          for dir in npm-packages/cli-*; do
+            publish "${dir}"
+          done
+          publish npm-packages/cli

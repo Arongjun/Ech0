@@ -9,6 +9,122 @@ For releases prior to v4.6.5, see the [GitHub releases page](https://github.com/
 
 ## [Unreleased]
 
+## [5.9.2] - 2026-11-04
+
+> **Upgrade notes.** This release changes how browser sessions and access tokens are authorized.
+>
+> * **Sign in again.** Administrator sessions issued before this release do not carry the role the admin APIs now check, so administrator actions return `403` until the session refreshes or you sign in again.
+> * **Recreate access tokens** used by scripts, `ech0` CLI profiles, integrations and MCP clients, then delete the old ones. A token keeps the scopes it was created with, so anything that moved to a new scope — deletes, admin settings, comment moderation, token management — stops working until you create a replacement. CLI users can just run `ech0 auth login` again.
+> * **Reconnect MCP clients** with a token whose scopes cover the tools they call (`mcp:read` is discovery only). OAuth-capable clients can authorize from the client instead, without registration if they publish a Client ID Metadata Document.
+
+### Added
+
+* **The CLI can inspect and moderate an instance.** `ech0 info` shows the site name, server version, Echo count, initialization and sign-in state and whether the command catalog is current, and works signed out. `ech0 comment panel list|status|delete` completes the review loop started by `ech0 comment create`, and `ech0 connect health` probes every peer. Default CLI logins now request the full command surface (`echo:private`, `echo:delete`, `comment:review`, `comment:delete`, `connect:read`, `connect:delete`, `admin:webhook`, …); `--scopes` still narrows a token. `PATCH` operations are sent as `PATCH` instead of falling back to `GET`.
+
+* **The account center shows your role.** Owner, administrator and member appear as distinct badges, so it is clear which account can approve MCP clients and manage the instance.
+
+* **Standard MCP authorization (OAuth 2.1 + CIMD).** `/mcp` now advertises RFC 9728 protected-resource metadata and implements RFC 8414 authorization-server metadata, `/oauth/authorize` consent, `/oauth/token` (PKCE S256 only) and a deprecated-but-compatible Dynamic Client Registration endpoint. Clients that publish a Client ID Metadata Document need no registration; non-loopback redirects must share the `client_id` origin, fetches stay on HTTPS and must return JSON. Ech0-branded consent screens list the requested scopes and only administrators can approve. Destructive MCP tools honour the client's `elicitation` capability through MRTR (`input_required` + nonce-bound, single-use `requestState`). `/.well-known` documents vary on the forwarded host/proto headers they derive the origin from.
+
+### Changed
+
+* **Access-token scopes now follow trust boundaries instead of resource buckets.** Writes no longer imply deletes: `echo:delete`, `file:delete` and `connect:delete` are separate grants. The former `comment:moderate` is split into `comment:review`, `comment:delete` and `comment:settings`. `echo:private` is an additive grant for private posts; `echo:read` alone returns public content only. The former `admin:settings` is split into `admin:site`, `admin:storage`, `admin:auth`, `admin:webhook`, `admin:agent`, `admin:data` and `admin:ops`; `admin:user` keeps its existing meaning, and `admin:token` is gone because token CRUD is now session-only. `mcp:read` replaces the old `admin:token` requirement for `GET /api/mcp/manifest`. This is an intentional breaking change: old tokens keep their stored scopes but lose any capability that moved to a new scope, so reissue tokens with the narrower grants.
+
+### Security
+
+* **Account-security operations are browser-session only.** Passkey enrollment/deletion, OAuth identity binding, access-token CRUD, device approval, OAuth consent and live log streams reject every access token regardless of its scopes. An access token that mints another token may no longer grant scopes beyond its own set.
+
+* **Administrator-only APIs now require an administrator session.** Endpoints that need an `admin:*` scope reject ordinary browser sessions with `403` instead of trusting any signed-in account. Access tokens keep using their admin scopes, so token-based automation is unaffected.
+
+## [5.9.1] - 2026-11-02
+
+### Added
+
+* **The `ech0` CLI covers comments and Connect.** `ech0 comment create|list` and `ech0 connect list|info|add|delete` build from the operation catalog like the Echo and file commands. The comment/Connect surface mirrors the MCP tools — no comment moderation and no health probe — so default logins request `comment:write` and `connect:write` without `comment:moderate` or `connect:read`. `ech0 comment create` posts to the trusted integration endpoint (`POST /api/comments/integration`) instead of the guest endpoint, so it needs no anti-bot form token or captcha and works from scripts; access tokens with `audience=cli` are now accepted by that route alongside `integration` and `mcp-remote`. `ech0 connect delete` keeps the `--yes` or interactive `[y/N]` guard.
+
+* **The `ech0` CLI gains tag and webhook modules.** `ech0 tag list|delete` closes the loop on `echo list --tag-ids` (tag ids were previously only reachable through the raw API) and cleans a tag up across posts; tags are still auto-created by `echo create/update --tag`, so there is no separate `tag create`. `ech0 webhook list|create|update|delete|test` mirrors the MCP webhook tools. Webhooks currently require `admin:settings` (there is no finer webhook scope), so the default CLI login includes it; the CLI v1 target is the instance owner/admin. `WebhookDto.name`/`url` are now marked required with field docs, so the operation catalog drives the CLI's required checks and help.
+
+* **`ech0 echo` reads answer questions instead of showing bare flags.** `echo hot|today|random|onthisday` join `echo list|get`, and every CLI-visible request field now carries a concise English `doc` tag, so `ech0 echo list --help` spells out paging defaults and limits, sort fields, Unix-second bounds, tag any-of matching and the visibility filter. The catalog also labels body-filtered `POST` queries as `read`, and boolean flags are tri-state (`--private` / `--no-private`; omitting both sends no filter).
+
+### Fixed
+
+* **CLI flags no longer corrupt typed input silently.** Numeric flags (`--page`, `--page-size`, `--date-from`, …) reject non-numeric values with exit code 2 instead of sending `null`, enum-constrained values such as `--sort-by fav_count` are checked before the request, and repeated array flags (`--tag-ids a --tag-ids b`) accumulate instead of keeping only the last value.
+
+### Internal
+
+* **`just cli release` cuts a CLI release.** The recipe typechecks, tests, checks for generated-type drift, bumps `apps/cli/package.json`, commits `chore(cli-release): vX.Y.Z`, creates the `cli-vX.Y.Z` tag and pushes the branch and tag, so the tag cannot drift from the package version. `ECH0_CLI_DRY=1` stops after the checks; `just cli bump X.Y.Z` keeps the manual bump-only workflow.
+
+## [5.9.0] - 2026-10-30
+
+### Added
+
+* **A first-party `ech0` command-line client.** `apps/cli` (Bun + TypeScript) signs in to one instance and covers Echo CRUD (`ech0 echo create|list|get|update|delete`) plus the file surface (`ech0 file upload|external|list|get|tree|download`). Sign in with a pasted access token, username/password, or `--device` browser approval; named profiles keep several instances apart, and credentials live in the system keychain with a file fallback (`ECH0_NO_KEYCHAIN=1`). Human output by default, `--json` / `--yaml` for scripts, exit codes `0`/`1`/`2` (plus `130` on Ctrl+C) and a hint on every error. The CLI has its own version line, starting at `0.1.0`, and ships as `ech0-cli-<os>-<arch>.tar.gz` + `SHA256SUMS` on GitHub Releases and as `@useech0/cli` with per-platform binaries on npm (darwin/linux × arm64/x64; Windows is unsupported). Reference: [`docs/dev/cli-design.md`](docs/dev/cli-design.md).
+
+* **Agent skill installer.** `ech0 install skills <dir>` writes the bundled skill (command surface, auth, Echo and operation references) into a skills root such as `~/.claude/skills`; `--from <folder>` installs a local copy instead. The same skill lives at [`skills/ech0`](skills/ech0).
+
+* **Device authorization for sign-in without a browser session.** `POST /api/auth/device/code` returns a `ABCD-EFGH` code (ambiguous characters omitted) valid for 10 minutes; the CLI polls `/api/auth/device/token` every 5 seconds and gets a one-month token with `audience=cli` once approved. `GET /api/auth/device/pending` and `POST /api/auth/device/approve` back the new `/device` page, which looks the code up while you type (debounced, 4-4 grouping), shows the client name, localized scopes, a countdown and the signed-in account with switch-account — and only lets admins approve, matching the rule for minting a token in the panel. The code survives the login redirect, so signing in from the link lands back on the approval.
+
+* **`GET /api/_catalog`: an operation catalog the CLI builds its commands from.** Public, canonical JSON describing every callable operation (method, path, scopes, effect, JSON Schema input, transport for SSE/WebSocket/multipart/binary) merged from the Huma document and the hand-written raw-gin routes. Each `/api` response carries `X-Ech0-Catalog: <fingerprint>`; a request that sends a different fingerprint is rejected with `412` and `error_code: catalog_stale` before the handler runs, so stale clients detect drift instead of failing obscurely. The CLI caches the document per host and refreshes once on `412`/`404`. A router test asserts every catalog op has a route and every `/api` route is described.
+
+* **Echo writes return the stored record.** `POST /echo` and `PUT /echo` now answer with `Result[Echo]` (id, tags, files, timestamps) instead of `null`, so clients learn the new id without a follow-up list/get. Callers that ignored the body are unaffected.
+
+* **Downloads keep the original file name.** Stored files on local, S3 and object storage now send `Content-Disposition: inline; filename=…` (RFC 5987 `filename*` for non-ASCII names, `download` when blank), so a browser "save as" and `ech0 file download` without `--output` use the name the file was uploaded with. Renderable types still preview inline.
+
+### Changed
+
+* **The page query operation is now `echo-list`.** `echo-query` is renamed (`POST /echo/query` is unchanged); only consumers that address operations by `operationId` — the CLI, and anything reading the OpenAPI spec — are affected. The deprecated `/echo/page` endpoints stay as they are.
+
+* **Echo request fields are documented in the spec.** Huma `doc` tags on the echo, tag and extension DTOs now spell out layout values, attachment semantics (`file_id` from the upload endpoint), tag reuse and the server-filled fields to ignore. The same text becomes the generated CLI flag help.
+
+### Fixed
+
+* **Access tokens ignored the chosen expiry.** The create path passed a `time.Duration` (nanoseconds) where seconds were expected, and the resulting `time.Duration(expiry) * time.Second` overflowed: an "8 hours" token came back with `exp` in 2058 and a "one month" token expired in 1995, so freshly minted tokens were already dead. Presets now map to seconds (8h → 28800, 1 month → 2592000, never → no expiry) with an 8-hour fallback for unknown values. Device authorization uses the same code path.
+
+* **The panel welcome buttons keep their size.** Their styling was scoped to a root element that `BaseButton` does not render, so it never applied: the home button collapsed to icon + padding and shrank once a longer locale widened the welcome text. `:deep` selectors and a non-shrinking action column fix both.
+
+### Internal
+
+* **CLI releases are independent.** Pushing a `cli-vX.Y.Z` tag runs [`release-cli.yml`](.github/workflows/release-cli.yml), which checks the tag against `apps/cli/package.json`, cross-compiles the four targets, creates the GitHub Release, and publishes the npm packages with OIDC provenance. Server releases no longer build or publish the CLI; `just cli dist X.Y.Z` reproduces the artifacts locally.
+
+* **CLI types are generated from the committed OpenAPI spec** (`@hey-api/openapi-ts`, TypeScript pinned to 5.9 inside the package), so a server spec change is a compile error in the client.
+
+* **Docs.** New [`docs/dev/cli-design.md`](docs/dev/cli-design.md) (catalog contract, transports, auth, command generation); `docs/design` and `docs/imgs` are consolidated under `docs/assets`.
+
+## [5.8.3] - 2026-10-25
+
+### Added
+
+* **The `em` manager script updates itself.** `em self-update` (menu option 10) replaces `/usr/local/sbin/em` with the current script and refreshes the `em` / `ech0` links, and `em update` now does the same on every run, even when the server binary is already current. Installs that still run the old script need one bootstrap: `curl -fsSL https://raw.githubusercontent.com/lin-snow/Ech0/main/scripts/ech0.sh | sudo bash -s -- self-update`.
+
+* **`em logs`, `em help`, and `em update --force`.** Logs are one command away instead of a raw `journalctl` invocation, `help` lists every action, and `--force` reinstalls the current release when a normal update skips it.
+
+* **Script installs get a persistent `JWT_SECRET`.** When `.env` does not already define one, the installer generates it, so restarting the service no longer invalidates every signed-in session.
+
+* **Install and update verify the service actually started.** Both wait for the unit to become active and probe `/healthz`, and print the last journal lines when startup fails.
+
+### Fixed
+
+* **`curl … | bash` no longer installs the shell as the manager.** The installer copied `/bin/bash` to `/usr/local/sbin/em` when it could not find its own script file; it now downloads the real script instead.
+
+* **Only stable Ech0 releases are selected.** Version lookup uses the latest-release endpoint and ignores pre-releases and chart tags such as `ech0-5.8.2`.
+
+* **A failed update rolls back.** The previous binary is kept as `ech0.bak` and restored automatically if the new one does not start.
+
+* **The manager's "current information" menu item works again.** It called the removed `ech0 info` command; it now runs `ech0 version`.
+
+* **Uninstall keeps configuration together with the data.** Keeping `data/` now also keeps `.env`, and the "already installed" message points at `update` / `self-update` instead of a dead end.
+
+* **The systemd unit waits for the network and stops cleanly.** It starts after `network-online.target` and allows 30 seconds for shutdown.
+
+* **A custom `ECH0_DB_PATH` no longer crashes or creates the wrong directory.** Directory resolution hardcoded an `/ech0.db` suffix: a bare file name such as `ech0.db` panicked, and `data/mydb.sqlite` resolved its parent to `data/my`. The directory now comes from the path itself, so any file name or nesting works, and an `ECH0_DB_TYPE` other than `sqlite` fails at startup with a clear error instead of running on an empty DB handle.
+
+* **`ECH0_SERVER_HOST` and `ECH0_LOG_CONSOLE` now take effect.** The listener was pinned to all interfaces and console output could not be turned off. `ECH0_SERVER_HOST=127.0.0.1` now narrows the bind address (empty / `0.0.0.0` / `::` still keeps dual-stack), and `ECH0_LOG_CONSOLE=false` writes only to the log file and TUI log stream (the default stays `true`, so existing behavior is unchanged).
+
+* **Clearer errors for `.env` and JWT secrets.** A `.env` file that exists but fails to parse now reports the real error instead of "No .env file found"; an unset `JWT_SECRET` warns that restarting invalidates issued tokens and adds an `ECH0_JWT_SECRET` alias; a malformed numeric env value names the affected field and keeps its default.
+
+* **Dead env vars removed.** `ECH0_MIGRATION_*`, `ECH0_COMMENT_ENABLE` (comments are toggled in the admin panel), and `ECH0_UPLOAD_{IMAGE,AUDIO,VIDEO}_PATH` (storage paths are chosen by extension routing) had no effect when set. See the new [`docs/usage/configuration.md`](docs/usage/configuration.md) for the full variable and default list.
+
+* **Sessions no longer expire every week.** The refresh token used a fixed 7 days from sign-in, and `/api/auth/refresh` only issued access tokens and never renewed the refresh cookie, so even an active user had to sign in again after a week. Every silent refresh now reissues the refresh token and resets the cookie (`exp` slides to `now + ECH0_JWT_REFRESH_EXPIRES`), so staying active within 7 days keeps you signed in. Renewal keeps the original JTI, so logout still revokes the same session and concurrent refreshes from multiple tabs no longer sign each other out.
+
 
 ## [5.8.2] - 2026-10-22
 
@@ -806,7 +922,8 @@ This is primarily a security release: six advisories disclosed since v4.7.2 are 
 
   Practical risk in this repo was negligible (the vulnerable code only runs at PWA build time on developer-controlled input), but the alerts are now resolved at the supply-chain level.
 
-[Unreleased]: https://github.com/lin-snow/Ech0/compare/v5.5.0...HEAD
+[Unreleased]: https://github.com/lin-snow/Ech0/compare/v5.8.3...HEAD
+[5.8.3]: https://github.com/lin-snow/Ech0/compare/v5.8.2...v5.8.3
 [5.5.0]: https://github.com/lin-snow/Ech0/compare/v5.4.7...v5.5.0
 [5.4.7]: https://github.com/lin-snow/Ech0/compare/v5.4.6...v5.4.7
 [5.4.6]: https://github.com/lin-snow/Ech0/compare/v5.4.5...v5.4.6

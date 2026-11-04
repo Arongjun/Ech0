@@ -96,6 +96,22 @@ func (f *fakeAuthService) UpdatePasskeyDeviceName(context.Context, string, strin
 func (f *fakeAuthService) PasskeyBoundary(context.Context) (string, []string) { return "", nil }
 func (f *fakeAuthService) UnbindOAuth(context.Context, string) error           { panic("not called") }
 
+func (f *fakeAuthService) StartDeviceAuthorization(string, []string) (authModel.DeviceCodeResponse, error) {
+	panic("not called in auth handler tests")
+}
+
+func (f *fakeAuthService) DeviceAuthorizationInfo(string) (authModel.DevicePendingInfo, error) {
+	panic("not called in auth handler tests")
+}
+
+func (f *fakeAuthService) ApproveDeviceAuthorization(context.Context, string) error {
+	panic("not called in auth handler tests")
+}
+
+func (f *fakeAuthService) PollDeviceAuthorization(string) (authModel.DeviceTokenResponse, error) {
+	panic("not called in auth handler tests")
+}
+
 type fakeUserService struct {
 	getUserByIDFn func(id string) (userModel.User, error)
 }
@@ -298,8 +314,14 @@ func TestRefresh_Success(t *testing.T) {
 	r := gin.New()
 	r.POST("/api/auth/refresh", h.Refresh())
 
+	oldToken := issueRefreshToken(t)
+	oldClaims, err := jwtUtil.ParseRefreshToken(oldToken)
+	if err != nil {
+		t.Fatalf("failed to parse seeded refresh token: %v", err)
+	}
+
 	req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", nil)
-	addRefreshCookie(req, issueRefreshToken(t))
+	addRefreshCookie(req, oldToken)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -322,6 +344,30 @@ func TestRefresh_Success(t *testing.T) {
 	}
 	if body.Data.ExpiresIn != config.Config().Auth.Jwt.Expires {
 		t.Fatalf("expected expires_in %d, got %d", config.Config().Auth.Jwt.Expires, body.Data.ExpiresIn)
+	}
+
+	var renewed string
+	for _, c := range rec.Result().Cookies() {
+		if c.Name != cookieUtil.RefreshTokenCookieName {
+			continue
+		}
+		renewed = c.Value
+		if c.MaxAge != config.Config().Auth.Jwt.RefreshExpires {
+			t.Fatalf("expected refreshed cookie MaxAge %d, got %d", config.Config().Auth.Jwt.RefreshExpires, c.MaxAge)
+		}
+	}
+	if renewed == "" {
+		t.Fatal("expected refresh token cookie to be re-issued on refresh")
+	}
+	newClaims, err := jwtUtil.ParseRefreshToken(renewed)
+	if err != nil {
+		t.Fatalf("renewed token must stay a valid refresh token: %v", err)
+	}
+	if newClaims.ID != oldClaims.ID {
+		t.Fatalf("expected renewed session to keep JTI %q, got %q", oldClaims.ID, newClaims.ID)
+	}
+	if newClaims.ExpiresAt == nil || newClaims.ExpiresAt.Before(time.Now().Add(time.Duration(config.Config().Auth.Jwt.RefreshExpires-5)*time.Second)) {
+		t.Fatalf("expected renewed expiry to slide to ~now+%ds, got %v", config.Config().Auth.Jwt.RefreshExpires, newClaims.ExpiresAt)
 	}
 }
 

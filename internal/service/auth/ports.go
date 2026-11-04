@@ -9,6 +9,7 @@ import (
 	"time"
 
 	authModel "github.com/lin-snow/ech0/internal/model/auth"
+	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 	model "github.com/lin-snow/ech0/internal/model/user"
 )
 
@@ -28,7 +29,17 @@ type Service interface {
 	DeletePasskey(ctx context.Context, passkeyID string) error
 	UpdatePasskeyDeviceName(ctx context.Context, passkeyID string, deviceName string) error
 	PasskeyBoundary(ctx context.Context) (rpID string, origins []string)
+	StartDeviceAuthorization(clientName string, scopes []string) (authModel.DeviceCodeResponse, error)
+	DeviceAuthorizationInfo(userCode string) (authModel.DevicePendingInfo, error)
+	ApproveDeviceAuthorization(ctx context.Context, userCode string) error
+	PollDeviceAuthorization(deviceCode string) (authModel.DeviceTokenResponse, error)
 	TokenRevoker
+}
+
+// TokenIssuer mints an access token for the session principal; device
+// approval uses the same policy as the settings panel.
+type TokenIssuer interface {
+	IssueForViewer(ctx context.Context, dto *settingModel.AccessTokenSettingDto) (string, error)
 }
 
 type TokenRevoker interface {

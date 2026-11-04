@@ -9,7 +9,7 @@ Ech0 采用 **Access Token + Refresh Token** 双令牌机制，遵循 OWASP 推�
 | Token 类型 | 存储位置 | 有效期 | 用途 |
 |---|---|---|---|
 | Access Token (`typ: session`) | 前端 JS 内存变量 | 15 分钟（可配置） | 每次 API 请求携带（Authorization header） |
-| Refresh Token (`typ: refresh`) | HttpOnly Cookie | 7 天（可配置） | 静默刷新、恢复会话 |
+| Refresh Token (`typ: refresh`) | HttpOnly Cookie | 7 天（可配置，滑动续期） | 静默刷新、恢复会话 |
 | API Access Token (`typ: access`) | 数据库（管理面板签发） | 自定义 | 面向 CLI / 集成 / MCP 的长期 token |
 
 ### 1.1 为什么这样设计
@@ -32,6 +32,7 @@ type MyClaims struct {
     Username string   `json:"username"`
     Type     string   `json:"typ"`       // "session" | "access" | "refresh"
     Scopes   []string `json:"scope,omitempty"`
+    IsAdmin  bool     `json:"is_admin,omitempty"` // session 角色，access token 不依赖它
     jwt.RegisteredClaims                  // iss, sub, aud, exp, iat, nbf, jti
 }
 ```
@@ -45,6 +46,10 @@ type MyClaims struct {
 | `TokenTypeRefresh` | `"refresh"` | `CreateRefreshClaims()` | 静默刷新专用 |
 
 > `ParseToken()` 仅接受 `session` / `access`，`ParseRefreshToken()` 仅接受 `refresh`，两者互不接受对方类型，防止 token 混用。
+
+`session` token 额外携带 `is_admin`。`admin:*` 路由与系统日志流在 `RequireScopes` 之后还会执行 `RequireAdminSession`：普通用户的浏览器会话即使能登录，也不能读取日志、修改站点设置或访问其他管理面板接口。`access` token 不依赖该 claim，仍以签发的 scope 为准。
+
+刷新会话时 `AuthHandler.Refresh` 会重新加载用户并调用 `CreateClaims(user)`，因此旧 token 刷新后自动带上最新角色；已签发但未携带 `is_admin` 的旧 session 需要重新登录或等待刷新。
 
 ### 2.3 TokenPair 结构
 
@@ -177,8 +182,19 @@ POST /api/auth/refresh  （公开路由，不需要 Authorization header）
 ├─ IsTokenRevoked() 检查是否被吊销
 ├─ GetUserByID() 确认用户仍然存在
 ├─ CreateClaims() + GenerateToken() 签发新 access_token
+├─ RenewRefreshClaims() + GenerateToken() 重签发 refresh_token（沿用原 JTI，exp 滑到 now + RefreshExpires）
+├─ Set-Cookie 重置 refresh_token（Max-Age = RefreshExpires）
 └─ 返回 JSON {access_token, expires_in}
 ```
+
+### 4.4 滑动续期（Sliding Expiration）
+
+Refresh Token 的有效期**从最近一次刷新起算**，不是从登录时刻写死：
+
+- 每次 `POST /api/auth/refresh` 都重签发 refresh token，`exp` 滑到 `now + RefreshExpires`，同时重置 Cookie 的 `Max-Age`；
+- 新 token 复用原 JTI（`RenewRefreshClaims`），因此登出吊销仍能命中同一会话，不会因续期产生"吊销不到"的旧会话；
+- 结果：只要在 `RefreshExpires`（默认 7 天）内活跃过（页面加载或 access token 过期触发的静默刷新即可），就无需重新登录；连续 7 天不活跃才会失效；
+- 由于 JTI 不变，多标签页并发刷新互不干扰（不会出现一方续期把另一方挤下线）。
 
 ## 5. 吊销机制（Token Blacklist）
 
@@ -263,7 +279,7 @@ Set-Cookie: ech0_refresh_token=<jwt>;
 
 - `typ: access`（区别于浏览器会话的 `typ: session`）
 - 不走 Cookie，走 `Authorization: Bearer` header
-- 有独立的 scope（`echo:read`, `admin:settings` 等）和 audience（`cli`, `integration`, `mcp-remote`）
+- 有独立的 scope（`echo:read`, `admin:webhook` 等）和 audience（`cli`, `integration`, `mcp-remote`）
 - 详见 [access-token-scope-design.md](./access-token-scope-design.md)
 
 ## 9. 文件索引
@@ -272,7 +288,8 @@ Set-Cookie: ech0_refresh_token=<jwt>;
 
 | 文件 | 职责 |
 |---|---|
-| `internal/model/auth/scope.go` | Token 类型常量、Scope/Audience 定义与校验 |
+| `internal/authz/scope.go` | Scope/Audience 定义与校验（纯策略） |
+| `internal/model/auth/token.go` | Token 类型常量（`session` / `access` / `refresh`） |
 | `internal/model/auth/auth.go` | MyClaims、TokenPair、OAuth/Passkey DTO、Passkey GORM 实体 |
 | `internal/model/auth/auth_dto.go` | LoginDto、RegisterDto |
 | `internal/util/jwt/jwt.go` | JWT 签发与解析（CreateClaims / CreateRefreshClaims / ParseToken / ParseRefreshToken / GenerateOAuthState / ParseOAuthState / ParseAndVerifyIDToken） |

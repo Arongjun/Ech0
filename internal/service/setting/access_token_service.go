@@ -5,17 +5,11 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"strings"
 	"time"
 
-	authModel "github.com/lin-snow/ech0/internal/model/auth"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	model "github.com/lin-snow/ech0/internal/model/setting"
-	userModel "github.com/lin-snow/ech0/internal/model/user"
-	jwtUtil "github.com/lin-snow/ech0/internal/util/jwt"
-	uuidUtil "github.com/lin-snow/ech0/internal/util/uuid"
 	"github.com/lin-snow/ech0/pkg/viewer"
 )
 
@@ -52,113 +46,13 @@ func (settingService *SettingService) ListAccessTokens(
 	return validTokens, nil
 }
 
+// CreateAccessToken is the settings-panel surface; minting itself lives in the
+// access capability so the device flow and OAuth server share one policy.
 func (settingService *SettingService) CreateAccessToken(
 	ctx context.Context,
 	newToken *model.AccessTokenSettingDto,
 ) (string, error) {
-	userid := viewer.MustFromContext(ctx).UserID()
-	user, err := settingService.commonService.CommonGetUserByUserId(ctx, userid)
-	if err != nil {
-		return "", err
-	}
-	if !user.IsAdmin {
-		return "", errors.New(commonModel.NO_PERMISSION_DENIED)
-	}
-	if err := validateAccessTokenRequest(user, newToken); err != nil {
-		return "", err
-	}
-
-	name := newToken.Name
-	expiry := newToken.Expiry
-	audience := newToken.Audience
-	scopes := normalizeScopes(newToken.Scopes)
-	scopeJSON, err := json.Marshal(scopes)
-	if err != nil {
-		return "", err
-	}
-	jti := uuidUtil.NewV7()
-	var expiryDuration time.Duration
-
-	switch expiry {
-	case model.EIGHT_HOUR_EXPIRY:
-		expiryDuration = 8 * time.Hour
-	case model.ONE_MONTH_EXPIRY:
-		expiryDuration = 30 * 24 * time.Hour
-	case model.NEVER_EXPIRY:
-		expiryDuration = 0
-	default:
-		expiryDuration = 8 * time.Hour
-	}
-
-	claims := jwtUtil.CreateAccessClaimsWithExpiry(user, int64(expiryDuration), scopes, audience, jti)
-	tokenString, err := jwtUtil.GenerateToken(claims)
-	if err != nil {
-		return "", err
-	}
-
-	var expiryPtr *int64
-	if expiry == model.NEVER_EXPIRY {
-		expiryPtr = nil
-	} else {
-		t := time.Now().UTC().Add(expiryDuration).Unix()
-		expiryPtr = &t
-	}
-
-	accessToken := &model.AccessTokenSetting{
-		UserID:    user.ID,
-		Token:     tokenString,
-		Name:      name,
-		TokenType: authModel.TokenTypeAccess,
-		Scopes:    string(scopeJSON),
-		Audience:  audience,
-		JTI:       jti,
-		Expiry:    expiryPtr,
-	}
-
-	if err := settingService.transactor.Run(ctx, func(txCtx context.Context) error {
-		return settingService.settingRepository.CreateAccessToken(txCtx, accessToken)
-	}); err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
-}
-
-func validateAccessTokenRequest(user userModel.User, dto *model.AccessTokenSettingDto) error {
-	if dto == nil {
-		return errors.New(commonModel.INVALID_PARAMS_BODY)
-	}
-	if strings.TrimSpace(dto.Name) == "" {
-		return errors.New(commonModel.INVALID_PARAMS_BODY)
-	}
-	if !authModel.IsValidAudience(dto.Audience) {
-		return errors.New(commonModel.INVALID_PARAMS_BODY)
-	}
-	if len(dto.Scopes) == 0 {
-		return errors.New(commonModel.INVALID_PARAMS_BODY)
-	}
-	for _, scope := range dto.Scopes {
-		if !authModel.IsValidScope(scope) {
-			return errors.New(commonModel.INVALID_PARAMS_BODY)
-		}
-	}
-	if authModel.HasAdminScope(dto.Scopes) && !user.IsAdmin {
-		return errors.New(commonModel.NO_PERMISSION_DENIED)
-	}
-	return nil
-}
-
-func normalizeScopes(scopes []string) []string {
-	seen := make(map[string]struct{}, len(scopes))
-	result := make([]string, 0, len(scopes))
-	for _, scope := range scopes {
-		if _, ok := seen[scope]; ok {
-			continue
-		}
-		seen[scope] = struct{}{}
-		result = append(result, scope)
-	}
-	return result
+	return settingService.access.IssueForViewer(ctx, newToken)
 }
 
 func (settingService *SettingService) DeleteAccessToken(ctx context.Context, id string) error {
