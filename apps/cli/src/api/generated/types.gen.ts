@@ -259,10 +259,10 @@ export type Echo = {
     created_at?: number;
     echo_files?: Array<EchoFile> | null;
     extension?: EchoExtension;
-    fav_count?: number;
     id?: string;
     layout?: string;
     private?: boolean;
+    reactions?: Array<ReactionCount> | null;
     tags?: Array<Tag> | null;
     user_id?: string;
     username?: string;
@@ -321,6 +321,10 @@ export type EchoFile = {
 
 export type EchoQueryDto = {
     /**
+     * Keyset pagination cursor; omit for page-based pagination, send an empty string for the first cursor page
+     */
+    cursor?: string;
+    /**
      * Only Echoes created at or after this Unix time (seconds)
      */
     dateFrom?: number;
@@ -347,7 +351,7 @@ export type EchoQueryDto = {
     /**
      * Sort field (default created_at)
      */
-    sortBy?: 'created_at' | 'fav_count';
+    sortBy?: 'created_at' | 'reactions';
     /**
      * Sort direction (default desc)
      */
@@ -586,6 +590,15 @@ export type HelloResponse = {
     [key: string]: unknown;
 };
 
+export type InitOwnerDto = {
+    email?: string;
+    locale?: string;
+    password?: string;
+    site_title?: string;
+    username?: string;
+    [key: string]: unknown;
+};
+
 export type LogEntry = {
     caller?: string;
     error?: string;
@@ -728,6 +741,7 @@ export type PageQueryDto = {
 
 export type PageQueryResultListEcho = {
     items?: Array<Echo> | null;
+    nextCursor?: string;
     total?: number;
     [key: string]: unknown;
 };
@@ -791,6 +805,20 @@ export type PublicComment = {
     status?: string;
     updated_at?: number;
     website?: string;
+    [key: string]: unknown;
+};
+
+export type ReactionCount = {
+    count?: number;
+    emoji?: string;
+    key?: string;
+    reacted?: boolean;
+    [key: string]: unknown;
+};
+
+export type ReactionEmoji = {
+    emoji?: string;
+    key?: string;
     [key: string]: unknown;
 };
 
@@ -1142,6 +1170,30 @@ export type ResultListPublicComment = {
     [key: string]: unknown;
 };
 
+export type ResultListReactionCount = {
+    code?: number;
+    data?: Array<ReactionCount> | null;
+    error_code?: string;
+    message_key?: string;
+    message_params?: {
+        [key: string]: unknown;
+    };
+    msg?: string;
+    [key: string]: unknown;
+};
+
+export type ResultListReactionEmoji = {
+    code?: number;
+    data?: Array<ReactionEmoji> | null;
+    error_code?: string;
+    message_key?: string;
+    message_params?: {
+        [key: string]: unknown;
+    };
+    msg?: string;
+    [key: string]: unknown;
+};
+
 export type ResultListTag = {
     code?: number;
     data?: Array<Tag> | null;
@@ -1463,6 +1515,7 @@ export type SystemSetting = {
     custom_css?: string;
     custom_js?: string;
     default_locale?: string;
+    disable_agent_discovery?: boolean;
     footer_content?: string;
     footer_link?: string;
     meting_api?: string;
@@ -1479,6 +1532,7 @@ export type SystemSettingDto = {
     custom_css?: string;
     custom_js?: string;
     default_locale?: string;
+    disable_agent_discovery?: boolean;
     footer_content?: string;
     footer_link?: string;
     meting_api?: string;
@@ -2238,36 +2292,6 @@ export type EchoHotResponses = {
 
 export type EchoHotResponse = EchoHotResponses[keyof EchoHotResponses];
 
-export type EchoLikeData = {
-    body?: never;
-    path: {
-        /**
-         * Echo ID
-         */
-        id: string;
-    };
-    query?: never;
-    url: '/echo/like/{id}';
-};
-
-export type EchoLikeErrors = {
-    /**
-     * Error
-     */
-    default: ErrorBody;
-};
-
-export type EchoLikeError = EchoLikeErrors[keyof EchoLikeErrors];
-
-export type EchoLikeResponses = {
-    /**
-     * OK
-     */
-    200: ResultInterface;
-};
-
-export type EchoLikeResponse = EchoLikeResponses[keyof EchoLikeResponses];
-
 export type EchoOnthisdayData = {
     body?: never;
     headers?: {
@@ -2527,6 +2551,74 @@ export type EchoGetResponses = {
 };
 
 export type EchoGetResponse = EchoGetResponses[keyof EchoGetResponses];
+
+export type ReactionRemoveData = {
+    body?: never;
+    path: {
+        /**
+         * Echo ID
+         */
+        id: string;
+        /**
+         * Reaction key
+         */
+        emoji: 'like' | 'heart' | 'haha' | 'wow' | 'sad' | 'cry' | 'party';
+    };
+    query?: never;
+    url: '/echo/{id}/reactions/{emoji}';
+};
+
+export type ReactionRemoveErrors = {
+    /**
+     * Error
+     */
+    default: ErrorBody;
+};
+
+export type ReactionRemoveError = ReactionRemoveErrors[keyof ReactionRemoveErrors];
+
+export type ReactionRemoveResponses = {
+    /**
+     * OK
+     */
+    200: ResultListReactionCount;
+};
+
+export type ReactionRemoveResponse = ReactionRemoveResponses[keyof ReactionRemoveResponses];
+
+export type ReactionAddData = {
+    body?: never;
+    path: {
+        /**
+         * Echo ID
+         */
+        id: string;
+        /**
+         * Reaction key
+         */
+        emoji: 'like' | 'heart' | 'haha' | 'wow' | 'sad' | 'cry' | 'party';
+    };
+    query?: never;
+    url: '/echo/{id}/reactions/{emoji}';
+};
+
+export type ReactionAddErrors = {
+    /**
+     * Error
+     */
+    default: ErrorBody;
+};
+
+export type ReactionAddError = ReactionAddErrors[keyof ReactionAddErrors];
+
+export type ReactionAddResponses = {
+    /**
+     * OK
+     */
+    200: ResultListReactionCount;
+};
+
+export type ReactionAddResponse = ReactionAddResponses[keyof ReactionAddResponses];
 
 export type EmbeddingReindexData = {
     body?: never;
@@ -2926,7 +3018,7 @@ export type CommonHelloResponses = {
 export type CommonHelloResponse = CommonHelloResponses[keyof CommonHelloResponses];
 
 export type InitOwnerData = {
-    body: RegisterDto;
+    body: InitOwnerDto;
     path?: never;
     query?: never;
     url: '/init/owner';
@@ -3724,6 +3816,31 @@ export type PasskeyUpdateNameResponses = {
 };
 
 export type PasskeyUpdateNameResponse = PasskeyUpdateNameResponses[keyof PasskeyUpdateNameResponses];
+
+export type ReactionCatalogData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/reactions';
+};
+
+export type ReactionCatalogErrors = {
+    /**
+     * Error
+     */
+    default: ErrorBody;
+};
+
+export type ReactionCatalogError = ReactionCatalogErrors[keyof ReactionCatalogErrors];
+
+export type ReactionCatalogResponses = {
+    /**
+     * OK
+     */
+    200: ResultListReactionEmoji;
+};
+
+export type ReactionCatalogResponse = ReactionCatalogResponses[keyof ReactionCatalogResponses];
 
 export type UserRegisterData = {
     body: RegisterDto;

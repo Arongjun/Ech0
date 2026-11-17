@@ -110,10 +110,96 @@ function publicEchos(dataset: StaticDataset): App.Api.Ech0.Echo[] {
   return (dataset.echos ?? []).filter((echo) => echo.private !== true)
 }
 
-function queryEchos(dataset: StaticDataset, body: EchoQueryBody): App.Api.Ech0.PaginationResult {
+type EchoCursor = { createdAt: number; id: string }
+
+const CURSOR_VERSION = 'v1:'
+
+function base64UrlEncode(value: string): string {
+  const bytes = new TextEncoder().encode(value)
+  let binary = ''
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte)
+  }
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+function base64UrlDecode(value: string): string | null {
+  try {
+    const padded = value.replace(/-/g, '+').replace(/_/g, '/')
+    const padding = padded.length % 4 === 0 ? '' : '='.repeat(4 - (padded.length % 4))
+    const binary = atob(padded + padding)
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0))
+    return new TextDecoder().decode(bytes)
+  } catch {
+    return null
+  }
+}
+
+function decodeEchoCursor(raw: string): EchoCursor | null {
+  const payload = base64UrlDecode(raw)
+  if (!payload || !payload.startsWith(CURSOR_VERSION)) return null
+  const separator = payload.indexOf(':', CURSOR_VERSION.length)
+  if (separator < 0) return null
+  const createdAt = Number(payload.slice(CURSOR_VERSION.length, separator))
+  const id = payload.slice(separator + 1)
+  // Any int64 is a valid position, matching the backend: stored Echoes may
+  // carry a zero/negative created_at and the server must accept its own
+  // nextCursor.
+  if (!Number.isInteger(createdAt) || id === '' || id.length > 64) return null
+  return { createdAt, id }
+}
+
+/**
+ * Index of the first Echo strictly after the cursor in the same
+ * (created_at, id) direction the backend keyset uses. The boundary is
+ * positional, so a cursor whose Echo was deleted still resumes correctly
+ * instead of truncating the page.
+ */
+function cursorBoundary(
+  sorted: App.Api.Ech0.Echo[],
+  cursor: EchoCursor,
+  ascending: boolean,
+): number {
+  const isAfter = (echo: App.Api.Ech0.Echo): boolean => {
+    const createdAt = toUnixSeconds(echo.created_at)
+    if (createdAt !== cursor.createdAt) {
+      return ascending ? createdAt > cursor.createdAt : createdAt < cursor.createdAt
+    }
+    if (echo.id === cursor.id) return false
+    return ascending ? echo.id > cursor.id : echo.id < cursor.id
+  }
+
+  let low = 0
+  let high = sorted.length
+  while (low < high) {
+    const mid = (low + high) >>> 1
+    if (isAfter(sorted[mid]!)) {
+      high = mid
+    } else {
+      low = mid + 1
+    }
+  }
+  return low
+}
+
+function invalidQuery<T>(msg: string, messageKey: string): App.Api.Response<T> {
+  return {
+    code: 0,
+    msg,
+    error_code: 'INVALID_QUERY',
+    message_key: messageKey,
+    data: null as T,
+  }
+}
+
+function queryEchos(
+  dataset: StaticDataset,
+  body: EchoQueryBody,
+): App.Api.Response<App.Api.Ech0.PaginationResult> {
   const search = (body.search ?? '').trim().toLowerCase()
   const tagIds = (body.tagIds ?? []).filter((id) => typeof id === 'string' && id !== '')
   const { dateFrom, dateTo } = body
+  const cursorMode = typeof body.cursor === 'string'
 
   const filtered = publicEchos(dataset).filter((echo) => {
     if (search !== '' && !(echo.content ?? '').toLowerCase().includes(search)) {
@@ -137,13 +223,19 @@ function queryEchos(dataset: StaticDataset, body: EchoQueryBody): App.Api.Ech0.P
     return true
   })
 
-  const byFavCount = body.sortBy === 'fav_count'
+  const byReactions = body.sortBy === 'reactions'
   const ascending = String(body.sortOrder ?? '').toLowerCase() === 'asc'
   const sorted = filtered.slice().sort((a, b) => {
-    const delta = byFavCount
-      ? (a.fav_count ?? 0) - (b.fav_count ?? 0)
-      : toUnixSeconds(a.created_at) - toUnixSeconds(b.created_at)
-    return ascending ? delta : -delta
+    if (byReactions) {
+      const delta = reactionTotal(a) - reactionTotal(b)
+      return ascending ? delta : -delta
+    }
+    const delta = toUnixSeconds(a.created_at) - toUnixSeconds(b.created_at)
+    if (delta !== 0) return ascending ? delta : -delta
+    // Backend order is `ORDER BY created_at <dir>, id <dir>`: the tiebreaker
+    // follows the same direction, and keyset pagination depends on it.
+    if (a.id === b.id) return 0
+    return (ascending ? a.id < b.id : a.id > b.id) ? -1 : 1
   })
 
   const rawPageSize = Number(body.pageSize)
@@ -154,11 +246,50 @@ function queryEchos(dataset: StaticDataset, body: EchoQueryBody): App.Api.Ech0.P
     pageSize = MAX_PAGE_SIZE
   }
 
+  if (cursorMode) {
+    if (byReactions) {
+      return invalidQuery<App.Api.Ech0.PaginationResult>(
+        'Cursor pagination requires sortBy=created_at',
+        'echo.cursor_sort_unsupported',
+      )
+    }
+
+    let start = 0
+    if (body.cursor) {
+      const cursor = decodeEchoCursor(body.cursor)
+      if (!cursor) {
+        return invalidQuery<App.Api.Ech0.PaginationResult>('Invalid cursor', 'echo.invalid_cursor')
+      }
+      start = cursorBoundary(sorted, cursor, ascending)
+    }
+
+    // Read one row past the page, as the backend does: a cursor is issued only
+    // when another row exists, so an exactly full last page has no next page.
+    const probe = sorted.slice(start, start + pageSize + 1)
+    const items = probe.slice(0, pageSize)
+    const last = items[items.length - 1]
+    return ok<App.Api.Ech0.PaginationResult>({
+      items,
+      total: sorted.length,
+      nextCursor:
+        probe.length > pageSize && last
+          ? base64UrlEncode(`${CURSOR_VERSION}${toUnixSeconds(last.created_at)}:${last.id}`)
+          : null,
+    })
+  }
+
   const rawPage = Number(body.page)
   const page = Number.isFinite(rawPage) && rawPage >= 1 ? Math.trunc(rawPage) : 1
   const start = (page - 1) * pageSize
 
-  return { items: sorted.slice(start, start + pageSize), total: sorted.length }
+  return ok<App.Api.Ech0.PaginationResult>({
+    items: sorted.slice(start, start + pageSize),
+    total: sorted.length,
+  })
+}
+
+function reactionTotal(echo: App.Api.Ech0.Echo): number {
+  return (echo.reactions ?? []).reduce((sum, reaction) => sum + reaction.count, 0)
 }
 
 function echosOnThisDay(dataset: StaticDataset, sameYear: boolean): App.Api.Ech0.Echo[] {
@@ -196,7 +327,7 @@ function route<T>(
     case 'GET /passkey/status':
       return ok<T>({ passkey_ready: false })
     case 'POST /echo/query':
-      return ok<T>(queryEchos(dataset, (body ?? {}) as EchoQueryBody))
+      return queryEchos(dataset, (body ?? {}) as EchoQueryBody) as App.Api.Response<T>
     case 'GET /echo/today':
       return ok<T>(echosOnThisDay(dataset, true))
     case 'GET /echo/onthisday':
@@ -205,7 +336,7 @@ function route<T>(
       return ok<T>(
         publicEchos(dataset)
           .slice()
-          .sort((a, b) => (b.fav_count ?? 0) - (a.fav_count ?? 0))
+          .sort((a, b) => reactionTotal(b) - reactionTotal(a))
           .slice(0, readLimit(query, 5)),
       )
     case 'GET /echo/random': {

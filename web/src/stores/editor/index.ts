@@ -4,10 +4,16 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { theToast } from '@/utils/toast'
-import { fetchAddEcho, fetchUpdateEcho } from '@/service/api'
+import { fetchAddEcho, fetchGetEchoById, fetchUpdateEcho } from '@/service/api'
 import { Mode, ExtensionType, ImageLayout, VideoLayout, AudioLayout } from '@/enums/enums'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
+import {
+  HOME_TIMELINE_ANCHOR_KEY,
+  HOME_TIMELINE_CURSORS_KEY,
+  HOME_TIMELINE_PAGE_KEY,
+} from '@/utils/timeline'
 import { useEchoStore, useSettingStore } from '@/stores'
+import { getEchoFiles } from '@/utils/echo'
 import { localStg, sessionStg } from '@/utils/storage'
 import { globalFileRegistry } from '@/lib/file'
 import { pairEchoFiles } from '@/utils/livephoto'
@@ -16,7 +22,7 @@ import router from '@/router'
 import { useExtensionModule } from './useExtensionModule'
 import { useFilesModule } from './useFilesModule'
 import { useDraftModule } from './useDraftModule'
-import type { Translate } from './types'
+import type { EditorSession, Translate } from './types'
 
 const HOME_TIMELINE_SCROLL_KEY = 'home:timeline:scrollTop'
 const REMEMBERED_IMAGE_LAYOUT_KEY = 'ech0_image_layout'
@@ -36,22 +42,21 @@ export const useEditorStore = defineStore('editorStore', () => {
 
   const ShowEditor = ref<boolean>(true)
   const currentMode = ref<Mode>(Mode.ECH0)
-  const currentExtensionType = ref<ExtensionType>()
   const isSubmitting = ref<boolean>(false)
-  const isUpdateMode = ref<boolean>(false)
+  const session = ref<EditorSession>({ kind: 'compose' })
+  const isUpdateMode = computed(() => session.value.kind === 'update')
+  const updateEcho = computed(() => (session.value.kind === 'update' ? session.value.echo : null))
 
   const echoToAdd = ref<App.Api.Ech0.EchoToAdd>({
     content: '',
-    echo_files: [],
     private: false,
     layout: getRememberedImageLayout(),
-    extension: null,
   })
   const tagToAdd = ref<string[]>([])
 
   const hasContent = computed(() => !!echoToAdd.value.content?.trim())
 
-  const extension = useExtensionModule({ echoToAdd, t })
+  const extension = useExtensionModule({ t })
   const files = useFilesModule({ t })
   const draft = useDraftModule({
     echoToAdd,
@@ -80,6 +85,11 @@ export const useEditorStore = defineStore('editorStore', () => {
     sessionStg.removeItem('home:lastActiveEchoId')
     sessionStg.removeItem('home:lastActiveEcho:viewportTop')
     sessionStg.removeItem('home:lastActiveEcho:viewportRatio')
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem(HOME_TIMELINE_ANCHOR_KEY)
+      sessionStorage.removeItem(HOME_TIMELINE_PAGE_KEY)
+      sessionStorage.removeItem(HOME_TIMELINE_CURSORS_KEY)
+    }
   }
 
   const jumpToHomeTimeline = () => {
@@ -109,11 +119,8 @@ export const useEditorStore = defineStore('editorStore', () => {
 
     echoToAdd.value = {
       content: '',
-      echo_files: [],
       private: false,
       layout: getRememberedImageLayout(),
-      extension: null,
-      tags: [],
     }
     files.fileToAdd.value = {
       id: undefined,
@@ -171,16 +178,48 @@ export const useEditorStore = defineStore('editorStore', () => {
       await files.handleAddMoreFile()
     }
 
-    if (isUpdateMode.value && echoStore.echoToUpdate) {
+    if (isUpdateMode.value) {
       await handleAddOrUpdateEcho(true)
     }
   }
 
-  function checkIsEmptyEcho(echo: App.Api.Ech0.EchoToAdd): boolean {
-    return (
-      !echo.content?.trim() && (!echo.echo_files || echo.echo_files.length === 0) && !echo.extension
+  const buildEchoFiles = () => {
+    const ids = files.filesToAdd.value.flatMap((file) => [file.id, file.live_video_id])
+    return [...new Set(ids.filter((id): id is string => Boolean(id)).map(String))].map(
+      (file_id, sort_order) => ({ file_id, sort_order }),
     )
   }
+
+  const buildEchoTags = () =>
+    (tagToAdd.value ?? [])
+      .map((name) => name.trim())
+      .filter((name) => name.length > 0)
+      .map((name) => ({ name }))
+
+  /** Builds the canonical submit payload; nothing is duplicated in `echoToAdd`. */
+  const buildEchoPayload = (): App.Api.Ech0.EchoToAdd => {
+    const mediaCat = files.mediaCategory.value
+    let layout = echoToAdd.value.layout
+    if (mediaCat === FILE_CATEGORY.VIDEO) {
+      layout = VideoLayout.DEFAULT
+    } else if (mediaCat === FILE_CATEGORY.AUDIO) {
+      layout = AudioLayout.DEFAULT
+    } else if (!Object.values(ImageLayout).includes(layout as ImageLayout)) {
+      layout = ImageLayout.WATERFALL
+    }
+
+    return {
+      content: echoToAdd.value.content,
+      echo_files: buildEchoFiles(),
+      private: echoToAdd.value.private,
+      layout,
+      extension: extension.payload.value,
+      tags: buildEchoTags(),
+    }
+  }
+
+  const isEchoPayloadEmpty = (payload: App.Api.Ech0.EchoToAdd) =>
+    !payload.content?.trim() && (payload.echo_files?.length ?? 0) === 0 && !payload.extension
 
   const handleAddOrUpdateEcho = async (justSyncFiles: boolean) => {
     if (isSubmitting.value) return
@@ -198,41 +237,18 @@ export const useEditorStore = defineStore('editorStore', () => {
         return
       }
 
-      extension.checkEchoExtension()
+      if (!extension.checkEchoExtension() && !justSyncFiles) return
 
-      const echoFiles: { file_id: string; sort_order: number }[] = []
-      let order = 0
-      for (const file of files.filesToAdd.value) {
-        if (!file.id) continue
-        echoFiles.push({ file_id: String(file.id), sort_order: order++ })
-        if (file.live_video_id && String(file.live_video_id) !== String(file.id)) {
-          echoFiles.push({ file_id: String(file.live_video_id), sort_order: order++ })
-        }
-      }
-      echoToAdd.value.echo_files = echoFiles
+      const payload = buildEchoPayload()
 
-      const mediaCat = files.mediaCategory.value
-      if (mediaCat === FILE_CATEGORY.VIDEO) {
-        echoToAdd.value.layout = VideoLayout.DEFAULT
-      } else if (mediaCat === FILE_CATEGORY.AUDIO) {
-        echoToAdd.value.layout = AudioLayout.DEFAULT
-      } else if (!Object.values(ImageLayout).includes(echoToAdd.value.layout as ImageLayout)) {
-        echoToAdd.value.layout = ImageLayout.WATERFALL
-      }
-
-      echoToAdd.value.tags = (tagToAdd.value ?? [])
-        .map((name) => name.trim())
-        .filter((name) => name.length > 0)
-        .map((name) => ({ name }))
-
-      if (checkIsEmptyEcho(echoToAdd.value)) {
+      if (isEchoPayloadEmpty(payload)) {
         const errMsg = isUpdateMode.value ? t('editor.updateEchoEmpty') : t('editor.addEchoEmpty')
         theToast.error(errMsg)
         return
       }
 
       if (!isUpdateMode.value) {
-        theToast.promise(fetchAddEcho(echoToAdd.value), {
+        theToast.promise(fetchAddEcho(payload), {
           loading: t('editor.publishing'),
           success: (res) => {
             if (res.code === 1) {
@@ -255,25 +271,23 @@ export const useEditorStore = defineStore('editorStore', () => {
       }
 
       if (isUpdateMode.value) {
-        if (!echoStore.echoToUpdate) {
+        const target = updateEcho.value
+        if (!target) {
           theToast.error(t('editor.noEchoToUpdate'))
           return
         }
 
-        echoStore.echoToUpdate.content = echoToAdd.value.content
-        echoStore.echoToUpdate.private = echoToAdd.value.private
-        echoStore.echoToUpdate.layout = echoToAdd.value.layout
-        echoStore.echoToUpdate.echo_files = echoToAdd.value.echo_files
-        echoStore.echoToUpdate.extension = echoToAdd.value.extension
-        echoStore.echoToUpdate.tags = echoToAdd.value.tags
+        const updatePayload: App.Api.Ech0.EchoToUpdate = { ...target, ...payload }
 
-        theToast.promise(fetchUpdateEcho(echoStore.echoToUpdate), {
+        theToast.promise(fetchUpdateEcho(updatePayload), {
           loading: justSyncFiles ? t('editor.syncingFiles') : t('editor.updating'),
           success: (res) => {
             if (res.code === 1 && !justSyncFiles) {
+              if (res.data) {
+                echoStore.replaceEcho(res.data)
+              }
               clearEditor()
-              isUpdateMode.value = false
-              echoStore.echoToUpdate = null
+              session.value = { kind: 'compose' }
               setMode(Mode.ECH0)
               echoStore.getTags()
               backToTimelineTab()
@@ -296,10 +310,94 @@ export const useEditorStore = defineStore('editorStore', () => {
     handleAddOrUpdateEcho(false)
   }
 
-  const handleExitUpdateMode = () => {
-    isUpdateMode.value = false
-    echoStore.echoToUpdate = null
+  const seedUpdateDraft = (echo: App.Api.Ech0.Echo) => {
+    echoToAdd.value.content = echo.content || ''
+
+    const paired = pairEchoFiles(getEchoFiles(echo))
+    files.setFilesToAdd(
+      [...paired.imageFiles, ...paired.videoFiles, ...paired.audioFiles].map((file) => ({
+        id: String(file.id || ''),
+        url: file.url || '',
+        storage_type: file.storage_type || 'local',
+        category: file.category,
+        content_type: file.content_type,
+        key: file.key || '',
+        size: file.size,
+        width: file.width,
+        height: file.height,
+        name: file.name,
+        is_live_photo: file.is_live_photo,
+        live_video_id: file.live_video_id,
+        live_video_url: file.live_video_url,
+        live_pair_id: file.live_pair_id,
+      })),
+    )
+
+    const echoExtension = echo.extension
+    if (echoExtension) {
+      extension.extensionToAdd.value.extension_type = echoExtension.type
+      switch (echoExtension.type) {
+        case ExtensionType.MUSIC:
+          extension.extensionToAdd.value.extension = echoExtension.payload.url || ''
+          break
+        case ExtensionType.VIDEO:
+          extension.extensionToAdd.value.extension = echoExtension.payload.videoId || ''
+          extension.videoURL.value = echoExtension.payload.videoId || ''
+          break
+        case ExtensionType.GITHUBPROJ:
+          extension.extensionToAdd.value.extension = echoExtension.payload.repoUrl || ''
+          break
+        case ExtensionType.WEBSITE:
+          extension.websiteToAdd.value.title = echoExtension.payload.title || ''
+          extension.websiteToAdd.value.site = echoExtension.payload.site || ''
+          break
+        case ExtensionType.LOCATION: {
+          const payload = echoExtension.payload
+          extension.locationToAdd.value = {
+            latitude: typeof payload.latitude === 'number' ? payload.latitude : null,
+            longitude: typeof payload.longitude === 'number' ? payload.longitude : null,
+            placeholder: payload.placeholder || '',
+          }
+          extension.extensionToAdd.value.extension =
+            typeof payload.latitude === 'number' && typeof payload.longitude === 'number'
+              ? `${payload.latitude},${payload.longitude}`
+              : ''
+          break
+        }
+        case ExtensionType.TWEET: {
+          const payload = echoExtension.payload
+          extension.tweetToAdd.value = {
+            url: payload.url || '',
+            username: payload.username || '',
+            statusId: payload.statusId || '',
+          }
+          extension.extensionToAdd.value.extension = payload.url || ''
+          break
+        }
+      }
+    }
+
+    const tags = echo.tags
+    tagToAdd.value = Array.isArray(tags)
+      ? tags.map((tag) => tag?.name).filter((name): name is string => !!name)
+      : []
+    echoToAdd.value.private = echo.private || false
+    echoToAdd.value.layout = echo.layout || ImageLayout.WATERFALL
+  }
+
+  const startUpdate = async (echo: App.Api.Ech0.Echo) => {
+    const res = await fetchGetEchoById(String(echo.id))
+    const target = res.code === 1 && res.data ? res.data : echo
+
+    session.value = { kind: 'update', echo: target }
     clearEditor()
+    seedUpdateDraft(target)
+    theToast.info(t('editor.enteredUpdateMode'))
+  }
+
+  const handleExitUpdateMode = () => {
+    clearEditor()
+    session.value = { kind: 'compose' }
     setMode(Mode.ECH0)
     theToast.info(t('editor.exitUpdateModeSuccess'))
   }
@@ -312,10 +410,11 @@ export const useEditorStore = defineStore('editorStore', () => {
     ShowEditor,
 
     currentMode,
-    currentExtensionType,
 
     isSubmitting,
+    session,
     isUpdateMode,
+    updateEcho,
     fileUploading: files.fileUploading,
 
     echoToAdd,
@@ -326,7 +425,6 @@ export const useEditorStore = defineStore('editorStore', () => {
 
     fileToAdd: files.fileToAdd,
     filesToAdd: files.filesToAdd,
-    fileIndex: files.fileIndex,
     selectedCategory: files.selectedCategory,
     mediaCategory: files.mediaCategory,
     effectiveCategory: files.effectiveCategory,
@@ -338,6 +436,7 @@ export const useEditorStore = defineStore('editorStore', () => {
     extensionToAdd: extension.extensionToAdd,
     locationToAdd: extension.locationToAdd,
     tweetToAdd: extension.tweetToAdd,
+    extensionPreview: extension.extensionPreview,
     tagToAdd,
 
     init,
@@ -349,10 +448,10 @@ export const useEditorStore = defineStore('editorStore', () => {
     handleAddOrUpdateEcho,
     handleAddOrUpdate,
     handleExitUpdateMode,
-    checkIsEmptyEcho,
+    startUpdate,
     checkEchoExtension: extension.checkEchoExtension,
-    syncEchoExtension: extension.syncEchoExtension,
     clearExtension: extension.clearExtension,
+    removeExtension: extension.removeExtension,
     handleUppyUploaded,
     setFilesToAdd: files.setFilesToAdd,
     reorderFilesByIds: files.reorderFilesByIds,

@@ -1,4 +1,17 @@
 {
+  "reaction": {
+    "add": "Reaktion hinzufügen",
+    "close": "Reaktionen schließen",
+    "unavailable": "Dies ist ein statisches Archiv; Reaktionen sind nicht verfügbar.",
+    "failed": "Reaktion fehlgeschlagen, bitte erneut versuchen.",
+    "like": "Gefällt mir",
+    "heart": "Herz",
+    "haha": "Haha",
+    "wow": "Wow",
+    "sad": "Traurig",
+    "cry": "Weinen",
+    "party": "Feiern"
+  },
   "common": {
     "requestFailed": "Anfrage fehlgeschlagen",
     "save": "Speichern",
@@ -24,6 +37,9 @@
     "preview": "Vorschau",
     "showPreview": "Vorschau einblenden",
     "hidePreview": "Vorschau ausblenden",
+    "previewFiles": "Dateien",
+    "previewContent": "Text",
+    "previewExtension": "Erweiterung",
     "imageLayoutPlaceholder": "Layout wählen",
     "imageUrlPlaceholder": "Anhang-URL eingeben…",
     "mediaSectionTitle": "Medien einfügen (Bild / Audio / Video)",
@@ -128,6 +144,8 @@
     "removeImage": "Anhang entfernen",
     "invalidImageIndex": "Ungültiger Anhang-Index – Entfernen nicht möglich",
     "removeImageConfirmTitle": "Diesen Anhang entfernen?",
+    "removeExtension": "Erweiterung entfernen",
+    "removeExtensionConfirmTitle": "Diese Erweiterung entfernen?",
     "removeImageRemoteFailed": "Anhang aus dem Editor entfernt, aber serverseitiges Löschen fehlgeschlagen – die Datei könnte auf dem Backend zurückbleiben",
     "dragToReorder": "Ziehen zum Neuanordnen",
     "convertingHeic": "HEIC-Foto wird konvertiert...",
@@ -264,9 +282,6 @@
     "deleteConfirmTitle": "Datei löschen bestätigen",
     "deleteConfirmDesc": "Sind Sie sicher, dass Sie die Datei \"{name}\" löschen möchten? Dieser Vorgang kann nicht rückgängig gemacht werden."
   },
-  "staticSite": {
-    "likeUnavailable": "Dies ist ein statisches Archiv; Liken ist nicht möglich."
-  },
   "auth": {
     "loginSuccess": "Anmeldung erfolgreich – willkommen zurück! 🎉",
     "signupSuccess": "Registrierung erfolgreich, bitte anmelden."
@@ -294,15 +309,36 @@
     "initialize": "Initialisieren",
     "initDone": "Initialisierung abgeschlossen",
     "alreadyInitializedRedirect": "System bereits initialisiert, Weiterleitung zur Anmeldung",
-    "initFailed": "Initialisierung fehlgeschlagen"
+    "initFailed": "Initialisierung fehlgeschlagen",
+    "introHeading": "Mit Ech0 loslegen",
+    "introDescription": "Erstelle das Owner-Konto, schließe die Grundeinrichtung der Seite ab und eröffne deinen persönlichen Aufzeichnungsraum.",
+    "siteTitlePlaceholder": "Seitenname (optional)",
+    "autoLoginFailed": "Owner erstellt. Bitte anmelden."
+  },
+  "onboarding": {
+    "title": "Mach deine Instanz fertig",
+    "publishTitle": "Schreibe deinen ersten Echo",
+    "publishDesc": "Halte einen Gedanken fest — hier beginnt deine Timeline.",
+    "siteTitleTitle": "Gib deiner Seite einen Namen",
+    "siteTitleDesc": "Gib deiner Seite einen Namen; er erscheint im Browsertitel und auf Freigabekarten.",
+    "siteURLTitle": "Lege deine Seitenadresse fest",
+    "siteURLDesc": "Trag deine öffentliche Adresse ein, damit RSS, Freigabelinks und Snapshots erreichbar sind.",
+    "done": "Erledigt",
+    "hide": "Ausblenden",
+    "firstEchoTitle": "Dein erster Echo ist veröffentlicht",
+    "firstEchoDesc": "Deine Timeline hat einen neuen Anfang. Klick auf das Datum, um den Echo zu öffnen.",
+    "dismiss": "Später",
+    "actionPublish": "Jetzt veröffentlichen",
+    "actionSiteTitle": "Namen geben",
+    "actionSiteURL": "Adresse anlegen"
   },
   "hub": {
     "emptyList": "Hub-Liste ist leer. Füge zuerst Connect-Einträge in den Einstellungen hinzu.",
     "noAvailableInstance": "Derzeit keine erreichbaren Hub-Instanzen verfügbar.",
     "connectedCount": "Mit {count} Instanz(en) verbunden, Echos werden geladen…",
     "loading": "Wird geladen…",
-    "emptyConnectHint": "Noch keine Daten. Füge zuerst einen Connect hinzu.",
     "noMoreData": "Keine weiteren Daten",
+    "emptyConnectHint": "Noch keine Daten. Füge zuerst einen Connect hinzu.",
     "globalWorld": "Globaler Platz",
     "peerWorld": "Gefolgte Seiten",
     "globalWorldDesc": "Durch alle öffentlichen Knoten streifen",
@@ -342,17 +378,14 @@
     "alreadyLatest": "Bereits auf dem neuesten Stand",
     "checkUpdateFailed": "Update-Prüfung fehlgeschlagen",
     "clickToCheckUpdate": "Klicken, um auf Updates zu prüfen",
-    "activityTitle": "Activity",
-    "activityAccent": "Log",
-    "visitorTitle": "Besucher",
-    "visitorAccent": "Statistik",
+    "activityTitle": "Activity Log",
+    "visitorTitle": "Besucherstatistik",
     "visitorPv": "Seitenaufrufe",
     "visitorUv": "Eindeutige Besucher",
     "visitorEmpty": "Noch keine Besucherdaten"
   },
   "tagPileWidget": {
-    "title": "Tech",
-    "accent": "Stacks",
+    "title": "Tech Stacks",
     "empty": "Keine Trending-Tags"
   },
   "panelPage": {
@@ -454,8 +487,14 @@
     "noMore": "Keine weiteren Daten",
     "noMoreFiltered": "Keine weiteren Daten",
     "loading": "Wird geladen…",
-    "older": "Älter",
-    "newer": "Neuer"
+    "loadingMore": "Weitere werden geladen…",
+    "loadMoreFailed": "Weitere Daten konnten nicht geladen werden",
+    "loadFailed": "Die Zeitleiste konnte nicht geladen werden",
+    "retry": "Erneut versuchen",
+    "allLoaded": "Das war alles",
+    "earlier": "Früher",
+    "later": "Später",
+    "pagerLabel": "Zeitleisten-Seiten"
   },
   "dateTime": {
     "justNow": "Gerade eben",
@@ -479,9 +518,6 @@
   },
   "echoDetail": {
     "share": "Teilen",
-    "like": "Gefällt mir",
-    "alreadyLiked": "Du hast bereits reagiert – danke!",
-    "likeSuccess": "Gefällt mir!",
     "copied": "Link in die Zwischenablage kopiert!",
     "shareSuffix": "Geteilt über Ech0",
     "sharePanelTitle": "Dieses Ech0 teilen",
@@ -542,7 +578,8 @@
     "deleteConfirmTitle": "Dieses Echo löschen?",
     "deleteConfirmDesc": "Diese Aktion kann nicht rückgängig gemacht werden.",
     "deleteSuccess": "Gelöscht",
-    "exitUpdateModeFirst": "Bitte zuerst den Bearbeitungsmodus verlassen",
+    "editAnotherEchoTitle": "Anderen Echo bearbeiten?",
+    "editAnotherEchoDesc": "Du bearbeitest bereits einen Echo. Aktuelle Änderungen verwerfen und diesen Echo bearbeiten?",
     "openDetail": "Detail öffnen",
     "expand": "Mehr anzeigen",
     "collapse": "Weniger anzeigen",
@@ -614,6 +651,8 @@
     "customJs": "Eigenes JS",
     "customJsPlaceholder": "Eigenes Script eingeben",
     "allowRegister": "Registrierung erlauben",
+    "agentDiscovery": "Agent-Erkennung",
+    "agentDiscoveryHint": "Veröffentlicht /llms.txt, den AI-Katalog und die MCP-Server-Card, damit KI-Agenten die Feeds, die API und den MCP-Endpunkt dieser Instanz finden",
     "defaultLocale": "Standardsprache",
     "logoUploading": "Server-Logo wird hochgeladen…",
     "logoUploadSuccess": "Server-Logo hochgeladen!",
@@ -1089,17 +1128,13 @@
     "pageNotFound": "Seite nicht gefunden"
   },
   "hubEcho": {
-    "jumpToEcho": "Dieses Echo öffnen",
-    "like": "Gefällt mir",
-    "alreadyLiked": "Du hast bereits reagiert",
-    "likeFailed": "Gefällt-mir fehlgeschlagen",
-    "likeSuccess": "Gefällt mir!"
+    "jumpToEcho": "Dieses Echo öffnen"
   },
   "imageGallery": {
     "previewImage": "Bild {index} anzeigen",
     "prevImage": "Vorheriges Bild",
     "nextImage": "Nächstes Bild",
-    "scrollHint": "← Wischen, um mehr zu sehen →",
+    "goToImage": "Zu Bild {index} springen",
     "livePhoto": "Live Photo",
     "turnOffAutoPlay": "Autoplay deaktivieren",
     "turnOnAutoPlay": "Autoplay aktivieren"
@@ -1305,7 +1340,7 @@
   },
   "devicePage": {
     "codeLabel": "Gerätecode",
-    "codePlaceholder": "ABCD-EFGH",
+    "codeSlotLabel": "Zeichen {index} von {total}",
     "codeHelp": "Gib den 8-stelligen Code aus deinem Terminal ein.",
     "approve": "Bestätigen",
     "approving": "Wird bestätigt…",

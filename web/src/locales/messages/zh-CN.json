@@ -1,4 +1,17 @@
 {
+  "reaction": {
+    "add": "添加表情反应",
+    "close": "关闭表情选择",
+    "unavailable": "当前为静态归档站点，无法使用表情反应。",
+    "failed": "表情反应失败，请重试。",
+    "like": "赞",
+    "heart": "喜欢",
+    "haha": "哈哈",
+    "wow": "惊讶",
+    "sad": "难过",
+    "cry": "大哭",
+    "party": "庆祝"
+  },
   "common": {
     "requestFailed": "请求失败",
     "save": "保存",
@@ -24,6 +37,9 @@
     "preview": "预览",
     "showPreview": "显示预览",
     "hidePreview": "隐藏预览",
+    "previewFiles": "文件",
+    "previewContent": "文本",
+    "previewExtension": "扩展",
     "imageLayoutPlaceholder": "请选择布局方式",
     "imageUrlPlaceholder": "请输入附件链接...",
     "mediaSectionTitle": "插入媒体（图片 / 音频 / 视频）",
@@ -128,6 +144,8 @@
     "removeImage": "移除附件",
     "invalidImageIndex": "当前附件索引无效，无法删除！",
     "removeImageConfirmTitle": "确定要移除附件吗？",
+    "removeExtension": "移除扩展",
+    "removeExtensionConfirmTitle": "确定要移除这个扩展吗？",
     "removeImageRemoteFailed": "附件已从编辑器移除，但服务器删除失败，可能存在残留文件",
     "dragToReorder": "拖拽调整顺序",
     "convertingHeic": "正在转换 HEIC 图片格式...",
@@ -264,9 +282,6 @@
     "deleteConfirmTitle": "确认删除文件",
     "deleteConfirmDesc": "确定要删除文件 \"{name}\" 吗？此操作将永久删除该文件，不可恢复。"
   },
-  "staticSite": {
-    "likeUnavailable": "当前为静态归档站点，无法点赞。"
-  },
   "auth": {
     "loginSuccess": "登录成功,欢迎回来！🎉",
     "signupSuccess": "注册成功,请登录！"
@@ -294,15 +309,36 @@
     "initialize": "初始化",
     "initDone": "初始化完成",
     "alreadyInitializedRedirect": "系统已初始化，正在跳转登录",
-    "initFailed": "初始化失败"
+    "initFailed": "初始化失败",
+    "introHeading": "开始使用 Ech0",
+    "introDescription": "创建 Owner 账号，完成站点基本设置，开启你的个人记录空间。",
+    "siteTitlePlaceholder": "站点名称（可留空）",
+    "autoLoginFailed": "Owner 已创建，请手动登录。"
+  },
+  "onboarding": {
+    "title": "让你的实例准备就绪",
+    "publishTitle": "写下第一条 Echo",
+    "publishDesc": "记录一个想法，让你的时间线从这里开始。",
+    "siteTitleTitle": "为站点取个名字",
+    "siteTitleDesc": "给你的站点一个名字，它将显示在浏览器标题和分享卡片中。",
+    "siteURLTitle": "设置站点地址",
+    "siteURLDesc": "配置你的公开地址，让 RSS、分享链接和内容快照都能正确访问。",
+    "done": "已完成",
+    "hide": "不再提示",
+    "firstEchoTitle": "第一条 Echo 已发布",
+    "firstEchoDesc": "你的时间线有了新的开始。点击日期即可查看 Echo 详情。",
+    "dismiss": "稍后再说",
+    "actionPublish": "立即发布",
+    "actionSiteTitle": "填写名称",
+    "actionSiteURL": "填写地址"
   },
   "hub": {
     "emptyList": "Hub列表为空，请到设置中添加Connect吧~",
     "noAvailableInstance": "当前Hub暂无可连接的实例。",
     "connectedCount": "成功连接 {count} 个实例，开始加载 Echos",
     "loading": "加载中...",
-    "emptyConnectHint": "暂无数据，快去添加 Connect 吧",
     "noMoreData": "没有更多数据了",
+    "emptyConnectHint": "暂无数据，快去添加 Connect 吧",
     "globalWorld": "全网广场",
     "peerWorld": "关注列表",
     "globalWorldDesc": "漫游全网公共动态",
@@ -342,17 +378,14 @@
     "alreadyLatest": "已是最新版本",
     "checkUpdateFailed": "检查更新失败",
     "clickToCheckUpdate": "点击检查更新",
-    "activityTitle": "Activity",
-    "activityAccent": "Log",
-    "visitorTitle": "Visitor",
-    "visitorAccent": "Stats",
+    "activityTitle": "Activity Log",
+    "visitorTitle": "Visitor Stats",
     "visitorPv": "访问量",
     "visitorUv": "独立访客",
     "visitorEmpty": "暂无访客数据"
   },
   "tagPileWidget": {
-    "title": "Tech",
-    "accent": "Stacks",
+    "title": "Tech Stacks",
     "empty": "暂无热门标签"
   },
   "panelPage": {
@@ -454,8 +487,14 @@
     "noMore": "没有更多数据了",
     "noMoreFiltered": "没有更多数据了",
     "loading": "加载中...",
-    "older": "之前",
-    "newer": "之后"
+    "loadingMore": "正在加载更多...",
+    "loadMoreFailed": "加载失败",
+    "loadFailed": "时间线加载失败",
+    "retry": "重试",
+    "allLoaded": "已经到底了",
+    "earlier": "之前",
+    "later": "之后",
+    "pagerLabel": "时间线分页"
   },
   "dateTime": {
     "justNow": "刚刚",
@@ -479,9 +518,6 @@
   },
   "echoDetail": {
     "share": "分享",
-    "like": "点赞",
-    "alreadyLiked": "你已经点赞过了，感谢你的喜欢！",
-    "likeSuccess": "点赞成功！",
     "copied": "链接已复制到剪贴板！",
     "shareSuffix": "来自 Ech0 分享",
     "sharePanelTitle": "分享这条 Ech0",
@@ -542,7 +578,8 @@
     "deleteConfirmTitle": "确定要删除吗？",
     "deleteConfirmDesc": "删除后将无法恢复，请谨慎操作",
     "deleteSuccess": "删除成功！",
-    "exitUpdateModeFirst": "请先退出更新模式！",
+    "editAnotherEchoTitle": "编辑另一条 Echo？",
+    "editAnotherEchoDesc": "你正在编辑另一条 Echo。放弃当前修改并编辑这条吗？",
     "openDetail": "查看详情",
     "expand": "展开全文",
     "collapse": "收起",
@@ -614,6 +651,8 @@
     "customJs": "自定义 JS",
     "customJsPlaceholder": "请输入自定义 Script",
     "allowRegister": "允许注册",
+    "agentDiscovery": "智能体发现",
+    "agentDiscoveryHint": "向 AI 智能体公开 /llms.txt、AI catalog 与 MCP server card，使其能自动发现本实例的订阅源、API 与 MCP 端点",
     "defaultLocale": "默认语言",
     "logoUploading": "服务器 Logo 上传中...",
     "logoUploadSuccess": "服务器 Logo 上传成功！",
@@ -1089,17 +1128,13 @@
     "pageNotFound": "页面不存在"
   },
   "hubEcho": {
-    "jumpToEcho": "跳转至该 Echo",
-    "like": "点赞",
-    "alreadyLiked": "你已经点赞过",
-    "likeFailed": "点赞失败",
-    "likeSuccess": "点赞成功"
+    "jumpToEcho": "跳转至该 Echo"
   },
   "imageGallery": {
     "previewImage": "预览图片{index}",
     "prevImage": "上一张图片",
     "nextImage": "下一张图片",
-    "scrollHint": "← 左右滑动查看更多 →",
+    "goToImage": "跳到第 {index} 张图片",
     "livePhoto": "实况照片",
     "turnOffAutoPlay": "关闭自动播放",
     "turnOnAutoPlay": "开启自动播放"
@@ -1305,7 +1340,7 @@
   },
   "devicePage": {
     "codeLabel": "设备码",
-    "codePlaceholder": "ABCD-EFGH",
+    "codeSlotLabel": "第 {index} 个字符，共 {total} 个",
     "codeHelp": "输入终端中显示的 8 位设备码。",
     "approve": "确认授权",
     "approving": "授权中…",

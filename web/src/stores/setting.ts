@@ -65,6 +65,7 @@ export const useSettingStore = defineStore('settingStore', () => {
     meting_api: cachedSetting?.meting_api || '',
     custom_css: cachedSetting?.custom_css || '',
     custom_js: cachedSetting?.custom_js || '',
+    disable_agent_discovery: cachedSetting?.disable_agent_discovery ?? false,
   })
   const S3Setting = ref<App.Api.Setting.S3Setting>({
     enable: false,

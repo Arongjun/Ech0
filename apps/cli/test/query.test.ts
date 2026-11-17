@@ -31,9 +31,10 @@ const CATALOG = {
         properties: {
           page: { type: "integer", description: "Page number, 1-based (default 1)" },
           pageSize: { type: "integer", description: "Items per page, 1-100 (default 10)" },
+          cursor: { type: "string", description: "Keyset pagination cursor; empty string for the first page" },
           search: { type: "string" },
           tagIds: { type: ["array", "null"], items: { type: "string" } },
-          sortBy: { type: "string", enum: ["created_at", "fav_count"], description: "Sort field" },
+          sortBy: { type: "string", enum: ["created_at", "reactions"], description: "Sort field" },
           sortOrder: { type: "string", enum: ["asc", "desc"] },
           private: { type: "boolean", description: "Visibility filter" },
         },
@@ -41,6 +42,7 @@ const CATALOG = {
       bind: {
         page: "body",
         pageSize: "body",
+        cursor: "body",
         search: "body",
         tagIds: "body",
         sortBy: "body",
@@ -94,13 +96,20 @@ describe("echo query flags", () => {
     expect(await valuesFor(["echo", "list", "--no-private"])).toEqual({ private: false });
   });
 
+  test("passes the cursor through, including the empty first-page value", async () => {
+    expect(await valuesFor(["echo", "list", "--cursor", ""])).toEqual({ cursor: "" });
+    expect(await valuesFor(["echo", "list", "--cursor", "v1:1700000000:abc"])).toEqual({
+      cursor: "v1:1700000000:abc",
+    });
+  });
+
   test("rejects non-numeric values instead of sending null", async () => {
     await expect(valuesFor(["echo", "list", "--page", "abc"])).rejects.toBeInstanceOf(UsageError);
     await expect(valuesFor(["echo", "list", "--page-size", "1.5"])).rejects.toBeInstanceOf(UsageError);
   });
 
   test("accepts only the documented sort values", async () => {
-    expect(await valuesFor(["echo", "list", "--sort-by", "fav_count"])).toEqual({ sortBy: "fav_count" });
+    expect(await valuesFor(["echo", "list", "--sort-by", "reactions"])).toEqual({ sortBy: "reactions" });
     await expect(valuesFor(["echo", "list", "--sort-by", "favorites"])).rejects.toBeInstanceOf(UsageError);
   });
 

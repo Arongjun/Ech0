@@ -4,6 +4,7 @@
 import { localStg } from '@/utils/storage'
 import { useAuthStore } from '@/stores/auth'
 import { i18n } from '@/locales'
+import { getVisitorId } from '@/utils/visitor'
 
 export function buildCommonHeaders(): Record<string, string> {
   let timeZone = 'UTC'
@@ -18,6 +19,11 @@ export function buildCommonHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
     'X-Timezone': timeZone,
     'X-Locale': locale,
+    'X-Ech0-Visitor': getVisitorId(),
+  }
+  const authHeader = useAuthStore().authHeader
+  if (authHeader) {
+    headers['Authorization'] = authHeader
   }
   try {
     const authHeader = useAuthStore().authHeader

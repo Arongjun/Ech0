@@ -84,10 +84,16 @@ const (
 	UserLocalAuthBackfilledKey     = "user_local_auth_backfilled_v1"
 	UsersPasswordColumnDroppedKey  = "users_password_column_dropped_v1"
 	EchoUserIDReconciledKey        = "echo_user_id_reconciled_v2"
+	EchosFavCountColumnDroppedKey  = "echos_fav_count_column_dropped_v1"
+	EchosPrivateCreatedDroppedKey  = "echos_private_created_index_dropped_v1"
 	ChatSessionKeyPrefix           = "chat_session:"
 )
 
 type PageQueryResult[T any] struct {
 	Total int64 `json:"total"`
 	Items T     `json:"items"`
+	// NextCursor is only populated for cursor-paginated queries. Its absence
+	// means there is no further page (and keeps legacy page-mode responses
+	// byte-identical).
+	NextCursor *string `json:"nextCursor,omitempty"`
 }

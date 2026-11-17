@@ -9,22 +9,55 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
 
+    <!--ECH0_SEO_START-->
+    <meta
+      name="description"
+      content="Ech0 is a next-generation open-source self-hosted platform built for individuals. It is lightweight and low-cost, making it easy to publish and share your ideas, writing, and links."
+    />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Ech0" />
     <meta property="og:title" content="Ech0" />
     <meta
       property="og:description"
       content="Ech0 is a next-generation open-source self-hosted platform built for individuals. It is lightweight and low-cost, making it easy to publish and share your ideas, writing, and links."
     />
-    <meta property="og:image" content="/Ech0.png" />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Ech0" />
     <meta property="og:url" content="/" />
+    <meta property="og:image" content="/og-cover.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Ech0" />
+    <meta property="og:locale" content="zh_CN" />
+
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Ech0" />
     <meta
       name="twitter:description"
       content="Ech0 is a next-generation open-source self-hosted platform built for individuals. It is lightweight and low-cost, making it easy to publish and share your ideas, writing, and links."
     />
-    <meta name="twitter:image" content="/Ech0.png" />
+    <meta name="twitter:image" content="/og-cover.jpg" />
+    <meta name="twitter:image:alt" content="Ech0" />
+
+    <title>Ech0</title>
+
+    <script id="website-jsonld" type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Ech0",
+        "description": "Ech0 is a next-generation open-source self-hosted platform built for individuals. It is lightweight and low-cost, making it easy to publish and share your ideas, writing, and links.",
+        "url": "/",
+        "publisher": {
+          "@type": "Organization",
+          "name": "Ech0 Team",
+          "logo": "/Ech0.png"
+        },
+        "sameAs": ["https://github.com/lin-snow/Ech0"]
+      }
+    </script>
+    <!--ECH0_SEO_END-->
 
     <link rel="alternate" type="application/atom+xml" title="Ech0 Atom Feed" href="/rss" />
 
@@ -37,18 +70,26 @@
     <link rel="manifest" href="/app.webmanifest" />
     <meta name="apple-mobile-web-app-title" content="Ech0" />
     <meta name="theme-color" content="#f3f7fb" />
-    <meta
-      name="description"
-      content="Ech0 is a next-generation open-source self-hosted platform built for individuals. It is lightweight and low-cost, making it easy to publish and share your ideas, writing, and links."
-    />
-    <meta
-      name="keywords"
-      content="Ech0, open-source, sharing, thoughts, text, links, privacy, data control, platform, web app"
-    />
-    <meta name="author" content="Ech0 Team" />
-    <meta name="generator" content="Ech0" />
 
-    <title>Ech0</title>
+    <script>
+      // The app theme is a user choice, not the OS preference. Resolve it before the first
+      // paint so no browser surface (PWA title bar / status bar, UA canvas behind transparent
+      // areas) falls back to prefers-color-scheme. Keep the map in sync with
+      // THEME_COLOR_FALLBACK in src/stores/theme.ts; that store re-syncs after hydration.
+      ;(() => {
+        const fallback = { light: '#f4f1ec', sunny: '#eeece6', dark: '#333333' }
+        let theme = 'light'
+        try {
+          const saved = JSON.parse(localStorage.getItem('themeMode'))
+          if (saved === 'light' || saved === 'sunny' || saved === 'dark') theme = saved
+        } catch {
+          // Malformed storage: fall through to the light default.
+        }
+        document.documentElement.classList.add(theme)
+        document.documentElement.style.colorScheme = theme === 'dark' ? 'dark' : 'light'
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', fallback[theme])
+      })()
+    </script>
     <script>
       ;(function () {
         try {
@@ -73,19 +114,8 @@
       })()
     </script>
 
-    <script id="website-jsonld" type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "Ech0",
-        "description": "Ech0 is a next-generation open-source self-hosted platform built for individuals. It is lightweight and low-cost, making it easy to publish and share your ideas, writing, and links.",
-        "publisher": {
-          "@type": "Organization",
-          "name": "Ech0 Team"
-        },
-        "sameAs": ["https://github.com/lin-snow/Ech0"]
-      }
-    </script>
+    <meta name="author" content="Ech0 Team" />
+    <meta name="generator" content="Ech0" />
 
     <style>
       html.app-loading,
@@ -191,6 +221,8 @@
 
       #app-loader .loader-brand {
         margin: 0;
+        display: flex;
+        justify-content: center;
         text-align: center;
         font-family:
           'SF Pro Display', 'Iowan Old Style', 'Noto Serif SC', 'PingFang SC', ui-serif, Georgia,
@@ -243,12 +275,20 @@
         visibility: hidden;
       }
 
-      @keyframes smile-spin {
-        from {
-          transform: rotate(0deg);
+      @keyframes letter-hop {
+        0%,
+        40%,
+        100% {
+          transform: translateY(0) scale(1) rotate(0deg);
         }
-        to {
-          transform: rotate(360deg);
+        10% {
+          transform: translateY(0.04em) scale(1.08, 0.92) rotate(0deg);
+        }
+        22% {
+          transform: translateY(-0.3em) scale(0.96, 1.05) rotate(var(--tilt, 0deg));
+        }
+        32% {
+          transform: translateY(0) scale(1.06, 0.94) rotate(0deg);
         }
       }
 
@@ -271,11 +311,23 @@
           width: 1.2em;
         }
       }
+
+      @media (prefers-reduced-motion: reduce) {
+        #app-loader .loader-brand,
+        #app-loader .loader-brand span,
+        #app-loader p,
+        #app-loader p::after {
+          animation: none;
+        }
+      }
     </style>
   </head>
 
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <!--ECH0_NOSCRIPT_START-->
+      <!--ECH0_NOSCRIPT_END-->
+    </div>
     <div id="app-loader">
       <div class="loader-shell" aria-hidden="true">
         <div class="loader-widget-smile">

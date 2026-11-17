@@ -38,43 +38,22 @@
         {{ t('echoDetail.metaPrivate') }}
       </span>
       <div class="echo-meta-actions">
+        <TheEchoReactions :echo="props.echo" />
         <TheShareEchoPanel :echo-id="props.echo.id" :echo-content="props.echo.content" />
-        <button
-          type="button"
-          class="echo-meta-like"
-          v-tooltip="t('echoDetail.like')"
-          @click="handleLikeEcho(props.echo.id)"
-        >
-          <span
-            :class="[
-              'transform transition-transform duration-150 inline-flex',
-              isLikeAnimating ? 'scale-160' : 'scale-100',
-            ]"
-          >
-            <GrayLike class="w-4 h-4" />
-          </span>
-          <span class="text-xs text-[var(--color-text-muted)]">
-            {{ props.echo.fav_count > 99 ? '99+' : props.echo.fav_count }}
-          </span>
-        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Lock from '@/components/icons/lock.vue'
-import GrayLike from '@/components/icons/graylike.vue'
 import TheShareEchoPanel from '@/components/advanced/echo/cards/TheShareEchoPanel.vue'
 import { useTimeDisplay } from '@/composables/useTimeDisplay'
 import { countWords } from '@/utils/echo'
-import { fetchLikeEcho } from '@/service/api'
-import { theToast } from '@/utils/toast'
-import { localStg } from '@/utils/storage'
-import { isStaticMode } from '@/service/request/shared'
+import TheEchoReactions from '@/components/advanced/echo/cards/TheEchoReactions.vue'
 import { useEchoStore } from '@/stores'
 
 const { t } = useI18n()
@@ -84,10 +63,6 @@ const echoStore = useEchoStore()
 
 const props = defineProps<{
   echo: App.Api.Ech0.Echo
-}>()
-
-const emit = defineEmits<{
-  (e: 'updateLikeCount', echoId: string): void
 }>()
 
 type NormalizedTag = { id: string; name: string }
@@ -151,38 +126,6 @@ const handleTagClick = (tag: NormalizedTag) => {
   echoStore.refreshEchos()
   router.push({ name: 'home' })
 }
-
-const isLikeAnimating = ref(false)
-
-const LIKE_LIST_KEY = 'likedEchoIds'
-const likedEchoIds: string[] = localStg.getItem(LIKE_LIST_KEY) || []
-const hasLikedEcho = (echoId: string): boolean => likedEchoIds.includes(echoId)
-
-const handleLikeEcho = (echoId: string) => {
-  isLikeAnimating.value = true
-  setTimeout(() => {
-    isLikeAnimating.value = false
-  }, 250)
-
-  if (isStaticMode()) {
-    theToast.info(String(t('staticSite.likeUnavailable')))
-    return
-  }
-
-  if (hasLikedEcho(echoId)) {
-    theToast.info(String(t('echoDetail.alreadyLiked')))
-    return
-  }
-
-  fetchLikeEcho(echoId).then((res) => {
-    if (res.code === 1) {
-      likedEchoIds.push(echoId)
-      localStg.setItem(LIKE_LIST_KEY, likedEchoIds)
-      emit('updateLikeCount', echoId)
-      theToast.info(String(t('echoDetail.likeSuccess')))
-    }
-  })
-}
 </script>
 
 <style scoped>
@@ -195,7 +138,7 @@ const handleLikeEcho = (echoId: string) => {
 
 .echo-meta-line {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0.4rem;
   color: var(--color-text-muted);
@@ -208,6 +151,7 @@ const handleLikeEcho = (echoId: string) => {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
+  white-space: nowrap;
 }
 
 .echo-meta-item--lock {
@@ -223,6 +167,15 @@ const handleLikeEcho = (echoId: string) => {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.45rem;
+}
+
+@media (width <= 360px) {
+  /* The reaction pill can grow to three emoji plus a capped total; drop the
+     least useful fact so the row and its actions still fit on small phones. */
+  .echo-meta-word,
+  .echo-meta-dot--word {
+    display: none;
+  }
 }
 
 .echo-meta-chip {
@@ -251,17 +204,8 @@ const handleLikeEcho = (echoId: string) => {
 .echo-meta-actions {
   margin-left: auto;
   display: inline-flex;
+  flex: none;
   align-items: center;
-  gap: 0.5rem;
-}
-
-.echo-meta-like {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  background: transparent;
-  border: none;
-  padding: 0;
-  cursor: pointer;
+  gap: 0.55rem;
 }
 </style>

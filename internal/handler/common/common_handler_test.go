@@ -14,7 +14,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	commonHandler "github.com/lin-snow/ech0/internal/handler/common"
+	"github.com/lin-snow/ech0/internal/kvstore"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
+	echoModel "github.com/lin-snow/ech0/internal/model/echo"
+	commonService "github.com/lin-snow/ech0/internal/service/common"
 	"github.com/lin-snow/ech0/internal/test/helpers"
 	commonmock "github.com/lin-snow/ech0/internal/test/mocks/commonmock"
 	versionPkg "github.com/lin-snow/ech0/internal/version"
@@ -25,6 +28,11 @@ import (
 
 func init() {
 	gin.SetMode(gin.TestMode)
+}
+
+// emptySettings reads config defaults, where agent discovery is enabled.
+func emptySettings() kvstore.Store {
+	return kvstore.NewMemory()
 }
 
 func TestGetHeatMap(t *testing.T) {
@@ -43,7 +51,7 @@ func TestGetHeatMap(t *testing.T) {
 			want := []commonModel.Heatmap{{Date: "2026-06-30", Count: 3}}
 			svc.EXPECT().GetHeatMap(tc.wantNormTZ).Return(want, nil).Once()
 
-			h := commonHandler.NewCommonHandler(svc)
+			h := commonHandler.NewCommonHandler(svc, emptySettings())
 			out, err := h.GetHeatMap(context.Background(), &commonHandler.GetHeatMapInput{Timezone: tc.inputTZ})
 
 			require.NoError(t, err)
@@ -59,7 +67,7 @@ func TestGetHeatMap_ServiceError(t *testing.T) {
 	sentinel := errors.New("db down")
 	svc.EXPECT().GetHeatMap(mock.Anything).Return(nil, sentinel).Once()
 
-	h := commonHandler.NewCommonHandler(svc)
+	h := commonHandler.NewCommonHandler(svc, emptySettings())
 	out, err := h.GetHeatMap(context.Background(), &commonHandler.GetHeatMapInput{Timezone: "UTC"})
 
 	require.ErrorIs(t, err, sentinel)
@@ -68,7 +76,7 @@ func TestGetHeatMap_ServiceError(t *testing.T) {
 
 func TestHelloEch0(t *testing.T) {
 	svc := commonmock.NewMockService(t)
-	h := commonHandler.NewCommonHandler(svc)
+	h := commonHandler.NewCommonHandler(svc, emptySettings())
 
 	out, err := h.HelloEch0(context.Background(), &commonHandler.HelloInput{})
 
@@ -87,7 +95,7 @@ func TestGetWebsiteTitle(t *testing.T) {
 		svc := commonmock.NewMockService(t)
 		svc.EXPECT().GetWebsiteTitle("https://example.com").Return("Example Domain", nil).Once()
 
-		h := commonHandler.NewCommonHandler(svc)
+		h := commonHandler.NewCommonHandler(svc, emptySettings())
 		out, err := h.GetWebsiteTitle(context.Background(), &commonHandler.GetWebsiteTitleInput{WebsiteURL: "https://example.com"})
 
 		require.NoError(t, err)
@@ -100,7 +108,7 @@ func TestGetWebsiteTitle(t *testing.T) {
 		sentinel := errors.New("dns failure")
 		svc.EXPECT().GetWebsiteTitle(mock.Anything).Return("", sentinel).Once()
 
-		h := commonHandler.NewCommonHandler(svc)
+		h := commonHandler.NewCommonHandler(svc, emptySettings())
 		out, err := h.GetWebsiteTitle(context.Background(), &commonHandler.GetWebsiteTitleInput{WebsiteURL: "https://bad"})
 
 		require.ErrorIs(t, err, sentinel)
@@ -110,7 +118,7 @@ func TestGetWebsiteTitle(t *testing.T) {
 
 func TestHealthz(t *testing.T) {
 	svc := commonmock.NewMockService(t)
-	h := commonHandler.NewCommonHandler(svc)
+	h := commonHandler.NewCommonHandler(svc, emptySettings())
 	r := gin.New()
 	r.GET("/healthz", h.Healthz())
 
@@ -161,7 +169,7 @@ func TestGetRobotsTxt(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			svc := commonmock.NewMockService(t)
-			h := commonHandler.NewCommonHandler(svc)
+			h := commonHandler.NewCommonHandler(svc, emptySettings())
 			r := gin.New()
 			r.GET("/robots.txt", h.GetRobotsTxt)
 
@@ -181,14 +189,32 @@ func TestGetRobotsTxt(t *testing.T) {
 			body := rec.Body.String()
 			assert.Contains(t, body, "User-agent: *")
 			assert.Contains(t, body, "Disallow: /api/")
+			for _, privatePath := range []string{"/auth", "/panel", "/device", "/oauth/", "/widget", "/chat", "/zen"} {
+				assert.Contains(t, body, "Disallow: "+privatePath)
+			}
 			assert.Contains(t, body, tc.wantSitemap)
+
+			// Crawlers reject unknown fields (Google flags them in Search Console),
+			// so every line must stay inside the RFC 9309 grammar.
+			for _, line := range strings.Split(strings.TrimSpace(body), "\n") {
+				line = strings.TrimSpace(line)
+				if line == "" || strings.HasPrefix(line, "#") {
+					continue
+				}
+				field, _, ok := strings.Cut(line, ":")
+				require.True(t, ok, "line is not a directive: %q", line)
+				assert.Contains(t, []string{"User-agent", "Allow", "Disallow", "Sitemap"}, field, line)
+			}
 		})
 	}
 }
 
 func TestGetSitemap(t *testing.T) {
 	svc := commonmock.NewMockService(t)
-	h := commonHandler.NewCommonHandler(svc)
+	svc.EXPECT().ListSitemapEntries(mock.Anything).Return([]echoModel.EchoRef{
+		{ID: "echo-1", CreatedAt: 1735689600},
+	}, nil).Once()
+	h := commonHandler.NewCommonHandler(svc, emptySettings())
 	r := gin.New()
 	r.GET("/sitemap.xml", h.GetSitemap)
 
@@ -203,7 +229,8 @@ func TestGetSitemap(t *testing.T) {
 
 	var urlset struct {
 		URLs []struct {
-			Loc string `xml:"loc"`
+			Loc     string `xml:"loc"`
+			LastMod string `xml:"lastmod"`
 		} `xml:"url"`
 	}
 	require.NoError(t, xml.Unmarshal(rec.Body.Bytes(), &urlset))
@@ -214,15 +241,34 @@ func TestGetSitemap(t *testing.T) {
 	assert.ElementsMatch(t, []string{
 		"http://ech0.app/",
 		"http://ech0.app/hub",
+		"http://ech0.app/about",
 		"http://ech0.app/rss",
+		"http://ech0.app/echo/echo-1",
 	}, locs)
+	assert.Equal(t, "2025-01-01T00:00:00Z", urlset.URLs[len(urlset.URLs)-1].LastMod)
+}
+
+func TestGetSitemap_ServiceError(t *testing.T) {
+	svc := commonmock.NewMockService(t)
+	svc.EXPECT().ListSitemapEntries(mock.Anything).Return(nil, errors.New("db down")).Once()
+	h := commonHandler.NewCommonHandler(svc, emptySettings())
+	r := gin.New()
+	r.GET("/sitemap.xml", h.GetSitemap)
+
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/sitemap.xml", nil))
+
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 }
 
 func TestGetRss(t *testing.T) {
 	t.Run("feed-content-type-for-subscriber", func(t *testing.T) {
 		svc := commonmock.NewMockService(t)
-		svc.EXPECT().GenerateRSS(mock.Anything).Return("<feed/>", nil).Once()
-		h := commonHandler.NewCommonHandler(svc)
+		svc.EXPECT().GenerateRSS(mock.Anything).Return(commonService.RSSDocument{
+			Atom: "<feed/>",
+			HTML: "<html>styled</html>",
+		}, nil).Once()
+		h := commonHandler.NewCommonHandler(svc, emptySettings())
 		r := gin.New()
 		r.GET("/rss", h.GetRss)
 
@@ -231,13 +277,17 @@ func TestGetRss(t *testing.T) {
 
 		require.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, "application/atom+xml; charset=utf-8", rec.Header().Get("Content-Type"))
+		assert.Equal(t, "Accept", rec.Header().Get("Vary"))
 		assert.Equal(t, "<feed/>", rec.Body.String())
 	})
 
-	t.Run("browser-accept-html-gets-generic-xml", func(t *testing.T) {
+	t.Run("browser-accept-html-gets-server-rendered-page", func(t *testing.T) {
 		svc := commonmock.NewMockService(t)
-		svc.EXPECT().GenerateRSS(mock.Anything).Return("<feed/>", nil).Once()
-		h := commonHandler.NewCommonHandler(svc)
+		svc.EXPECT().GenerateRSS(mock.Anything).Return(commonService.RSSDocument{
+			Atom: "<feed/>",
+			HTML: "<html>styled</html>",
+		}, nil).Once()
+		h := commonHandler.NewCommonHandler(svc, emptySettings())
 		r := gin.New()
 		r.GET("/rss", h.GetRss)
 
@@ -247,13 +297,15 @@ func TestGetRss(t *testing.T) {
 		r.ServeHTTP(rec, req)
 
 		require.Equal(t, http.StatusOK, rec.Code)
-		assert.Equal(t, "application/xml; charset=utf-8", rec.Header().Get("Content-Type"))
+		assert.Equal(t, "text/html; charset=utf-8", rec.Header().Get("Content-Type"))
+		assert.Equal(t, "Accept", rec.Header().Get("Vary"))
+		assert.Equal(t, "<html>styled</html>", rec.Body.String())
 	})
 
 	t.Run("service-error-returns-fail-envelope", func(t *testing.T) {
 		svc := commonmock.NewMockService(t)
-		svc.EXPECT().GenerateRSS(mock.Anything).Return("", errors.New("rss boom")).Once()
-		h := commonHandler.NewCommonHandler(svc)
+		svc.EXPECT().GenerateRSS(mock.Anything).Return(commonService.RSSDocument{}, errors.New("rss boom")).Once()
+		h := commonHandler.NewCommonHandler(svc, emptySettings())
 		r := gin.New()
 		r.GET("/rss", h.GetRss)
 

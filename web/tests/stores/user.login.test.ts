@@ -16,7 +16,7 @@ const apiMocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@/service/api', () => apiMocks)
-vi.mock('@/router', () => ({ default: { push: vi.fn() } }))
+vi.mock('@/router', () => ({ default: { push: vi.fn(), currentRoute: { value: { query: {} } } } }))
 vi.mock('@/utils/toast', () => ({ theToast: { success: vi.fn(), error: vi.fn() } }))
 vi.mock('@/stores/auth', () => ({
   useAuthStore: () => ({ setToken: vi.fn(), clearToken: vi.fn() }),

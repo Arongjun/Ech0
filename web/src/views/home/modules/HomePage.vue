@@ -81,10 +81,9 @@ import {
   onDeactivated,
   computed,
   watch,
-  nextTick,
 } from 'vue'
-import { useEchoStore, useUserStore, useSettingStore } from '@/stores'
-import { useRoute, onBeforeRouteLeave } from 'vue-router'
+import { useEchoStore, useUserStore, useSettingStore, useConnectStore } from '@/stores'
+import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import {
   TheCommentWidget,
@@ -92,7 +91,6 @@ import {
   TheHeatMap,
   TheRecentCard,
 } from '@/components/advanced/widget'
-import { sessionStg } from '@/utils/storage'
 
 const route = useRoute()
 const TheEditor = defineAsyncComponent(() => import('./TheEditor.vue'))
@@ -102,6 +100,7 @@ const HubPage = defineAsyncComponent(() => import('@/views/hub/modules/HubPage.v
 const userStore = useUserStore()
 const settingStore = useSettingStore()
 const echoStore = useEchoStore()
+const connectStore = useConnectStore()
 const { isLogin } = storeToRefs(userStore)
 const { AgentSetting } = storeToRefs(settingStore)
 const { searchingMode, isFilteringMode } = storeToRefs(echoStore)
@@ -117,18 +116,17 @@ const shouldHideBannerOnMobile = computed(
   () => mobileSearchOpen.value || searchingMode.value || isFilteringMode.value,
 )
 
+// Start the (potentially slow) connect lookup before the status widgets mount,
+// so it never queues behind the AI Recent request on the status page.
+watch(
+  activeTab,
+  (tab) => {
+    if (tab === 'status') void connectStore.getConnectInfo()
+  },
+  { immediate: true },
+)
+
 const mainColumn = ref<HTMLElement | null>(null)
-const TIMELINE_SCROLL_KEY = 'home:timeline:scrollTop'
-const WINDOW_SCROLL_KEY = 'home:window:scrollTop'
-const LAST_ACTIVE_ECHO_KEY = 'home:lastActiveEchoId'
-const LAST_ACTIVE_VIEWPORT_TOP_KEY = 'home:lastActiveEcho:viewportTop'
-const LAST_ACTIVE_VIEWPORT_RATIO_KEY = 'home:lastActiveEcho:viewportRatio'
-let currentTimelineScrollTop = 0
-let currentWindowScrollTop = 0
-let scrollDebounceTimer: ReturnType<typeof setTimeout> | null = null
-const isNavigatingAway = ref(false)
-const isRestoringScroll = ref(false)
-let scrollListenersBound = false
 
 const paletteOpen = ref<boolean>(false)
 const chatLauncherOpen = ref<boolean>(false)
@@ -154,165 +152,9 @@ const handleGlobalKeydown = (event: KeyboardEvent) => {
   }
 }
 
-const flushScrollPositions = () => {
-  if (scrollDebounceTimer !== null) {
-    clearTimeout(scrollDebounceTimer)
-    scrollDebounceTimer = null
-  }
-  if (isRestoringScroll.value || isNavigatingAway.value) return
-
-  if (mainColumn.value) {
-    currentTimelineScrollTop = Math.round(mainColumn.value.scrollTop)
-    sessionStg.setItem(TIMELINE_SCROLL_KEY, String(currentTimelineScrollTop))
-  }
-  if (typeof window !== 'undefined') {
-    currentWindowScrollTop = Math.round(window.scrollY)
-    sessionStg.setItem(WINDOW_SCROLL_KEY, String(currentWindowScrollTop))
-  }
-}
-
-const scheduleScrollSave = () => {
-  if (isRestoringScroll.value || isNavigatingAway.value) return
-  if (scrollDebounceTimer !== null) return
-  scrollDebounceTimer = setTimeout(flushScrollPositions, 150)
-}
-
-const saveTimelineScrollPosition = () => {
-  if (isNavigatingAway.value || isRestoringScroll.value || !mainColumn.value) return
-  currentTimelineScrollTop = Math.round(mainColumn.value.scrollTop)
-  scheduleScrollSave()
-}
-
-const saveWindowScrollPosition = () => {
-  if (isNavigatingAway.value || isRestoringScroll.value || typeof window === 'undefined') return
-  currentWindowScrollTop = Math.round(window.scrollY)
-  scheduleScrollSave()
-}
-
-const bindScrollListeners = () => {
-  if (scrollListenersBound) return
-  if (typeof window !== 'undefined') {
-    window.addEventListener('scroll', saveWindowScrollPosition, { passive: true })
-  }
-  if (mainColumn.value) {
-    mainColumn.value.addEventListener('scroll', saveTimelineScrollPosition, { passive: true })
-  }
-  scrollListenersBound = true
-}
-
-const unbindScrollListeners = () => {
-  if (!isRestoringScroll.value) {
-    flushScrollPositions()
-  }
-  if (!scrollListenersBound) return
-  if (typeof window !== 'undefined') {
-    window.removeEventListener('scroll', saveWindowScrollPosition)
-  }
-  if (mainColumn.value) {
-    mainColumn.value.removeEventListener('scroll', saveTimelineScrollPosition)
-  }
-  if (scrollDebounceTimer !== null) {
-    clearTimeout(scrollDebounceTimer)
-    scrollDebounceTimer = null
-  }
-  scrollListenersBound = false
-}
-
-const restoreTimelineScrollPosition = async () => {
-  isRestoringScroll.value = true
-  try {
-    const rawTimeline = sessionStg.getItem(TIMELINE_SCROLL_KEY)
-    const timelineTop = rawTimeline ? Number(rawTimeline) : 0
-    const rawWindow = sessionStg.getItem(WINDOW_SCROLL_KEY)
-    const windowTop = rawWindow ? Number(rawWindow) : 0
-    const lastEchoId = sessionStg.getItem(LAST_ACTIVE_ECHO_KEY)
-    const rawViewportTop = sessionStg.getItem(LAST_ACTIVE_VIEWPORT_TOP_KEY)
-    const savedViewportTop =
-      rawViewportTop !== null && rawViewportTop !== undefined ? Number(rawViewportTop) : null
-    const rawViewportRatio = sessionStg.getItem(LAST_ACTIVE_VIEWPORT_RATIO_KEY)
-    const savedViewportRatio =
-      rawViewportRatio !== null && rawViewportRatio !== undefined ? Number(rawViewportRatio) : null
-
-    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 820
-
-    // Step 0: Ensure base scroll position is restored immediately if container is at 0
-    if (isDesktop && mainColumn.value && Number.isFinite(timelineTop) && timelineTop > 0) {
-      if (Math.abs(mainColumn.value.scrollTop - timelineTop) > 2) {
-        mainColumn.value.scrollTop = timelineTop
-      }
-    } else if (
-      !isDesktop &&
-      typeof window !== 'undefined' &&
-      Number.isFinite(windowTop) &&
-      windowTop > 0
-    ) {
-      if (Math.abs(window.scrollY - windowTop) > 2) {
-        window.scrollTo(0, windowTop)
-      }
-    }
-
-    // Step 1: Wait for DOM nextTick so KeepAlive-activated elements are attached
-    await nextTick()
-
-    // Step 2: Fine-anchor to the active card that was clicked
-    if (lastEchoId) {
-      const id = String(lastEchoId).trim()
-      const getCard = () =>
-        document.getElementById(`echo-${id}`) ||
-        (document.querySelector(`[data-echo-id="${id}"]`) as HTMLElement | null)
-
-      let cardEl = getCard()
-      if (!cardEl) {
-        await new Promise((resolve) => window.requestAnimationFrame(resolve))
-        cardEl = getCard()
-      }
-
-      if (cardEl) {
-        let targetTop: number | null = null
-        if (savedViewportTop !== null && Number.isFinite(savedViewportTop)) {
-          targetTop = savedViewportTop
-        } else if (savedViewportRatio !== null && Number.isFinite(savedViewportRatio)) {
-          const vh = window.innerHeight || document.documentElement.clientHeight || 1
-          targetTop = Math.round(savedViewportRatio * vh)
-        }
-
-        const alignCard = () => {
-          if (!cardEl) return
-          const currentRect = cardEl.getBoundingClientRect()
-          const expectedTop = targetTop ?? Math.round((window.innerHeight || 800) * 0.1)
-          const delta = Math.round(currentRect.top - expectedTop)
-          if (Math.abs(delta) >= 1) {
-            if (isDesktop && mainColumn.value) {
-              mainColumn.value.scrollTop += delta
-            } else if (typeof window !== 'undefined') {
-              window.scrollBy(0, delta)
-            }
-          }
-        }
-
-        alignCard()
-
-        // Step 3: Run on next animation frame to compensate for any font/avatar/media reflow
-        await new Promise((resolve) => window.requestAnimationFrame(resolve))
-        alignCard()
-      }
-    }
-  } catch (err) {
-    console.warn('[ScrollRestore] Error restoring scroll position:', err)
-  } finally {
-    sessionStg.removeItem(LAST_ACTIVE_ECHO_KEY)
-    sessionStg.removeItem(LAST_ACTIVE_VIEWPORT_TOP_KEY)
-    sessionStg.removeItem(LAST_ACTIVE_VIEWPORT_RATIO_KEY)
-    window.setTimeout(() => {
-      isRestoringScroll.value = false
-    }, 100)
-  }
-}
-
 const prefetchHeavyChunks = () => {
   const trigger = () => {
     import('@/views/echo/EchoView.vue').catch(() => {})
-    import('@/editor/core/markdown').catch(() => {})
   }
   const ric = (window as Window & { requestIdleCallback?: typeof requestIdleCallback })
     .requestIdleCallback
@@ -323,63 +165,18 @@ const prefetchHeavyChunks = () => {
   }
 }
 
-watch(activeTab, (tab, prevTab) => {
-  if (tab === 'home' && prevTab !== 'home') {
-    void restoreTimelineScrollPosition()
-  } else if (prevTab === 'home' && tab !== 'home') {
-    if (!isRestoringScroll.value) {
-      flushScrollPositions()
-    }
-  }
-})
-
-onBeforeRouteLeave(() => {
-  if (!isRestoringScroll.value) {
-    flushScrollPositions()
-  }
-  isNavigatingAway.value = true
-})
-
-onMounted(async () => {
+onMounted(() => {
   if (mainColumn.value) {
     mainColumn.value.scrollLeft = 0
   }
-  bindScrollListeners()
-  const stopScrollRestoreWatch = watch(
-    () => echoStore.echoList.length > 0 && !echoStore.isLoading,
-    (ready) => {
-      if (!ready) return
-      stopScrollRestoreWatch()
-      window.requestAnimationFrame(() => {
-        void restoreTimelineScrollPosition()
-      })
-    },
-    { immediate: true, flush: 'post' },
-  )
   window.addEventListener('keydown', handleGlobalKeydown)
   prefetchHeavyChunks()
 })
 
-onDeactivated(() => {
-  if (!isRestoringScroll.value) {
-    flushScrollPositions()
-  }
-  isNavigatingAway.value = true
-  unbindScrollListeners()
-  window.removeEventListener('keydown', handleGlobalKeydown)
-})
-
-onActivated(async () => {
-  isNavigatingAway.value = false
-  window.addEventListener('keydown', handleGlobalKeydown)
-  await nextTick()
-  void restoreTimelineScrollPosition().finally(() => {
-    bindScrollListeners()
-  })
-})
+onActivated(() => window.addEventListener('keydown', handleGlobalKeydown))
+onDeactivated(() => window.removeEventListener('keydown', handleGlobalKeydown))
 
 onBeforeUnmount(() => {
-  unbindScrollListeners()
   window.removeEventListener('keydown', handleGlobalKeydown)
 })
 </script>
@@ -471,13 +268,20 @@ onBeforeUnmount(() => {
     min-height: 0;
     align-self: stretch;
     overflow-y: auto;
-    scrollbar-gutter: stable;
+
+    /* No visible scrollbar: scrolling stays wheel/touch/keyboard-driven and
+       nothing near the right edge can be mis-grabbed. */
+    scrollbar-width: none;
     overscroll-behavior: contain;
     flex: 0 1 var(--home-main-max);
     max-width: var(--home-main-max);
     padding: 1.5rem 0 2rem;
     will-change: scroll-position;
     transform: translateZ(0);
+  }
+
+  .home-main::-webkit-scrollbar {
+    display: none;
   }
 
   .home-main--unclipped {

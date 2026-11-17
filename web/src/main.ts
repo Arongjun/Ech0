@@ -13,6 +13,7 @@ import FloatingVue from 'floating-vue'
 import App from './App.vue'
 import router from './router'
 import { initStores } from './stores/store-init'
+import { preloadMarkdown } from './editor/core/loader'
 import { useSettingStore } from './stores/setting'
 import { useThemeStore } from './stores/theme'
 import { useInitStore } from './stores/init'
@@ -92,6 +93,7 @@ async function bootstrap() {
   }
 
   try {
+    await preloadMarkdown()
     await Promise.race([
       router.isReady(),
       new Promise<void>((resolve) => window.setTimeout(resolve, 2000)),

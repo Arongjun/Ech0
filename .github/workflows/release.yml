@@ -19,6 +19,7 @@ env:
 
 jobs:
   verify-version:
+    if: github.repository == 'lin-snow/Ech0'
     name: Verify tag matches internal/version.Version
     runs-on: ubuntu-latest
     steps:
@@ -47,6 +48,7 @@ jobs:
           fi
 
   build:
+    if: github.repository == 'lin-snow/Ech0'
     name: Build Frontend & Backend
     needs: [verify-version]
     runs-on: ubuntu-latest
@@ -78,7 +80,7 @@ jobs:
       - name: Setup Go Environment
         uses: actions/setup-go@v7
         with:
-          go-version: "1.27.3"
+          go-version: "1.27.4"
           cache-dependency-path: "**/go.sum"
       - name: Set Go proxy
         run: go env -w GOPROXY=https://proxy.golang.org,direct
@@ -146,6 +148,7 @@ jobs:
           retention-days: 1
 
   prepare-release:
+    if: github.repository == 'lin-snow/Ech0'
     name: Prepare Release Package
     runs-on: ubuntu-latest
     needs: [build]
@@ -180,6 +183,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-docker:
+    if: github.repository == 'lin-snow/Ech0'
     name: Build and Push Docker Images
     runs-on: ubuntu-latest
     needs: [build]

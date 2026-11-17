@@ -4,7 +4,7 @@
   <div class="px-3 pb-4 py-2 mt-4 sm:mt-6 mb-10 mx-auto flex justify-center items-center">
     <div class="w-full sm:max-w-lg mx-auto">
       <div v-if="echo" class="w-full sm:mt-1 mx-auto">
-        <TheEchoDetail :echo="echo" @update-like-count="handleUpdateLikeCount" />
+        <TheEchoDetail :echo="echo" />
         <TheEchoInteractions />
       </div>
       <div v-else class="w-full sm:mt-1 text-[var(--color-text-muted)]">
@@ -15,95 +15,102 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useI18n } from 'vue-i18n'
 import TheEchoDetail from '@/components/advanced/echo/cards/TheEchoDetail.vue'
 import TheEchoInteractions from '@/components/advanced/echo/cards/TheEchoInteractions.vue'
+import { clearSeoOverride, setSeoOverride } from '@/composables/useSeoOverride'
+import { DEFAULT_SEO_DESCRIPTION } from '@/composables/useSeoHead'
+import { DEFAULT_SITE_TITLE } from '@/constants/site'
 import { useEchoStore } from '@/stores'
+import { getEchoImages } from '@/utils/echo'
+import { absoluteSeoUrl, seoPlainText, seoTruncate } from '@/utils/seo'
+import { useI18n } from 'vue-i18n'
 
 const route = useRoute()
-const { t } = useI18n()
-const echoId = route.params.echoId as string
+const { t, locale } = useI18n()
 
 const echoStore = useEchoStore()
-const getEchoFromStore = (id: string): App.Api.Ech0.Echo | null => {
-  const targetId = String(id ?? '').trim()
-  if (!targetId) return null
-  const idx = echoStore.echoIndexMap.get(targetId)
-  if (idx !== undefined && echoStore.echoList[idx]) {
-    return echoStore.echoList[idx]
+
+const getEchoFromStore = (echoId: string): App.Api.Ech0.Echo | null => {
+  const idx = echoStore.echoIndexMap.get(echoId)
+  if (idx !== undefined) {
+    return echoStore.echoList[idx] ?? null
   }
-  return echoStore.echoList.find((e) => String(e.id).trim() === targetId) ?? null
+  return echoStore.echoList.find((item) => String(item.id).trim() === echoId) ?? null
 }
 
-const updateEchoPageTitle = (targetEcho: App.Api.Ech0.Echo | null) => {
-  if (!targetEcho) {
-    route.meta.title = t('echoPage.title')
-    return
-  }
-  const raw = (targetEcho.content || '').trim()
-  const firstLine = raw
-    .split('\n')[0]
-    .replace(/^[#*`>~-]+\s*/, '')
-    .trim()
-  if (firstLine) {
-    route.meta.title = firstLine.length > 32 ? `${firstLine.slice(0, 32)}...` : firstLine
-  } else {
-    route.meta.title = t('echoPage.title')
-  }
-}
+const currentEchoId = () => String(route.params.echoId ?? '').trim()
 
-const echo = ref<App.Api.Ech0.Echo | null>(getEchoFromStore(echoId))
+const echo = ref<App.Api.Ech0.Echo | null>(getEchoFromStore(currentEchoId()))
 const isLoading = ref(!echo.value)
 
-updateEchoPageTitle(echo.value)
-
-const handleUpdateLikeCount = () => {
-  if (echo.value) {
-    echo.value.fav_count += 1
+const loadEcho = async () => {
+  const echoId = currentEchoId()
+  if (!echoId) {
+    isLoading.value = false
+    return
   }
+
+  isLoading.value = true
+  echo.value = getEchoFromStore(echoId)
+
+  isLoading.value = !echo.value
+  const fresh = await echoStore.prefetchEcho(echoId, true)
+  // Route changes can overlap the background refresh of the previous post.
+  if (currentEchoId() !== echoId) return
+  if (fresh) echo.value = fresh
+  isLoading.value = false
 }
+
+// Mirrors the server-rendered head so client navigation and the crawlable
+// document agree on the card, canonical URL and BlogPosting payload.
+const applyEchoSeo = () => {
+  const value = echo.value
+  if (!value) return
+
+  const text = seoPlainText(value.content)
+  const title = seoTruncate(text.split('\n')[0] || 'Echo', 60)
+  const description = seoTruncate(text.replace(/\n/g, ' ') || DEFAULT_SEO_DESCRIPTION, 160)
+  const image = absoluteSeoUrl(getEchoImages(value)[0]?.url)
+  const createdAt = Number(value.created_at)
+  const publishedAt =
+    Number.isFinite(createdAt) && createdAt > 0
+      ? new Date(createdAt * 1000).toISOString()
+      : undefined
+
+  setSeoOverride({
+    path: route.path,
+    title,
+    description,
+    type: 'article',
+    image,
+    publishedAt,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: title,
+      description,
+      datePublished: publishedAt,
+      dateModified: publishedAt,
+      inLanguage: locale.value,
+      image,
+      author: { '@type': 'Person', name: value.username || DEFAULT_SITE_TITLE },
+    },
+  })
+}
+
+watch(echo, applyEchoSeo, { immediate: true })
 
 watch(
   () => route.params.echoId,
-  async (newId) => {
-    if (!newId) return
-    const id = String(newId).trim()
-    echo.value = getEchoFromStore(id)
-    if (!echo.value) {
-      isLoading.value = true
-      echo.value = await echoStore.prefetchEcho(id, true)
-      isLoading.value = false
-    } else {
-      echoStore.prefetchEcho(id, true).then((fullEcho) => {
-        if (fullEcho) {
-          echo.value = fullEcho
-          updateEchoPageTitle(fullEcho)
-        }
-      })
-    }
-    updateEchoPageTitle(echo.value)
+  () => {
+    clearSeoOverride()
+    loadEcho()
   },
 )
 
-onMounted(async () => {
-  if (!echo.value) {
-    isLoading.value = true
-    echo.value = await echoStore.prefetchEcho(echoId, true)
-    isLoading.value = false
-  } else {
-    echoStore.prefetchEcho(echoId, true).then((fullEcho) => {
-      if (fullEcho) {
-        echo.value = fullEcho
-        updateEchoPageTitle(fullEcho)
-      }
-    })
-  }
-  updateEchoPageTitle(echo.value)
-})
+onMounted(loadEcho)
 
-onBeforeUnmount(() => {
-  route.meta.title = 'echoPage.title'
-})
+onBeforeUnmount(() => clearSeoOverride(route.path))
 </script>

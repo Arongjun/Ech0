@@ -1,14 +1,7 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <!-- Copyright (C) 2025-2026 lin-snow -->
 <template>
-  <div
-    v-if="
-      filesToAdd &&
-      filesToAdd.length > 0 &&
-      (currentMode === Mode.ECH0 || currentMode === Mode.Media)
-    "
-    class="relative w-11/12 mx-auto my-7"
-  >
+  <div v-if="filesToAdd.length > 0" class="relative w-11/12 mx-auto my-7">
     <!-- Single media delete button for audio / video -->
     <button
       v-if="!isImage"
@@ -159,8 +152,7 @@ import { getImageToAddUrl } from '@/utils/other'
 import { isLivePhoto } from '@/utils/livephoto'
 import { deleteFileById } from '@/lib/file'
 import { theToast } from '@/utils/toast'
-import { useEchoStore, useEditorStore } from '@/stores'
-import { Mode } from '@/enums/enums'
+import { useEditorStore } from '@/stores'
 import { FILE_CATEGORY, FILE_STORAGE_TYPE } from '@/constants/file'
 import { useBaseDialog } from '@/composables/useBaseDialog'
 import { useI18n } from 'vue-i18n'
@@ -172,10 +164,8 @@ const { t } = useI18n()
 const isDeleting = ref<boolean>(false)
 const draggedIdx = ref<number | null>(null)
 
-const echoStore = useEchoStore()
-const { echoToUpdate } = storeToRefs(echoStore)
 const editorStore = useEditorStore()
-const { filesToAdd, currentMode, isUpdateMode, mediaCategory } = storeToRefs(editorStore)
+const { filesToAdd, isUpdateMode, mediaCategory } = storeToRefs(editorStore)
 
 const previewItems = computed(() =>
   filesToAdd.value.map((image, idx) => {
@@ -232,7 +222,7 @@ const onDragOver = (idx: number, e: DragEvent) => {
 
 const onDragEnd = () => {
   draggedIdx.value = null
-  if (isUpdateMode.value && echoToUpdate.value) {
+  if (isUpdateMode.value) {
     void editorStore.handleAddOrUpdateEcho(true)
   }
 }
@@ -295,7 +285,7 @@ const onTouchEnd = () => {
     draggedIdx.value = null
     isTouchDragging = false
     isTouching = false
-    if (isUpdateMode.value && echoToUpdate.value) {
+    if (isUpdateMode.value) {
       void editorStore.handleAddOrUpdateEcho(true)
     }
   } else {
@@ -347,8 +337,8 @@ const handleRemoveImageAt = (index: number) => {
 
         editorStore.removeFileAt(index)
 
-        if (isUpdateMode.value && echoToUpdate.value) {
-          void editorStore.handleAddOrUpdateEcho(true)
+        if (isUpdateMode.value) {
+          editorStore.handleAddOrUpdateEcho(true)
         }
       } finally {
         isDeleting.value = false

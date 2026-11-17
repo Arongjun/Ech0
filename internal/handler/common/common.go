@@ -10,9 +10,11 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	res "github.com/lin-snow/ech0/internal/handler/response"
+	"github.com/lin-snow/ech0/internal/kvstore"
 	commonModel "github.com/lin-snow/ech0/internal/model/common"
 	service "github.com/lin-snow/ech0/internal/service/common"
 	errorUtil "github.com/lin-snow/ech0/internal/util/err"
@@ -45,7 +47,11 @@ type (
 
 type CommonHandler struct {
 	commonService service.Service
+	durableKV     kvstore.Store
 }
+
+// maxSitemapURLs is the sitemap protocol cap for a single urlset document.
+const maxSitemapURLs = 50000
 
 type siteMapURLSet struct {
 	XMLName xml.Name     `xml:"urlset"`
@@ -54,14 +60,14 @@ type siteMapURLSet struct {
 }
 
 type siteMapURL struct {
-	Loc        string `xml:"loc"`
-	ChangeFreq string `xml:"changefreq,omitempty"`
-	Priority   string `xml:"priority,omitempty"`
+	Loc     string `xml:"loc"`
+	LastMod string `xml:"lastmod,omitempty"`
 }
 
-func NewCommonHandler(commonService service.Service) *CommonHandler {
+func NewCommonHandler(commonService service.Service, durableKV kvstore.Store) *CommonHandler {
 	return &CommonHandler{
 		commonService: commonService,
+		durableKV:     durableKV,
 	}
 }
 
@@ -74,7 +80,7 @@ func (commonHandler *CommonHandler) GetHeatMap(ctx context.Context, in *GetHeatM
 }
 
 func (commonHandler *CommonHandler) GetRss(ctx *gin.Context) {
-	atom, err := commonHandler.commonService.GenerateRSS(ctx)
+	doc, err := commonHandler.commonService.GenerateRSS(ctx)
 	if err != nil {
 		ctx.JSON(
 			http.StatusOK,
@@ -86,13 +92,14 @@ func (commonHandler *CommonHandler) GetRss(ctx *gin.Context) {
 		return
 	}
 
-	const browserContentType = "application/xml; charset=utf-8"
-	const feedContentType = "application/atom+xml; charset=utf-8"
-	contentType := feedContentType
+	// The same URL yields two representations, so caches must key on Accept.
+	ctx.Header("Vary", "Accept")
+
 	if strings.Contains(ctx.GetHeader("Accept"), "text/html") {
-		contentType = browserContentType
+		ctx.Data(http.StatusOK, "text/html; charset=utf-8", []byte(doc.HTML))
+		return
 	}
-	ctx.Data(http.StatusOK, contentType, []byte(atom))
+	ctx.Data(http.StatusOK, "application/atom+xml; charset=utf-8", []byte(doc.Atom))
 }
 
 func (commonHandler *CommonHandler) HelloEch0(ctx context.Context, _ *HelloInput) (HelloOutput, error) {
@@ -132,31 +139,67 @@ func resolveBaseURL(ctx *gin.Context) string {
 }
 
 func (commonHandler *CommonHandler) GetRobotsTxt(ctx *gin.Context) {
-	baseURL := resolveBaseURL(ctx)
-	content := strings.Join([]string{
+	baseURL := strings.TrimRight(resolveBaseURL(ctx), "/")
+	lines := []string{
 		"User-agent: *",
 		"Allow: /",
 		"Disallow: /api/",
 		"Disallow: /auth",
 		"Disallow: /panel",
 		"Disallow: /init",
+		"Disallow: /device",
+		"Disallow: /oauth/",
+		"Disallow: /widget",
+		"Disallow: /chat",
+		"Disallow: /zen",
 		"Disallow: /healthz",
-		fmt.Sprintf("Sitemap: %s/sitemap.xml", strings.TrimRight(baseURL, "/")),
-		"",
-	}, "\n")
+	}
+	// Stay inside the RFC 9309 grammar (user-agent / allow / disallow / sitemap):
+	// Google reports any other field — e.g. ARD's `Agentmap:` — as an invalid
+	// line in Search Console. ARD consumers fetch /.well-known/ard.json directly,
+	// so the catalog needs no robots.txt advertisement.
+	lines = append(lines, fmt.Sprintf("Sitemap: %s/sitemap.xml", baseURL), "")
+	content := strings.Join(lines, "\n")
 
 	ctx.Data(http.StatusOK, "text/plain; charset=utf-8", []byte(content))
 }
 
 func (commonHandler *CommonHandler) GetSitemap(ctx *gin.Context) {
 	baseURL := strings.TrimRight(resolveBaseURL(ctx), "/")
+	urls := []siteMapURL{
+		{Loc: baseURL + "/"},
+		{Loc: baseURL + "/hub"},
+		{Loc: baseURL + "/about"},
+		{Loc: baseURL + "/rss"},
+	}
+
+	refs, err := commonHandler.commonService.ListSitemapEntries(ctx.Request.Context())
+	if err != nil {
+		ctx.JSON(
+			http.StatusInternalServerError,
+			commonModel.Fail[string](errorUtil.HandleError(&commonModel.ServerError{
+				Msg: "",
+				Err: err,
+			})),
+		)
+		return
+	}
+
+	// The sitemap protocol caps one file at 50,000 URLs; beyond that the file is
+	// truncated rather than emitting an invalid document.
+	for _, ref := range refs {
+		if len(urls) >= maxSitemapURLs {
+			break
+		}
+		urls = append(urls, siteMapURL{
+			Loc:     baseURL + "/echo/" + ref.ID,
+			LastMod: time.Unix(ref.CreatedAt, 0).UTC().Format(time.RFC3339),
+		})
+	}
+
 	urlSet := siteMapURLSet{
 		XMLNS: "http://www.sitemaps.org/schemas/sitemap/0.9",
-		URLs: []siteMapURL{
-			{Loc: baseURL + "/", ChangeFreq: "daily", Priority: "1.0"},
-			{Loc: baseURL + "/hub", ChangeFreq: "daily", Priority: "0.8"},
-			{Loc: baseURL + "/rss", ChangeFreq: "hourly", Priority: "0.6"},
-		},
+		URLs:  urls,
 	}
 
 	var buf bytes.Buffer
@@ -165,7 +208,7 @@ func (commonHandler *CommonHandler) GetSitemap(ctx *gin.Context) {
 	encoder.Indent("", "  ")
 	if err := encoder.Encode(urlSet); err != nil {
 		ctx.JSON(
-			http.StatusOK,
+			http.StatusInternalServerError,
 			commonModel.Fail[string](errorUtil.HandleError(&commonModel.ServerError{
 				Msg: "",
 				Err: err,

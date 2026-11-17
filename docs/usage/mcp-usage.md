@@ -121,6 +121,7 @@ npx -y mcp-remote@0.16.0 http://localhost:6277/mcp 53682 --debug
 - **POST /mcp**：处理 JSON-RPC 请求（唯一入口）
 - **GET / DELETE /mcp**：返回 405（服务端无会话，也不提供独立 SSE 流）
 - **Origin 校验**：带 `Origin` 头的跨源请求会被拒绝（403），用于防御 DNS rebinding。同源请求始终放行；需要额外放行的浏览器来源用 `ECH0_WEB_CORS_ALLOWED_ORIGINS` 配置。原生 MCP Host / CLI 不发送 `Origin`，不受影响。
+- **前置发现（公开，无需 token）**：`/mcp/server-card` 给出传输、协议版本与鉴权头（MCP Server Card，SEP-2127）；AI catalog 与 `/llms.txt` 见 [`agent-discovery.md`](agent-discovery.md)。
 
 ## 能力总览
 
@@ -140,7 +141,7 @@ npx -y mcp-remote@0.16.0 http://localhost:6277/mcp 53682 --debug
 | Tool | `create_post` | 创建帖子；支持 `content`、`echo_files`、`layout`、`extension`，至少提供其一 | `echo:write` |
 | Tool | `update_post` | 更新帖子；`echo_files` / `extension` 提供时为**全量替换** | `echo:write` |
 | Tool | `delete_post` | 永久删除帖子 | `echo:delete` |
-| Tool | `like_post` | 帖子点赞数 +1 | `echo:write` |
+| Tool | `react_to_post` | 添加/移除帖子表情反应（幂等，返回该帖最新聚合） | `echo:write` |
 | Tool | `delete_tag` | 删除标签并解除与所有帖子的关联 | `echo:delete` |
 | Resource | `ech0://posts/recent` | 最近 20 条帖子（可附 `?limit=N`） | `echo:read` |
 | Resource Template | `ech0://posts/{id}` | 按 UUID 读取单篇帖子（通过 `resources/templates/list` 公布） | `echo:read` |

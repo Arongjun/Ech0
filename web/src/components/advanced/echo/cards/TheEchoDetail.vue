@@ -52,7 +52,7 @@
       </div>
     </section>
 
-    <TheEchoMeta :echo="props.echo" @update-like-count="(id) => emit('updateLikeCount', id)" />
+    <TheEchoMeta :echo="props.echo" />
   </article>
 </template>
 
@@ -79,10 +79,6 @@ type Echo = App.Api.Ech0.Echo
 
 const props = defineProps<{
   echo: Echo
-}>()
-
-const emit = defineEmits<{
-  (e: 'updateLikeCount', echoId: string): void
 }>()
 
 const settingStore = useSettingStore()

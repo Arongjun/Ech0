@@ -44,7 +44,7 @@ export async function queryInstancePage(
         pageSize: merged.pageSize,
         search: merged.search,
         tagIds: merged.tagIds,
-        sortBy: merged.sortBy,
+        ...(merged.sortBy ? { sortBy: merged.sortBy } : {}),
         sortOrder: merged.sortOrder,
       }),
       credentials: 'omit',

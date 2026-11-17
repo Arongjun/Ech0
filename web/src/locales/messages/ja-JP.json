@@ -1,4 +1,17 @@
 {
+  "reaction": {
+    "add": "リアクションを追加",
+    "close": "リアクションを閉じる",
+    "unavailable": "これは静的アーカイブのため、リアクションは利用できません。",
+    "failed": "リアクションに失敗しました。もう一度お試しください。",
+    "like": "いいね",
+    "heart": "ハート",
+    "haha": "笑い",
+    "wow": "びっくり",
+    "sad": "悲しい",
+    "cry": "号泣",
+    "party": "お祝い"
+  },
   "common": {
     "requestFailed": "リクエストに失敗しました",
     "save": "保存",
@@ -24,6 +37,9 @@
     "preview": "プレビュー",
     "showPreview": "プレビューを表示",
     "hidePreview": "プレビューを非表示",
+    "previewFiles": "ファイル",
+    "previewContent": "テキスト",
+    "previewExtension": "拡張",
     "imageLayoutPlaceholder": "レイアウトを選択してください",
     "imageUrlPlaceholder": "添付ファイルのURLを入力...",
     "mediaSectionTitle": "メディアを挿入（画像 / 音声 / 動画）",
@@ -128,6 +144,8 @@
     "removeImage": "添付ファイルを削除",
     "invalidImageIndex": "添付ファイルのインデックスが無効です。削除できません！",
     "removeImageConfirmTitle": "この添付ファイルを削除しますか？",
+    "removeExtension": "拡張を削除",
+    "removeExtensionConfirmTitle": "この拡張を削除しますか？",
     "removeImageRemoteFailed": "エディタから削除しましたが、サーバー側の削除に失敗しました。バックエンドにファイルが残っている可能性があります",
     "dragToReorder": "ドラッグして並べ替え",
     "convertingHeic": "HEIC画像を変換中...",
@@ -264,9 +282,6 @@
     "deleteConfirmTitle": "ファイルの削除確認",
     "deleteConfirmDesc": "ファイル「{name}」を削除してもよろしいですか？この操作は取り消せません。"
   },
-  "staticSite": {
-    "likeUnavailable": "これは静的アーカイブのため、いいねはできません。"
-  },
   "auth": {
     "loginSuccess": "ログインしました。おかえりなさい！🎉",
     "signupSuccess": "登録が完了しました。ログインしてください！"
@@ -294,15 +309,36 @@
     "initialize": "初期化",
     "initDone": "初期化が完了しました",
     "alreadyInitializedRedirect": "システムは初期化済みです。ログイン画面へ移動します",
-    "initFailed": "初期化に失敗しました"
+    "initFailed": "初期化に失敗しました",
+    "introHeading": "Ech0 をはじめる",
+    "introDescription": "Owner アカウントを作成し、サイトの基本設定を完了して、あなたの記録スペースを始めましょう。",
+    "siteTitlePlaceholder": "サイト名（任意）",
+    "autoLoginFailed": "オーナーを作成しました。ログインしてください。"
+  },
+  "onboarding": {
+    "title": "インスタンスの準備をしましょう",
+    "publishTitle": "最初の Echo を書く",
+    "publishDesc": "ひらめきをひとつ記録しましょう。ここからタイムラインが始まります。",
+    "siteTitleTitle": "サイトに名前を付ける",
+    "siteTitleDesc": "サイトの名前を決めましょう。ブラウザのタイトルや共有カードに表示されます。",
+    "siteURLTitle": "サイトのアドレスを設定",
+    "siteURLDesc": "公開アドレスを設定すると、RSS・共有リンク・スナップショットが正しく開けます。",
+    "done": "完了",
+    "hide": "非表示",
+    "firstEchoTitle": "最初の Echo を公開しました",
+    "firstEchoDesc": "タイムラインに新しい始まりができました。日付をクリックすると Echo の詳細を開けます。",
+    "dismiss": "あとで",
+    "actionPublish": "今すぐ投稿",
+    "actionSiteTitle": "名前を付ける",
+    "actionSiteURL": "アドレスを設定"
   },
   "hub": {
     "emptyList": "Hub一覧は空です。設定から Connect を追加してください～",
     "noAvailableInstance": "現在 Hub に接続可能なインスタンスはありません。",
     "connectedCount": "{count} 個のインスタンスに接続しました。Echo の読み込みを開始します",
     "loading": "読み込み中...",
-    "emptyConnectHint": "データはありません。Connect を追加しましょう",
     "noMoreData": "これ以上データはありません",
+    "emptyConnectHint": "データはありません。Connect を追加しましょう",
     "globalWorld": "グローバル広場",
     "peerWorld": "フォロー一覧",
     "globalWorldDesc": "すべてのパブリックノードを巡る",
@@ -342,17 +378,14 @@
     "alreadyLatest": "最新バージョンです",
     "checkUpdateFailed": "更新の確認に失敗しました",
     "clickToCheckUpdate": "クリックして更新を確認",
-    "activityTitle": "Activity",
-    "activityAccent": "Log",
-    "visitorTitle": "Visitor",
-    "visitorAccent": "Stats",
+    "activityTitle": "Activity Log",
+    "visitorTitle": "Visitor Stats",
     "visitorPv": "PV",
     "visitorUv": "UV",
     "visitorEmpty": "訪問者データはありません"
   },
   "tagPileWidget": {
-    "title": "Tech",
-    "accent": "Stacks",
+    "title": "Tech Stacks",
     "empty": "人気タグはありません"
   },
   "panelPage": {
@@ -454,8 +487,14 @@
     "noMore": "これ以上データはありません",
     "noMoreFiltered": "これ以上データはありません",
     "loading": "読み込み中...",
-    "older": "以前",
-    "newer": "以降"
+    "loadingMore": "さらに読み込み中...",
+    "loadMoreFailed": "読み込みに失敗しました",
+    "loadFailed": "タイムラインを読み込めませんでした",
+    "retry": "再試行",
+    "allLoaded": "最後まで表示しました",
+    "earlier": "以前",
+    "later": "以降",
+    "pagerLabel": "タイムラインのページ"
   },
   "dateTime": {
     "justNow": "たった今",
@@ -479,9 +518,6 @@
   },
   "echoDetail": {
     "share": "シェア",
-    "like": "いいね",
-    "alreadyLiked": "既にいいね済みです。ありがとうございます！",
-    "likeSuccess": "いいねしました！",
     "copied": "リンクをクリップボードにコピーしました！",
     "shareSuffix": "Ech0 からのシェア",
     "sharePanelTitle": "この Ech0 をシェア",
@@ -542,7 +578,8 @@
     "deleteConfirmTitle": "削除しますか？",
     "deleteConfirmDesc": "削除すると復元できません。慎重に操作してください",
     "deleteSuccess": "削除しました！",
-    "exitUpdateModeFirst": "先に更新モードを終了してください！",
+    "editAnotherEchoTitle": "別の Echo を編集しますか？",
+    "editAnotherEchoDesc": "すでに別の Echo を編集中です。現在の変更を破棄してこの Echo を編集しますか？",
     "openDetail": "詳細を開く",
     "expand": "全文を表示",
     "collapse": "折りたたむ",
@@ -614,6 +651,8 @@
     "customJs": "カスタム JS",
     "customJsPlaceholder": "カスタム Script を入力してください",
     "allowRegister": "登録を許可",
+    "agentDiscovery": "エージェント検出",
+    "agentDiscoveryHint": "/llms.txt、AI カタログ、MCP サーバーカードを公開し、AI エージェントがこのインスタンスのフィード・API・MCP エンドポイントを検出できるようにします",
     "defaultLocale": "既定の言語",
     "logoUploading": "サーバーロゴをアップロード中...",
     "logoUploadSuccess": "サーバーロゴをアップロードしました！",
@@ -1089,17 +1128,13 @@
     "pageNotFound": "ページが存在しません"
   },
   "hubEcho": {
-    "jumpToEcho": "この Echo へ移動",
-    "like": "いいね",
-    "alreadyLiked": "既にいいね済みです",
-    "likeFailed": "いいねに失敗しました",
-    "likeSuccess": "いいねしました"
+    "jumpToEcho": "この Echo へ移動"
   },
   "imageGallery": {
     "previewImage": "画像 {index} をプレビュー",
     "prevImage": "前の画像",
     "nextImage": "次の画像",
-    "scrollHint": "← 左右にスワイプで続きを表示 →",
+    "goToImage": "{index} 枚目の画像へ移動",
     "livePhoto": "Live Photos",
     "turnOffAutoPlay": "自動再生をオフ",
     "turnOnAutoPlay": "自動再生をオン"
@@ -1305,7 +1340,7 @@
   },
   "devicePage": {
     "codeLabel": "デバイスコード",
-    "codePlaceholder": "ABCD-EFGH",
+    "codeSlotLabel": "{total} 文字中 {index} 番目の文字",
     "codeHelp": "ターミナルに表示された 8 文字のコードを入力してください。",
     "approve": "承認する",
     "approving": "承認中…",

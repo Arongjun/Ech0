@@ -45,8 +45,8 @@ export const useInitStore = defineStore('initStore', () => {
     }
   }
 
-  const initOwner = async (payload: App.Api.Auth.SignupParams) => {
-    const enriched: App.Api.Auth.SignupParams = {
+  const initOwner = async (payload: App.Api.Init.InitOwnerParams) => {
+    const enriched: App.Api.Init.InitOwnerParams = {
       ...payload,
       locale: payload.locale || String(i18n.global.locale.value),
     }

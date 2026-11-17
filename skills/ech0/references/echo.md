@@ -112,7 +112,7 @@ the id first. Deleting an Echo also deletes its attachments.
 ```bash
 ech0 echo get --id <echo_id>
 ech0 echo list --page 1 --page-size 20 --search daily
-ech0 echo list --sort-by fav_count --tag-ids <tag_id>
+ech0 echo list --sort-by reactions --tag-ids <tag_id>
 ech0 echo hot --limit 10
 ech0 echo today
 ech0 echo random
@@ -124,13 +124,16 @@ ech0 echo onthisday
 | Flag | Meaning |
 | --- | --- |
 | `--page`, `--page-size` | 1-based page; size 1–100, default 10 |
+| `--cursor` | Keyset paging instead of `--page`: pass `""` for the first page, then the previous response's `data.nextCursor`. Honors `--page-size`, ignores `--page`, and needs `--sort-by created_at` |
 | `--search` | Substring match on Echo content |
 | `--tag-ids` | Tag IDs; matches an Echo carrying **any** listed tag. Repeat the flag or use commas |
-| `--sort-by`, `--sort-order` | `created_at` (default) or `fav_count`; `asc` or `desc` (default) |
+| `--sort-by`, `--sort-order` | `created_at` (default) or `reactions`; `asc` or `desc` (default) |
 | `--date-from`, `--date-to` | Unix seconds, inclusive |
 | `--private`, `--no-private` | Private-only or public-only; omit both for no filter. Only admins are honoured; other accounts always see public Echoes |
 
 Boolean flags are tri-state: passing neither sends no filter. Tag IDs come from
 `ech0 tag list`. Responses look like `{code, msg, data}`; `ech0 echo list`
 returns `data.items` plus `total`, and the curated views return arrays (or one
-Echo for `random`).
+Echo for `random`). With `--cursor`, `total` still counts the whole filtered
+set and `data.nextCursor` carries the position of the next page — it is absent
+once the last page came back short.

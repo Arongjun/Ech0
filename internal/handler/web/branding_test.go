@@ -5,9 +5,13 @@ package handler
 
 import (
 	"encoding/json"
+	"github.com/gin-gonic/gin"
+	"github.com/lin-snow/ech0/internal/visitor"
+	"net/http"
 	"os"
 	"strings"
 	"testing"
+	"testing/fstest"
 
 	settingModel "github.com/lin-snow/ech0/internal/model/setting"
 )
@@ -102,5 +106,52 @@ func TestBrandIndexHTML_ReplacesShareMeta(t *testing.T) {
 	}
 	if !strings.Contains(out, `<link rel="apple-touch-icon" href="/api/files/images/logo.png" />`) {
 		t.Fatal("apple-touch-icon not replaced")
+	}
+}
+
+func TestTemplates_CustomBrandingSurvivesSEORendering(t *testing.T) {
+	handler := NewWebHandler(visitor.NewTracker(), stubSettings{setting: settingModel.SystemSetting{
+		SiteTitle: "Arong & Friends", ServerName: "Arong", HomeSignatureText: "记录生活",
+		ServerLogo: "/images/custom-logo.png", DefaultLocale: "zh-CN",
+	}}, stubEchoes{})
+	// Use checked-in source fixtures, not a built frontend: backend CI embeds a placeholder.
+	handler.shell = newSPAShell(readPublic(t, "../index.html"))
+	handler.files = http.FS(fstest.MapFS{"app.webmanifest": &fstest.MapFile{Data: readPublic(t, "app.webmanifest")}})
+	r := gin.New()
+	r.NoRoute(handler.Templates())
+	rec := get(r, "/")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("home status: %d", rec.Code)
+	}
+	body := rec.Body.String()
+	for _, want := range []string{
+		`<h1 class="loader-brand">Arong &amp; Friends</h1>`,
+		`content="记录生活"`,
+		`<link rel="apple-touch-icon" href="/images/custom-logo.png" />`,
+		`content="http://blog.example.com/images/custom-logo.png"`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("missing %q", want)
+		}
+	}
+	if strings.Count(body, "<title>") != 1 {
+		t.Fatal("duplicate page titles")
+	}
+	if strings.Contains(body, `"sameAs"`) {
+		t.Fatal("official project identity leaked")
+	}
+	manifest := get(r, "/app.webmanifest")
+	if manifest.Code != http.StatusOK || !strings.Contains(manifest.Header().Get("Cache-Control"), "no-store") {
+		t.Fatalf("manifest status/cache: %d %s", manifest.Code, manifest.Header().Get("Cache-Control"))
+	}
+	var value map[string]any
+	if err := json.Unmarshal(manifest.Body.Bytes(), &value); err != nil {
+		t.Fatal(err)
+	}
+	if value["name"] != "Arong & Friends" || value["description"] != "记录生活" {
+		t.Fatalf("manifest branding: %v", value)
+	}
+	if _, exists := value["screenshots"]; exists {
+		t.Fatal("official screenshots leaked")
 	}
 }

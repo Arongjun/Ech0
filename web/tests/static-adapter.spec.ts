@@ -7,14 +7,20 @@ import type { Mock } from 'vitest'
 import { handleStaticRequest } from '@/service/request/static-adapter'
 import type { StaticDataset } from '@/service/request/static-adapter'
 
-const echo = (id: string, content: string, createdAt: number, favCount = 0): App.Api.Ech0.Echo => ({
+const echo = (
+  id: string,
+  content: string,
+  createdAt: number,
+  reactionCount = 0,
+): App.Api.Ech0.Echo => ({
   id,
   content,
   username: 'owner',
   layout: 'waterfall',
   private: false,
   user_id: 'u1',
-  fav_count: favCount,
+  reactions:
+    reactionCount > 0 ? [{ key: 'like', emoji: '👍', count: reactionCount, reacted: false }] : [],
   created_at: createdAt,
   echo_files: [],
   tags: [],
@@ -104,6 +110,31 @@ describe('handleStaticRequest', () => {
     expect(unfiltered.data.items).toHaveLength(5)
   })
 
+  it('POST /api/echo/query cursor 分页续接且不重叠', async () => {
+    const first = await handleStaticRequest<App.Api.Ech0.PaginationResult>(
+      '/api/echo/query',
+      'POST',
+      { page: 1, pageSize: 2, cursor: '' },
+    )
+    expect(first.data.items.map((item) => item.id)).toEqual(['e5', 'e4'])
+    expect(first.data.nextCursor).toBeTruthy()
+
+    const second = await handleStaticRequest<App.Api.Ech0.PaginationResult>(
+      '/api/echo/query',
+      'POST',
+      { page: 1, pageSize: 2, cursor: first.data.nextCursor ?? '' },
+    )
+    expect(second.data.items.map((item) => item.id)).toEqual(['e3', 'e2'])
+
+    const third = await handleStaticRequest<App.Api.Ech0.PaginationResult>(
+      '/api/echo/query',
+      'POST',
+      { page: 1, pageSize: 2, cursor: second.data.nextCursor ?? '' },
+    )
+    expect(third.data.items.map((item) => item.id)).toEqual(['e1'])
+    expect(third.data.nextCursor).toBeNull()
+  })
+
   it('GET /api/echo/{id} 命中返回 Echo，未命中返回 code 0', async () => {
     const hit = await handleStaticRequest<App.Api.Ech0.Echo>('/api/echo/e3', 'GET', undefined)
     expect(hit.code).toBe(1)
@@ -129,8 +160,8 @@ describe('handleStaticRequest', () => {
     expect(res.data.map((item) => item.id)).toEqual(['c1', 'c3'])
   })
 
-  it('PUT /api/echo/like/{id} 返回 code 0（冻结展示）', async () => {
-    const res = await handleStaticRequest('/api/echo/like/e1', 'PUT', undefined)
+  it('PUT /api/echo/{id}/reactions/{emoji} 返回 code 0（冻结展示）', async () => {
+    const res = await handleStaticRequest('/api/echo/e1/reactions/like', 'PUT', undefined)
 
     expect(res.code).toBe(0)
     expect(res.data).toBeNull()

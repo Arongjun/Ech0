@@ -14,6 +14,7 @@ import (
 	model0 "github.com/lin-snow/ech0/internal/model/common"
 	model1 "github.com/lin-snow/ech0/internal/model/echo"
 	"github.com/lin-snow/ech0/internal/model/user"
+	"github.com/lin-snow/ech0/internal/service/common"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -120,22 +121,22 @@ func (_c *MockService_CommonGetUserByUserId_Call) RunAndReturn(run func(ctx cont
 }
 
 // GenerateRSS provides a mock function for the type MockService
-func (_mock *MockService) GenerateRSS(ctx *gin.Context) (string, error) {
+func (_mock *MockService) GenerateRSS(ctx *gin.Context) (service.RSSDocument, error) {
 	ret := _mock.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GenerateRSS")
 	}
 
-	var r0 string
+	var r0 service.RSSDocument
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(*gin.Context) (string, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(*gin.Context) (service.RSSDocument, error)); ok {
 		return returnFunc(ctx)
 	}
-	if returnFunc, ok := ret.Get(0).(func(*gin.Context) string); ok {
+	if returnFunc, ok := ret.Get(0).(func(*gin.Context) service.RSSDocument); ok {
 		r0 = returnFunc(ctx)
 	} else {
-		r0 = ret.Get(0).(string)
+		r0 = ret.Get(0).(service.RSSDocument)
 	}
 	if returnFunc, ok := ret.Get(1).(func(*gin.Context) error); ok {
 		r1 = returnFunc(ctx)
@@ -169,12 +170,12 @@ func (_c *MockService_GenerateRSS_Call) Run(run func(ctx *gin.Context)) *MockSer
 	return _c
 }
 
-func (_c *MockService_GenerateRSS_Call) Return(s string, err error) *MockService_GenerateRSS_Call {
-	_c.Call.Return(s, err)
+func (_c *MockService_GenerateRSS_Call) Return(rSSDocument service.RSSDocument, err error) *MockService_GenerateRSS_Call {
+	_c.Call.Return(rSSDocument, err)
 	return _c
 }
 
-func (_c *MockService_GenerateRSS_Call) RunAndReturn(run func(ctx *gin.Context) (string, error)) *MockService_GenerateRSS_Call {
+func (_c *MockService_GenerateRSS_Call) RunAndReturn(run func(ctx *gin.Context) (service.RSSDocument, error)) *MockService_GenerateRSS_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -350,6 +351,68 @@ func (_c *MockService_GetWebsiteTitle_Call) Return(s string, err error) *MockSer
 }
 
 func (_c *MockService_GetWebsiteTitle_Call) RunAndReturn(run func(websiteURL string) (string, error)) *MockService_GetWebsiteTitle_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListSitemapEntries provides a mock function for the type MockService
+func (_mock *MockService) ListSitemapEntries(ctx context.Context) ([]model1.EchoRef, error) {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListSitemapEntries")
+	}
+
+	var r0 []model1.EchoRef
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context) ([]model1.EchoRef, error)); ok {
+		return returnFunc(ctx)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context) []model1.EchoRef); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model1.EchoRef)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockService_ListSitemapEntries_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListSitemapEntries'
+type MockService_ListSitemapEntries_Call struct {
+	*mock.Call
+}
+
+// ListSitemapEntries is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *MockService_Expecter) ListSitemapEntries(ctx any) *MockService_ListSitemapEntries_Call {
+	return &MockService_ListSitemapEntries_Call{Call: _e.mock.On("ListSitemapEntries", ctx)}
+}
+
+func (_c *MockService_ListSitemapEntries_Call) Run(run func(ctx context.Context)) *MockService_ListSitemapEntries_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockService_ListSitemapEntries_Call) Return(echoRefs []model1.EchoRef, err error) *MockService_ListSitemapEntries_Call {
+	_c.Call.Return(echoRefs, err)
+	return _c
+}
+
+func (_c *MockService_ListSitemapEntries_Call) RunAndReturn(run func(ctx context.Context) ([]model1.EchoRef, error)) *MockService_ListSitemapEntries_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -654,6 +717,68 @@ func (_c *MockCommonRepository_GetUserByUserId_Call) Return(user model.User, err
 }
 
 func (_c *MockCommonRepository_GetUserByUserId_Call) RunAndReturn(run func(ctx context.Context, id string) (model.User, error)) *MockCommonRepository_GetUserByUserId_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListPublicEchoRefs provides a mock function for the type MockCommonRepository
+func (_mock *MockCommonRepository) ListPublicEchoRefs(ctx context.Context) ([]model1.EchoRef, error) {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListPublicEchoRefs")
+	}
+
+	var r0 []model1.EchoRef
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context) ([]model1.EchoRef, error)); ok {
+		return returnFunc(ctx)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context) []model1.EchoRef); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model1.EchoRef)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockCommonRepository_ListPublicEchoRefs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListPublicEchoRefs'
+type MockCommonRepository_ListPublicEchoRefs_Call struct {
+	*mock.Call
+}
+
+// ListPublicEchoRefs is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *MockCommonRepository_Expecter) ListPublicEchoRefs(ctx any) *MockCommonRepository_ListPublicEchoRefs_Call {
+	return &MockCommonRepository_ListPublicEchoRefs_Call{Call: _e.mock.On("ListPublicEchoRefs", ctx)}
+}
+
+func (_c *MockCommonRepository_ListPublicEchoRefs_Call) Run(run func(ctx context.Context)) *MockCommonRepository_ListPublicEchoRefs_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockCommonRepository_ListPublicEchoRefs_Call) Return(echoRefs []model1.EchoRef, err error) *MockCommonRepository_ListPublicEchoRefs_Call {
+	_c.Call.Return(echoRefs, err)
+	return _c
+}
+
+func (_c *MockCommonRepository_ListPublicEchoRefs_Call) RunAndReturn(run func(ctx context.Context) ([]model1.EchoRef, error)) *MockCommonRepository_ListPublicEchoRefs_Call {
 	_c.Call.Return(run)
 	return _c
 }

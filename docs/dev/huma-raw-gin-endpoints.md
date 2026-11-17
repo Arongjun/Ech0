@@ -103,10 +103,21 @@ JSON-RPC 2.0 协议（方法分发，非 REST 资源），且鉴权维度（audi
 |---|---|---|---|---|
 | GET | `/robots.txt` | `CommonHandler.GetRobotsTxt` | Resource（公开） | `text/plain` |
 | GET | `/sitemap.xml` | `CommonHandler.GetSitemap` | Resource（公开） | `application/xml` |
-| GET | `/rss` | `CommonHandler.GetRss` | Resource（公开） | `application/atom+xml` / `application/xml`（按 UA 协商） |
+| GET | `/rss` | `CommonHandler.GetRss` | Resource（公开） | `application/atom+xml` / `text/html`（按 `Accept` 协商；浏览器拿到服务端渲染的订阅落地页——只含订阅 URL 与条数/最近更新，不重复 feed 正文，不依赖 XSLT） |
 | GET | `/healthz` | `CommonHandler.Healthz` | Resource（公开） | 探活（惯例裸 gin 探针） |
 | —（NoRoute） | 任意未命中 | `WebHandler.Templates` | Engine 级 | SPA `index.html` fallback |
 | GET | `/api/files/*` | `StaticFS` | 专用组 · `StaticFileSecurity`（目录穿越防护） | 本地上传文件静态服务 |
+
+### J. 智能体发现资源（4）
+
+| 方法 | 路径 | Handler | 分组 / 鉴权 | 内容类型 |
+|---|---|---|---|---|
+| GET | `/llms.txt` | `CommonHandler.GetLlmsTxt` | Resource（公开） | `text/plain`，Markdown 正文 |
+| GET | `/.well-known/ard.json` | `CommonHandler.GetAgentCatalog` | Resource（公开） | `application/ai-catalog+json`（ARD 1.0 入口） |
+| GET | `/.well-known/ai-catalog.json` | `CommonHandler.GetAgentCatalog` | Resource（公开） | 同上（前身路径，同一文档） |
+| GET | `/mcp/server-card` | `MCPHandler.GetServerCard` | Resource（公开） | `application/mcp-server-card+json`（MCP SEP-2127） |
+
+这四份文档是给机器读的资源，不是业务 envelope：必须保原文类型、带 `ETag` 与 `Cache-Control`，并且 `/mcp/server-card` 不能挂在 `/mcp` 组的鉴权之后（卡片本身是连接前置元数据）。开关为 `SystemSetting.DisableAgentDiscovery`（偏好设置 → 系统设置，默认开启），关闭时四个路径一律 404；`/robots.txt` 不随开关变化，也不声明 catalog。
 
 ### I. MCP 授权服务器（7）
 
@@ -135,7 +146,8 @@ JSON-RPC 2.0 协议（方法分发，非 REST 资源），且鉴权维度（audi
 | G MCP JSON-RPC | 2 |
 | H 非 JSON 资源/SPA/静态 | 6 |
 | I MCP 授权服务器 | 7 |
-| **合计裸 gin** | **38** |
+| J 智能体发现资源 | 4 |
+| **合计裸 gin** | **42** |
 
 对照面：13 个业务域（init / auth / common / echo / connect / user / setting / file / dashboard / copilot / comment / migration / embedding）均已在 Huma，约 100 个 JSON 端点，经 `registerOperations` 聚合。
 

@@ -125,7 +125,7 @@ func (echoService *EchoService) PostEcho(ctx context.Context, newEcho *model.Ech
 		logUtil.GetLogger().Warn("confirm temp files after post echo failed", logUtil.Err(err))
 	}
 
-	return savedEcho, nil
+	return echoService.hydrateEchoReactions(ctx, savedEcho)
 }
 
 func (echoService *EchoService) GetEchosByPage(
@@ -226,7 +226,7 @@ func (echoService *EchoService) GetTodayEchos(ctx context.Context, timezone stri
 	if err != nil {
 		return nil, err
 	}
-	return echoService.echoRepository.GetTodayEchos(showPrivate, timezone), nil
+	return echoService.hydrateReactions(ctx, echoService.echoRepository.GetTodayEchos(showPrivate, timezone))
 }
 
 func (echoService *EchoService) GetHotEchos(ctx context.Context, limit int) ([]model.Echo, error) {
@@ -234,7 +234,11 @@ func (echoService *EchoService) GetHotEchos(ctx context.Context, limit int) ([]m
 	if err != nil {
 		return nil, err
 	}
-	return echoService.echoRepository.GetHotEchos(limit, showPrivate)
+	echos, err := echoService.echoRepository.GetHotEchos(limit, showPrivate)
+	if err != nil {
+		return nil, err
+	}
+	return echoService.hydrateReactions(ctx, echos)
 }
 
 func (echoService *EchoService) GetRandomEcho(ctx context.Context) (*model.Echo, error) {
@@ -242,7 +246,11 @@ func (echoService *EchoService) GetRandomEcho(ctx context.Context) (*model.Echo,
 	if err != nil {
 		return nil, err
 	}
-	return echoService.echoRepository.GetRandomEcho(showPrivate)
+	echo, err := echoService.echoRepository.GetRandomEcho(showPrivate)
+	if err != nil {
+		return nil, err
+	}
+	return echoService.hydrateEchoReactions(ctx, echo)
 }
 
 func (echoService *EchoService) GetOnThisDayEchos(ctx context.Context, timezone string) ([]model.Echo, error) {
@@ -250,7 +258,7 @@ func (echoService *EchoService) GetOnThisDayEchos(ctx context.Context, timezone 
 	if err != nil {
 		return nil, err
 	}
-	return echoService.echoRepository.GetOnThisDayEchos(showPrivate, timezone), nil
+	return echoService.hydrateReactions(ctx, echoService.echoRepository.GetOnThisDayEchos(showPrivate, timezone))
 }
 
 // UpdateEcho persists the edit and returns the stored record, mirroring PostEcho.
@@ -315,34 +323,7 @@ func (echoService *EchoService) UpdateEcho(ctx context.Context, echo *model.Echo
 		logUtil.GetLogger().Warn("confirm temp files after update echo failed", logUtil.Err(err))
 	}
 
-	return saved, nil
-}
-
-func (echoService *EchoService) LikeEcho(ctx context.Context, id string) error {
-	echo, err := echoService.echoRepository.GetEchosById(ctx, id)
-	if err != nil {
-		return err
-	}
-	if echo == nil {
-		return errors.New(commonModel.ECHO_NOT_FOUND)
-	}
-	if echo.Private {
-		allowed, err := echoService.canReadPrivate(ctx)
-		if err != nil {
-			return err
-		}
-		if !allowed {
-			return errors.New(commonModel.NO_PERMISSION_DENIED)
-		}
-	}
-
-	if err := echoService.transactor.Run(ctx, func(txCtx context.Context) error {
-		return echoService.echoRepository.LikeEcho(txCtx, id)
-	}); err != nil {
-		return err
-	}
-	echoService.echoRepository.InvalidateEchoCaches(id)
-	return nil
+	return echoService.hydrateEchoReactions(ctx, saved)
 }
 
 func (echoService *EchoService) GetEchoById(ctx context.Context, id string) (*model.Echo, error) {
@@ -362,7 +343,7 @@ func (echoService *EchoService) GetEchoById(ctx context.Context, id string) (*mo
 			return nil, errors.New(commonModel.NO_PERMISSION_DENIED)
 		}
 	}
-	return echo, nil
+	return echoService.hydrateEchoReactions(ctx, echo)
 }
 
 func (echoService *EchoService) GetAllTags() ([]model.Tag, error) {
@@ -499,10 +480,22 @@ func (echoService *EchoService) QueryEchos(
 	if queryDto.SortOrder == "" {
 		queryDto.SortOrder = "desc"
 	}
+	if err := normalizeEchoCursor(&queryDto); err != nil {
+		return commonModel.PageQueryResult[[]model.Echo]{}, err
+	}
 
 	showPrivate, err := echoService.canReadPrivate(ctx)
 	if err != nil {
 		return commonModel.PageQueryResult[[]model.Echo]{}, err
+	}
+
+	cursorMode := queryDto.Cursor != nil
+	pageSize := queryDto.PageSize
+	if cursorMode {
+		// Fetch one extra row so the presence of a next page is known without
+		// making the client issue a guaranteed-empty request when the last page
+		// is exactly full.
+		queryDto.PageSize = pageSize + 1
 	}
 
 	echos, total, err := echoService.echoRepository.QueryEchos(queryDto, showPrivate)
@@ -510,10 +503,72 @@ func (echoService *EchoService) QueryEchos(
 		return commonModel.PageQueryResult[[]model.Echo]{}, err
 	}
 
-	return commonModel.PageQueryResult[[]model.Echo]{
+	hasMore := false
+	if cursorMode && len(echos) > pageSize {
+		echos = echos[:pageSize]
+		hasMore = true
+	}
+
+	echos, err = echoService.hydrateReactions(ctx, echos)
+	if err != nil {
+		return commonModel.PageQueryResult[[]model.Echo]{}, err
+	}
+
+	result := commonModel.PageQueryResult[[]model.Echo]{
 		Items: echos,
 		Total: total,
-	}, nil
+	}
+	if hasMore {
+		last := echos[len(echos)-1]
+		if last.ID != "" {
+			next := model.EncodeCursor(model.Cursor{CreatedAt: last.CreatedAt, ID: last.ID})
+			result.NextCursor = &next
+		}
+	}
+	return result, nil
+}
+
+const maxEchoCursorLength = 512
+
+// normalizeEchoCursor validates the optional keyset cursor and puts the query
+// in cursor mode. A cursor position is never trusted as a filter: only the
+// (created_at, id) boundary is read, while visibility and every caller filter
+// are re-applied by the repository.
+func normalizeEchoCursor(queryDto *commonModel.EchoQueryDto) error {
+	if queryDto.Cursor == nil {
+		return nil
+	}
+
+	if queryDto.SortBy != "created_at" {
+		return commonModel.NewBizErrorWithMessageKey(
+			commonModel.ErrCodeInvalidQuery,
+			commonModel.ECHO_CURSOR_SORT_UNSUPPORTED,
+			commonModel.MsgKeyEchoCursorSortUnsupported,
+			nil,
+		)
+	}
+
+	cursor := strings.TrimSpace(*queryDto.Cursor)
+	if len(cursor) > maxEchoCursorLength {
+		return invalidEchoCursorError()
+	}
+	if cursor != "" {
+		if _, err := model.DecodeCursor(cursor); err != nil {
+			return invalidEchoCursorError()
+		}
+	}
+	queryDto.Cursor = &cursor
+	queryDto.Page = 1
+	return nil
+}
+
+func invalidEchoCursorError() error {
+	return commonModel.NewBizErrorWithMessageKey(
+		commonModel.ErrCodeInvalidQuery,
+		commonModel.INVALID_ECHO_CURSOR,
+		commonModel.MsgKeyEchoInvalidCursor,
+		nil,
+	)
 }
 
 func isSafeTagName(name string) bool {

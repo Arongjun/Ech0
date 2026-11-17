@@ -78,35 +78,18 @@
         {{ formatDisplayTime(props.echo.createdTs) }}
       </button>
 
-      <div class="flex flex-none items-center gap-1" v-tooltip="t('hubEcho.like')">
-        <button
-          @click="handleLikeEcho()"
-          :class="[
-            'transform transition-transform duration-150',
-            isLikeAnimating ? 'scale-160' : 'scale-100',
-          ]"
-        >
-          <GrayLike class="w-4 h-4" />
-        </button>
-
-        <span class="text-xs text-[var(--color-text-muted)]">
-          {{ fav_count > 99 ? '99+' : fav_count }}
-        </span>
-      </div>
+      <TheEchoReactions :echo="props.echo" :base-url="props.echo.server_url" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import Verified from '@/components/icons/verified.vue'
-import GrayLike from '@/components/icons/graylike.vue'
+import TheEchoReactions from '@/components/advanced/echo/cards/TheEchoReactions.vue'
 import { TheMdPreview } from '@/components/advanced/md'
-import { computed, defineAsyncComponent, ref, watch } from 'vue'
+import { defineAsyncComponent } from 'vue'
 import { isContentLeadingEcho } from '@/utils/echo'
 import { useTimeDisplay } from '@/composables/useTimeDisplay'
-import { useFetch } from '@vueuse/core'
-import { theToast } from '@/utils/toast'
-import { localStg } from '@/utils/storage'
 import { useI18n } from 'vue-i18n'
 
 const TheMediaPlayer = defineAsyncComponent(
@@ -124,49 +107,8 @@ const props = defineProps<{
 const { t } = useI18n()
 const { toggleTimeDisplay, formatDisplayTime } = useTimeDisplay()
 
-const fav_count = ref<number>(props.echo.fav_count)
-const server_url = computed(() => props.echo.server_url)
-const echo_id = computed(() => props.echo.id)
-const isLikeAnimating = ref(false)
-const LIKE_LIST_KEY = computed(() => `${server_url.value}_liked_echo_ids`)
-
-watch(
-  () => props.echo.fav_count,
-  (next) => {
-    fav_count.value = next
-  },
-)
-
 const handleJumpToEcho = () => {
-  window.open(`${server_url.value}/echo/${echo_id.value}`, '_blank', 'noopener,noreferrer')
-}
-
-const handleLikeEcho = async () => {
-  isLikeAnimating.value = true
-  setTimeout(() => {
-    isLikeAnimating.value = false
-  }, 250)
-
-  const likedEchoIds: string[] = localStg.getItem(LIKE_LIST_KEY.value) || []
-  if (likedEchoIds.includes(echo_id.value)) {
-    theToast.info(String(t('hubEcho.alreadyLiked')))
-    return
-  }
-
-  const { error, data } = await useFetch<App.Api.Response<null>>(
-    `${server_url.value}/api/echo/like/${echo_id.value}`,
-  )
-    .put()
-    .json()
-
-  if (error.value || data.value?.code !== 1) {
-    theToast.error(String(t('hubEcho.likeFailed')))
-  } else {
-    fav_count.value += 1
-    likedEchoIds.push(echo_id.value)
-    localStg.setItem(LIKE_LIST_KEY.value, likedEchoIds)
-    theToast.success(String(t('hubEcho.likeSuccess')))
-  }
+  window.open(`${props.echo.server_url}/echo/${props.echo.id}`, '_blank', 'noopener,noreferrer')
 }
 </script>
 
