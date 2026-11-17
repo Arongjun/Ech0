@@ -134,7 +134,15 @@ export const useEditorStore = defineStore('editorStore', () => {
     draft.clearLocalDraft()
   }
 
-  const handleUppyUploaded = async (uploadedFiles: App.Api.Ech0.FileToAdd[]) => {
+  // Queue completion callbacks: useUpload can emit a retry while image sizing
+  // in the preceding batch is still awaiting I/O. The draft's fileToAdd is shared.
+  let uploadDelivery = Promise.resolve()
+  const handleUppyUploaded = (uploadedFiles: App.Api.Ech0.FileToAdd[]) => {
+    const delivery = uploadDelivery.then(() => applyUploadedFiles(uploadedFiles))
+    uploadDelivery = delivery.catch(() => undefined)
+    return delivery
+  }
+  const applyUploadedFiles = async (uploadedFiles: App.Api.Ech0.FileToAdd[]) => {
     for (const file of uploadedFiles) {
       if (file.id) {
         globalFileRegistry.upsert({
@@ -151,8 +159,28 @@ export const useEditorStore = defineStore('editorStore', () => {
       }
     }
 
-    const { imageFiles, videoFiles, audioFiles } = pairEchoFiles(uploadedFiles)
-    const filesToProcess = [...imageFiles, ...videoFiles, ...audioFiles]
+    // Upload retries can deliver the still and motion in different batches.
+    // Reconcile against unattached companions already in the draft, but never
+    // let a later upload replace an existing completed Live Photo association.
+    const existing = files.filesToAdd.value
+    const attachedIds = new Set(
+      existing.flatMap((file) => [file.id, file.live_video_id]).filter(Boolean),
+    )
+    const incoming = uploadedFiles.filter((file) => !file.id || !attachedIds.has(file.id))
+    if (incoming.length === 0) return
+    const { imageFiles, videoFiles, audioFiles } = pairEchoFiles([
+      ...existing.filter((file) => !file.live_video_id),
+      ...incoming,
+    ])
+    const reconciled = [...imageFiles, ...videoFiles, ...audioFiles]
+    const byId = new Map(reconciled.filter((file) => file.id).map((file) => [file.id, file]))
+    const existingIds = new Set(existing.map((file) => file.id))
+    files.setFilesToAdd(
+      existing
+        .filter((file) => file.live_video_id || !file.id || byId.has(file.id))
+        .map((file) => (file.live_video_id ? file : byId.get(file.id) || file)),
+    )
+    const filesToProcess = reconciled.filter((file) => !file.id || !existingIds.has(file.id))
 
     for (const file of filesToProcess) {
       if (!file.url) {

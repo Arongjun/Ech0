@@ -23,6 +23,7 @@ export interface EchoPost {
   username?: string
   created_at: number | string
   fav_count?: number
+  legacy_like_count?: number
   reactions?: App.Api.Ech0.ReactionCount[]
   tags?: EchoTag[]
   echo_files?: App.Api.Ech0.EchoFile[]

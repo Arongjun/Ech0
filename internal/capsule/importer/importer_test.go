@@ -222,6 +222,7 @@ func TestRun_LandsCapsuleVerbatim(t *testing.T) {
 	var echo echoModel.Echo
 	require.NoError(t, f.db.Where("id = ?", echoIDPublic).First(&echo).Error)
 	require.Equal(t, publicCreatedTS, echo.CreatedAt)
+	require.Equal(t, 42, echo.LegacyLikeCount)
 	require.Equal(t, "alice", echo.Username)
 	require.Equal(t, "hello **capsule**\n", echo.Content)
 	require.Equal(t, echoModel.LayoutGrid, echo.Layout)

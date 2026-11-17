@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useEditorStore } from '@/stores/editor'
 import { fetchAddEcho } from '@/service/api'
+import { getImageSize } from '@/utils/image'
 import { ExtensionType, ImageLayout } from '@/enums/enums'
 
 vi.mock('@/service/api', () => ({
@@ -22,6 +23,8 @@ vi.mock('vue-i18n', async (importOriginal) => {
     useI18n: () => ({ t: (key: string) => key }),
   }
 })
+
+vi.mock('@/utils/image', () => ({ getImageSize: vi.fn(async () => ({ width: 10, height: 20 })) }))
 
 const fetchAddEchoMock = vi.mocked(fetchAddEcho)
 
@@ -114,5 +117,124 @@ describe('editor submit payload', () => {
     await editorStore.handleAddOrUpdateEcho(false)
 
     expect(fetchAddEchoMock).not.toHaveBeenCalled()
+  })
+  it.each(['image-first', 'motion-first'])(
+    'pairs a retried Live Photo across separate batches: %s',
+    async (order) => {
+      const store = useEditorStore()
+      const image = {
+        id: 'still',
+        url: '/images/IMG_1.jpg',
+        key: 'IMG_1.jpg',
+        name: 'IMG_1.HEIC',
+        category: 'image',
+        storage_type: 'local',
+        live_pair_id: 'pair-1',
+      } as App.Api.Ech0.FileToAdd
+      const motion = {
+        id: 'motion',
+        url: '/images/IMG_1.mov',
+        key: 'IMG_1.mov',
+        name: 'IMG_1.MOV',
+        category: 'video',
+        storage_type: 'local',
+        live_pair_id: 'pair-1',
+      } as App.Api.Ech0.FileToAdd
+      const [first, second] = order === 'image-first' ? [image, motion] : [motion, image]
+      await store.handleUppyUploaded([first!])
+      await store.handleUppyUploaded([second!])
+      await store.handleUppyUploaded([image, motion])
+      expect(store.filesToAdd).toHaveLength(1)
+      expect(store.filesToAdd[0]).toMatchObject({
+        id: 'still',
+        is_live_photo: true,
+        live_video_id: 'motion',
+        live_video_url: motion.url,
+      })
+      await store.handleAddOrUpdateEcho(false)
+      expect(fetchAddEchoMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          echo_files: [
+            { file_id: 'still', sort_order: 0 },
+            { file_id: 'motion', sort_order: 1 },
+          ],
+        }),
+      )
+    },
+  )
+
+  it('does not replace a completed pair when later uploads have the same basename', async () => {
+    const store = useEditorStore()
+    store.setFilesToAdd([
+      {
+        id: 'old-still',
+        url: '/images/IMG_1.jpg',
+        name: 'IMG_1.jpg',
+        category: 'image',
+        storage_type: 'local',
+        live_video_id: 'old-motion',
+        live_video_url: '/images/old.mov',
+        is_live_photo: true,
+      },
+    ])
+    await store.handleUppyUploaded([
+      {
+        id: 'new-still',
+        url: '/images/new.jpg',
+        name: 'IMG_1.jpg',
+        category: 'image',
+        storage_type: 'local',
+        live_pair_id: 'new-pair',
+      },
+      {
+        id: 'new-motion',
+        url: '/images/new.mov',
+        name: 'IMG_1.mov',
+        category: 'video',
+        storage_type: 'local',
+        live_pair_id: 'new-pair',
+      },
+    ])
+    expect(store.filesToAdd.map((file) => [file.id, file.live_video_id])).toEqual([
+      ['old-still', 'old-motion'],
+      ['new-still', 'new-motion'],
+    ])
+  })
+  it('serializes overlapping completion callbacks while still image sizing is pending', async () => {
+    const store = useEditorStore()
+    let sized!: (size: { width: number; height: number }) => void
+    vi.mocked(getImageSize).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          sized = resolve
+        }),
+    )
+    const first = store.handleUppyUploaded([
+      {
+        id: 'concurrent-still',
+        url: '/images/IMG_2.jpg',
+        category: 'image',
+        storage_type: 'local',
+        live_pair_id: 'p2',
+      },
+    ])
+    await Promise.resolve()
+    const retry = store.handleUppyUploaded([
+      {
+        id: 'concurrent-motion',
+        url: '/images/IMG_2.mov',
+        category: 'video',
+        storage_type: 'local',
+        live_pair_id: 'p2',
+      },
+    ])
+    sized({ width: 10, height: 20 })
+    await Promise.all([first, retry])
+    expect(store.filesToAdd).toHaveLength(1)
+    expect(store.filesToAdd[0]).toMatchObject({
+      id: 'concurrent-still',
+      live_video_id: 'concurrent-motion',
+      category: 'image',
+    })
   })
 })

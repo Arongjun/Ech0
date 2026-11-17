@@ -6,7 +6,7 @@ import '@/themes/index.scss'
 import '@/themes/arong-ios-glass-pro.css'
 import 'floating-vue/dist/style.css'
 
-import { createApp } from 'vue'
+import { createApp, nextTick } from 'vue'
 import { createPinia } from 'pinia'
 import FloatingVue from 'floating-vue'
 
@@ -15,40 +15,16 @@ import router from './router'
 import { initStores } from './stores/store-init'
 import { preloadMarkdown } from './editor/core/loader'
 import { useSettingStore } from './stores/setting'
-import { useThemeStore } from './stores/theme'
-import { useInitStore } from './stores/init'
 import { setupI18n } from './locales'
 
 import BaseDialog from '@/components/common/BaseDialog.vue'
+import { createStartupLoader } from '@/lib/startupLoader'
 
 if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
   window.history.scrollRestoration = 'manual'
 }
 
-const appLoader = document.getElementById('app-loader')
-let loaderCleared = false
-const clearStartupLoader = () => {
-  if (loaderCleared) return
-  loaderCleared = true
-  try {
-    appLoader?.remove()
-  } catch {}
-  document.documentElement.classList.remove('app-loading')
-}
-
-const startLoaderFade = () => {
-  if (!appLoader) {
-    clearStartupLoader()
-    return
-  }
-  window.requestAnimationFrame(() => {
-    try {
-      appLoader.classList.add('fade-out')
-    } catch {}
-  })
-  appLoader.addEventListener('transitionend', clearStartupLoader, { once: true })
-  window.setTimeout(clearStartupLoader, 600)
-}
+const startupLoader = createStartupLoader()
 
 async function bootstrap() {
   const app = createApp(App)
@@ -56,19 +32,11 @@ async function bootstrap() {
 
   app.use(pinia)
 
-  try {
-    useThemeStore().init()
-  } catch (e) {
-    console.warn('Theme init error:', e)
-  }
-
-  const i18n = await setupI18n().catch((e) => {
-    console.warn('Failed to setup i18n:', e)
-    return undefined
-  })
-  if (i18n) {
-    app.use(i18n)
-  }
+  // Restore upstream's initialized-before-mount lifecycle. Auth, onboarding and
+  // locale must be settled before the first visible route (no login/locale flash).
+  await Promise.all([initStores(), preloadMarkdown()])
+  const settingStore = useSettingStore()
+  app.use(await setupI18n(settingStore.SystemSetting?.default_locale))
 
   app.use(router)
   app.use(FloatingVue, {
@@ -88,46 +56,22 @@ async function bootstrap() {
 
   app.component('BaseDialog', BaseDialog)
 
-  app.config.errorHandler = (err, instance, info) => {
+  let mounted = false
+  let mountError: unknown
+  app.config.errorHandler = (err, _instance, info) => {
     console.error('[Vue App Error]', err, info)
+    if (!mounted) mountError = err
   }
 
-  try {
-    await preloadMarkdown()
-    await Promise.race([
-      router.isReady(),
-      new Promise<void>((resolve) => window.setTimeout(resolve, 2000)),
-    ])
-  } catch (err) {
-    console.warn('Router isReady error:', err)
-  }
-
-  try {
-    app.mount('#app')
-  } catch (err) {
-    console.error('Failed to mount application:', err)
-  }
-
-  window.requestAnimationFrame(() => {
-    startLoaderFade()
-  })
-
-  window.setTimeout(startLoaderFade, 2500)
-
-  initStores()
-    .then(() => {
-      const settingStore = useSettingStore()
-      const initStore = useInitStore()
-      if (initStore.initialized && settingStore.SystemSetting?.default_locale) {
-        setupI18n(settingStore.SystemSetting.default_locale).catch(() => undefined)
-      }
-    })
-    .catch((e) => {
-      console.warn('Background stores init failed:', e)
-    })
+  await router.isReady()
+  app.mount('#app')
+  await nextTick()
+  if (mountError) throw mountError
+  mounted = true
+  startupLoader.finish()
 }
 
 bootstrap().catch((err) => {
   console.error('Failed to bootstrap application:', err)
-  startLoaderFade()
+  startupLoader.fail()
 })

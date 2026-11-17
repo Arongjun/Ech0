@@ -220,8 +220,8 @@ export const useSeoHead = (systemSetting: Ref<SeoSystemSetting>) => {
     })
 
     const publisher = {
-      '@type': 'Organization',
-      name: siteTitle,
+      '@type': branded ? 'Person' : 'Organization',
+      name: systemSetting.value.server_name?.trim() || siteTitle,
       url: baseUrl,
       logo: new URL(brandedLogo || '/Ech0.png', `${baseUrl}/`).toString(),
     }
@@ -262,7 +262,14 @@ export const useSeoHead = (systemSetting: Ref<SeoSystemSetting>) => {
   )
 
   watch(
-    () => systemSetting.value.site_title,
+    () => [
+      systemSetting.value.site_title,
+      systemSetting.value.server_name,
+      systemSetting.value.server_logo,
+      systemSetting.value.home_signature_text,
+      systemSetting.value.home_welcome_text,
+      systemSetting.value.footer_content,
+    ],
     () => {
       updateSeoMeta()
     },

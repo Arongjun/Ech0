@@ -154,17 +154,18 @@ func bakeEchos(loaded *capsule.Loaded, baseURL string) ([]echo, error) {
 		}
 
 		e := echo{
-			ID:        doc.ID,
-			Content:   doc.Content,
-			Username:  username,
-			Layout:    layout,
-			Private:   false,
-			UserID:    "",
-			CreatedAt: createdAt,
-			EchoFiles: bakeFiles(doc, createdAt, baseURL),
-			Tags:      nil,
-			Extension: bakeExtension(doc, createdAt),
-			tagNames:  dedupeNames(doc.Tags),
+			ID:              doc.ID,
+			Content:         doc.Content,
+			Username:        username,
+			LegacyLikeCount: doc.FavCount,
+			Layout:          layout,
+			Private:         false,
+			UserID:          "",
+			CreatedAt:       createdAt,
+			EchoFiles:       bakeFiles(doc, createdAt, baseURL),
+			Tags:            nil,
+			Extension:       bakeExtension(doc, createdAt),
+			tagNames:        dedupeNames(doc.Tags),
 		}
 		out = append(out, e)
 	}

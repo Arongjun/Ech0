@@ -65,6 +65,7 @@ declare namespace App {
         user_id: string
         extension?: EchoExtension | null
         tags?: Tag[]
+        legacy_like_count?: number
         reactions?: ReactionCount[]
         created_at: number | string
         user?: {

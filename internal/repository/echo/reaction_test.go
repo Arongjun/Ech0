@@ -106,3 +106,24 @@ func TestReactionCatalogIsNonEmpty(t *testing.T) {
 	_, ok := echoModel.ReactionEmojiByKey("unknown")
 	assert.False(t, ok)
 }
+
+func TestLegacyLikesRemainIndependentOfReactionsAndEdits(t *testing.T) {
+	repo, db := newEchoRepo(t)
+	seedEcho(t, db, "legacy", "old", false, 100)
+	require.NoError(t, db.Model(&echoModel.Echo{}).Where("id = ?", "legacy").Update("fav_count", 7).Error)
+	ctx := context.Background()
+	require.NoError(t, repo.AddReaction(ctx, "legacy", "like", "v:new"))
+	counts, err := repo.ListReactions(ctx, []string{"legacy"}, "v:new")
+	require.NoError(t, err)
+	require.Equal(t, 1, counts["legacy"][0].Count)
+	require.NoError(t, repo.RemoveReaction(ctx, "legacy", "like", "v:new"))
+	row := echoModel.Echo{ID: "legacy", Content: "edited", Layout: echoModel.LayoutWaterfall}
+	require.NoError(t, repo.UpdateEcho(ctx, &row))
+	var kept echoModel.Echo
+	require.NoError(t, db.First(&kept, "id = ?", "legacy").Error)
+	require.Equal(t, 7, kept.LegacyLikeCount)
+	require.Equal(t, "edited", kept.Content)
+	counts, err = repo.ListReactions(ctx, []string{"legacy"}, "v:new")
+	require.NoError(t, err)
+	require.Empty(t, counts["legacy"])
+}

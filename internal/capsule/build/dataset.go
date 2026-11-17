@@ -66,16 +66,17 @@ type agent struct {
 }
 
 type echo struct {
-	ID        string     `json:"id"`
-	Content   string     `json:"content"`
-	Username  string     `json:"username"`
-	Layout    string     `json:"layout"`
-	Private   bool       `json:"private"`
-	UserID    string     `json:"user_id"`
-	CreatedAt int64      `json:"created_at"`
-	EchoFiles []echoFile `json:"echo_files"`
-	Tags      []tag      `json:"tags"`
-	Extension *extension `json:"extension"`
+	LegacyLikeCount int        `json:"legacy_like_count,omitempty"`
+	ID              string     `json:"id"`
+	Content         string     `json:"content"`
+	Username        string     `json:"username"`
+	Layout          string     `json:"layout"`
+	Private         bool       `json:"private"`
+	UserID          string     `json:"user_id"`
+	CreatedAt       int64      `json:"created_at"`
+	EchoFiles       []echoFile `json:"echo_files"`
+	Tags            []tag      `json:"tags"`
+	Extension       *extension `json:"extension"`
 
 	tagNames []string
 }

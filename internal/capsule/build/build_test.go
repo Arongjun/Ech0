@@ -190,6 +190,8 @@ func TestRunBakesDataset(t *testing.T) {
 	assert.Equal(t, newEchoID, ds.Echos[0].ID)
 	assert.Equal(t, newCreated.Unix(), ds.Echos[0].CreatedAt)
 	assert.Equal(t, oldEchoID, ds.Echos[1].ID)
+	assert.Equal(t, 3, ds.Echos[1].LegacyLikeCount)
+	assert.Zero(t, ds.Echos[0].LegacyLikeCount)
 	assert.Equal(t, oldCreated.Unix(), ds.Echos[1].CreatedAt)
 	assert.Greater(t, ds.Echos[0].CreatedAt, ds.Echos[1].CreatedAt)
 

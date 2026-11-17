@@ -54,7 +54,7 @@ func brandingFromSetting(s settingModel.SystemSetting, title string) siteBrandin
 	}
 
 	logo := strings.TrimSpace(s.ServerLogo)
-	if logo == "" || isBuiltinLogo(logo) {
+	if logo == "" || isBuiltinLogo(logo) || !(strings.HasPrefix(logo, "/") && !strings.HasPrefix(logo, "//") || strings.HasPrefix(logo, "https://") || strings.HasPrefix(logo, "http://")) {
 		return b
 	}
 	b.LogoURL = logo
@@ -178,3 +178,27 @@ func brandIndexHTML(htmlStr string, b siteBranding) string {
 	}
 	return htmlStr
 }
+
+// brandLoaderIdentity follows the upstream letter-hop motion, without hard-coded
+// official text. Escape both the accessible name and each visual character.
+func brandLoaderIdentity(b siteBranding) string {
+	title := strings.TrimSpace(b.Title)
+	if title == "" || title == defaultSiteTitle || title == "Echo" {
+		title = "Loading"
+	}
+	var out strings.Builder
+	out.WriteString(`<div id="loader-identity" data-server-brand="true">`)
+	if b.LogoURL != "" {
+		out.WriteString(`<img id="loader-logo" alt="" src="` + html.EscapeString(b.LogoURL) + `" />`)
+	} else {
+		out.WriteString(`<img id="loader-logo" alt="" hidden />`)
+	}
+	out.WriteString(`<h1 class="loader-brand" aria-label="` + html.EscapeString(title) + `">`)
+	for index, letter := range []rune(title) {
+		out.WriteString(fmt.Sprintf(`<span aria-hidden="true" style="--letter-index:%d">%s</span>`, index%8, html.EscapeString(string(letter))))
+	}
+	out.WriteString(`</h1></div>`)
+	return out.String()
+}
+
+var loaderIdentityRe = regexp.MustCompile(`(?s)<div id="loader-identity"[^>]*>.*?</div>`)

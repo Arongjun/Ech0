@@ -24,6 +24,10 @@ type Echo struct {
 	Tags      []Tag          `gorm:"many2many:echo_tags;"                          json:"tags,omitempty"`
 	CreatedAt int64          `gorm:"autoCreateTime;index:idx_echos_private_created_id,priority:2;index:idx_echos_created_id,priority:1" json:"created_at"`
 
+	// LegacyLikeCount is the pre-reactions aggregate. Keep its original column:
+	// anonymous historical likes cannot honestly be turned into per-actor reactions.
+	LegacyLikeCount int `gorm:"column:fav_count;default:0" json:"legacy_like_count,omitempty"`
+
 	// Reactions is a request-scoped projection hydrated by the service from
 	// echo_reactions; it is never persisted with the echo row and therefore
 	// never enters the shared echo cache.

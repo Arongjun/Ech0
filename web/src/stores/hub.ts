@@ -53,6 +53,7 @@ function toHubEcho(
     user_id: post.user_id ?? '',
     extension: post.extension,
     reactions: post.reactions ?? [],
+    legacy_like_count: post.legacy_like_count ?? post.fav_count ?? 0,
     created_at: post.created_at,
     createdTs: timeValueToMs(post.created_at),
     server_name: inst.serverName,

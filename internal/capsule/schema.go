@@ -24,20 +24,20 @@ type Manifest struct {
 }
 
 type Site struct {
-	SiteTitle     string `yaml:"site_title,omitempty"`
-	ServerLogo    string `yaml:"server_logo,omitempty"`
-	ServerName    string `yaml:"server_name,omitempty"`
-	ServerURL     string `yaml:"server_url,omitempty"`
-	DefaultLocale string `yaml:"default_locale,omitempty"`
-	ICPNumber     string `yaml:"ICP_number,omitempty"`
+	SiteTitle         string `yaml:"site_title,omitempty"`
+	ServerLogo        string `yaml:"server_logo,omitempty"`
+	ServerName        string `yaml:"server_name,omitempty"`
+	ServerURL         string `yaml:"server_url,omitempty"`
+	DefaultLocale     string `yaml:"default_locale,omitempty"`
+	ICPNumber         string `yaml:"ICP_number,omitempty"`
 	FooterContent     string `yaml:"footer_content,omitempty"`
 	FooterLink        string `yaml:"footer_link,omitempty"`
 	HomeWelcomeText   string `yaml:"home_welcome_text,omitempty"`
 	HomeSignatureText string `yaml:"home_signature_text,omitempty"`
 	HomeSignatureURL  string `yaml:"home_signature_url,omitempty"`
 	MetingAPI         string `yaml:"meting_api,omitempty"`
-	CustomCSS     string `yaml:"custom_css,omitempty"`
-	CustomJS      string `yaml:"custom_js,omitempty"`
+	CustomCSS         string `yaml:"custom_css,omitempty"`
+	CustomJS          string `yaml:"custom_js,omitempty"`
 }
 
 type Owner struct {
@@ -55,8 +55,8 @@ type EchoDoc struct {
 	Tags      []string `yaml:"tags,omitempty"`
 	Layout    string   `yaml:"layout,omitempty"`
 	Private   bool     `yaml:"private,omitempty"`
-	// FavCount is accepted for reading capsules written before reactions; it
-	// is ignored on import and never exported.
+	// FavCount preserves the anonymous pre-reactions total independently of new
+	// per-actor reactions, including round-trips through older capsules.
 	FavCount  int        `yaml:"fav_count,omitempty"`
 	Files     []FileRef  `yaml:"files,omitempty"`
 	Extension *Extension `yaml:"extension,omitempty"`

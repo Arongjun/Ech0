@@ -300,10 +300,10 @@ func (webHandler *WebHandler) servePage(
 		}
 	}
 	body := webHandler.shell.render(meta.headHTML(), meta.NoScript, meta.Lang)
+	body = loaderIdentityRe.ReplaceAllLiteral(body, []byte(brandLoaderIdentity(brand)))
 	if brand.Title != defaultSiteTitle {
 		// Preserve route-specific SEO while branding the loader and install surfaces.
 		doc := string(body)
-		doc = strings.ReplaceAll(doc, `<h1 class="loader-brand">Ech0</h1>`, `<h1 class="loader-brand">`+html.EscapeString(brand.Title)+`</h1>`)
 		doc = strings.ReplaceAll(doc, `<meta name="apple-mobile-web-app-title" content="Ech0" />`, `<meta name="apple-mobile-web-app-title" content="`+html.EscapeString(brand.Title)+`" />`)
 		doc = metaAuthorRe.ReplaceAllLiteralString(doc, `<meta name="author" content="`+html.EscapeString(brand.Author)+`" />`)
 		if brand.LogoURL != "" {

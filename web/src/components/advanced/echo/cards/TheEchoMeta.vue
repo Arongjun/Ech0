@@ -16,6 +16,13 @@
       </button>
     </div>
 
+    <span
+      v-if="props.echo.legacy_like_count && props.echo.legacy_like_count > 0"
+      class="echo-meta-item text-xs text-[var(--color-text-muted)]"
+      :title="t('echoDetail.legacyLikesHint')"
+    >
+      {{ t('echoDetail.legacyLikes', { count: props.echo.legacy_like_count }) }}
+    </span>
     <div class="echo-meta-line">
       <button
         type="button"

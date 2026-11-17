@@ -624,14 +624,20 @@ export function useUpload(opts: UseUploadOptions) {
     items.value.splice(to, 0, moved)
   }
 
-  function remove(id: string) {
-    const idx = items.value.findIndex((i) => i.id === id)
-    if (idx < 0) return
-    const item = items.value[idx]
-    if (item.abort) item.abort.abort()
-    URL.revokeObjectURL(item.preview)
-    items.value.splice(idx, 1)
+  function removeMany(ids: string[]) {
+    const selected = new Set(ids)
+    for (const item of items.value) {
+      if (!selected.has(item.id)) continue
+      item.abort?.abort()
+      URL.revokeObjectURL(item.preview)
+    }
+    // Drop a pair atomically before pump() can start its waiting companion.
+    items.value = items.value.filter((item) => !selected.has(item.id))
     pump()
+  }
+
+  function remove(id: string) {
+    removeMany([id])
   }
 
   function cancelAll() {
@@ -654,6 +660,7 @@ export function useUpload(opts: UseUploadOptions) {
     hydrate,
     retry,
     remove,
+    removeMany,
     moveItem,
     cancelAll,
     reset,

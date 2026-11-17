@@ -258,13 +258,14 @@ func (s *session) importEcho(ctx context.Context, path string, doc *capsule.Echo
 	}
 
 	echo := echoModel.Echo{
-		ID:        doc.ID,
-		Content:   doc.Content,
-		Username:  doc.Username,
-		Layout:    layout,
-		Private:   doc.Private,
-		UserID:    userID,
-		CreatedAt: createdAt,
+		ID:              doc.ID,
+		Content:         doc.Content,
+		Username:        doc.Username,
+		Layout:          layout,
+		Private:         doc.Private,
+		UserID:          userID,
+		CreatedAt:       createdAt,
+		LegacyLikeCount: doc.FavCount,
 	}
 	if err := s.db.Omit(clause.Associations).Create(&echo).Error; err != nil {
 		return fmt.Errorf("capsule import: %s: create echo: %w", path, err)

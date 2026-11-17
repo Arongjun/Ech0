@@ -527,7 +527,9 @@
     "shareCopyFailed": "コピーに失敗しました。もう一度お試しください。",
     "shareMarkdownCopied": "Markdown をクリップボードにコピーしました！",
     "metaWordCountValue": "{count} 文字",
-    "metaPrivate": "非公開"
+    "metaPrivate": "非公開",
+    "legacyLikes": "以前のいいね {count}",
+    "legacyLikesHint": "更新前の匿名のいいねです。新しいリアクションとは別に保持されます。"
   },
   "commentSection": {
     "disabled": "コメント機能は無効です。",

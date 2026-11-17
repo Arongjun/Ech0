@@ -125,7 +125,7 @@ func TestTemplates_CustomBrandingSurvivesSEORendering(t *testing.T) {
 	}
 	body := rec.Body.String()
 	for _, want := range []string{
-		`<h1 class="loader-brand">Arong &amp; Friends</h1>`,
+		`<h1 class="loader-brand" aria-label="Arong &amp; Friends">`,
 		`content="记录生活"`,
 		`<link rel="apple-touch-icon" href="/images/custom-logo.png" />`,
 		`content="http://blog.example.com/images/custom-logo.png"`,
@@ -153,5 +153,15 @@ func TestTemplates_CustomBrandingSurvivesSEORendering(t *testing.T) {
 	}
 	if _, exists := value["screenshots"]; exists {
 		t.Fatal("official screenshots leaked")
+	}
+}
+
+func TestLoaderBrandEscapesAndDoesNotLeakOfficialName(t *testing.T) {
+	rendered := brandLoaderIdentity(siteBranding{Title: `Arong <script>&$`, LogoURL: `/images/logo.png?x="&y=2`})
+	if strings.Contains(rendered, "<script>") || !strings.Contains(rendered, `aria-label="Arong &lt;script&gt;&amp;$"`) || !strings.Contains(rendered, `--letter-index:1`) {
+		t.Fatalf("unsafe or unanimated loader: %s", rendered)
+	}
+	if strings.Contains(brandLoaderIdentity(siteBranding{Title: defaultSiteTitle}), "Ech0") {
+		t.Fatal("official loader brand leaked")
 	}
 }

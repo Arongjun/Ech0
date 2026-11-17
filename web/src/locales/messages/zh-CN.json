@@ -527,7 +527,9 @@
     "shareCopyFailed": "复制失败，请重试。",
     "shareMarkdownCopied": "Markdown 已复制到剪贴板！",
     "metaWordCountValue": "{count} 字",
-    "metaPrivate": "私有"
+    "metaPrivate": "私有",
+    "legacyLikes": "历史点赞 {count}",
+    "legacyLikesHint": "升级前累计点赞；与新的表情反应分别保留，不能按用户撤回。"
   },
   "commentSection": {
     "disabled": "评论功能未开启。",

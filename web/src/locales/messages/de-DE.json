@@ -527,7 +527,9 @@
     "shareCopyFailed": "Kopieren fehlgeschlagen, bitte erneut versuchen.",
     "shareMarkdownCopied": "Markdown in die Zwischenablage kopiert!",
     "metaWordCountValue": "{count} Wörter",
-    "metaPrivate": "Privat"
+    "metaPrivate": "Privat",
+    "legacyLikes": "{count} frühere Likes",
+    "legacyLikesHint": "Anonyme Likes vor dem Upgrade, getrennt von neuen Reaktionen gespeichert."
   },
   "commentSection": {
     "disabled": "Kommentare sind deaktiviert.",

@@ -417,6 +417,9 @@ components:
           type: string
         layout:
           type: string
+        legacy_like_count:
+          format: int64
+          type: integer
         private:
           type: boolean
         reactions:

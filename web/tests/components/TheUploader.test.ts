@@ -4,6 +4,8 @@
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import TheUploader from '@/components/advanced/TheUploader.vue'
+import { deleteFileById } from '@/lib/file'
+import { httpUpload } from '@/lib/file/upload'
 import { FILE_STORAGE_TYPE } from '@/constants/file'
 
 type FileToAdd = App.Api.Ech0.FileToAdd
@@ -39,12 +41,18 @@ vi.mock('@/stores', async () => {
         editorState.filesToAdd.push(file)
       }
     },
-    removeFileAt: vi.fn(),
+    removeFileAt: vi.fn((index: number) => {
+      editorState.filesToAdd.splice(index, 1)
+    }),
     reorderFilesByIds: vi.fn(),
   })
   shared.editorState = editorState as unknown as EditorState
   return { useEditorStore: () => editorState }
 })
+
+vi.mock('@/composables/useBaseDialog', () => ({
+  useBaseDialog: () => ({ openConfirm: ({ onConfirm }: { onConfirm: () => void }) => onConfirm() }),
+}))
 
 vi.mock('@/lib/file', () => ({
   deleteFileById: vi.fn(),
@@ -111,6 +119,8 @@ describe('TheUploader', () => {
     shared.editorState.isUpdateMode = false
     vi.mocked(shared.editorState.handleAddOrUpdateEcho).mockClear()
     vi.mocked(shared.editorState.reorderFilesByIds).mockClear()
+    vi.mocked(deleteFileById).mockReset()
+    vi.mocked(deleteFileById).mockResolvedValue(undefined as never)
     URL.createObjectURL = vi.fn(() => 'blob:preview')
     URL.revokeObjectURL = vi.fn()
   })
@@ -259,5 +269,105 @@ describe('TheUploader', () => {
     await flushTicks()
 
     expect(wrapper.findAll('li')).toHaveLength(1)
+  })
+  it('keeps the motion queue row attached and removes both ids when either half is removed', async () => {
+    shared.editorState.filesToAdd.push(
+      {
+        id: 'still',
+        url: '/images/IMG_1.jpg',
+        key: 'IMG_1.jpg',
+        category: 'image',
+        storage_type: 'local',
+        live_pair_id: 'p',
+      } as FileToAdd,
+      {
+        id: 'motion',
+        url: '/images/IMG_1.mov',
+        key: 'IMG_1.mov',
+        category: 'video',
+        storage_type: 'local',
+        live_pair_id: 'p',
+      } as FileToAdd,
+    )
+    const wrapper = mount(TheUploader, {
+      props: { fileStorageType: FILE_STORAGE_TYPE.LOCAL, EnableCompressor: false, maxFiles: 9 },
+    })
+    wrappers.push(wrapper)
+    await flushTicks()
+    shared.editorState.filesToAdd[0]!.live_video_id = 'motion'
+    shared.editorState.filesToAdd[0]!.live_video_url = '/images/IMG_1.mov'
+    shared.editorState.filesToAdd.splice(1, 1)
+    await flushTicks()
+    expect(wrapper.findAll('li')).toHaveLength(2)
+    await wrapper.findAll('li')[1]!.get('button[title="uploader.removeItem"]').trigger('click')
+    await flushTicks()
+    expect(deleteFileById).toHaveBeenCalledWith('still')
+    expect(deleteFileById).toHaveBeenCalledWith('motion')
+    expect(shared.editorState.filesToAdd).toHaveLength(0)
+    expect(wrapper.findAll('li')).toHaveLength(0)
+  })
+  it('never deletes an unrelated existing image when removing an upload with no result id', async () => {
+    shared.editorState.filesToAdd.push({
+      id: 'keep',
+      url: '/images/keep.jpg',
+      key: 'keep.jpg',
+      category: 'image',
+      storage_type: 'local',
+    } as FileToAdd)
+    vi.mocked(httpUpload).mockRejectedValueOnce(new Error('fixture upload failure'))
+    const wrapper = mount(TheUploader, {
+      props: { fileStorageType: FILE_STORAGE_TYPE.LOCAL, EnableCompressor: false, maxFiles: 9 },
+    })
+    wrappers.push(wrapper)
+    const input = wrapper.get('input[type="file"]')
+    Object.defineProperty(input.element, 'files', {
+      value: [new File(['x'], 'failed.png', { type: 'image/png' })],
+      configurable: true,
+    })
+    await input.trigger('change')
+    await flushTicks()
+    expect(wrapper.findAll('li')).toHaveLength(2)
+    await wrapper.findAll('li')[1]!.get('button[title="uploader.removeItem"]').trigger('click')
+    await flushTicks()
+    expect(deleteFileById).not.toHaveBeenCalled()
+    expect(shared.editorState.filesToAdd.map((file) => file.id)).toEqual(['keep'])
+    expect(wrapper.findAll('li')).toHaveLength(1)
+  })
+
+  it('cancels a pending pair atomically without starting the waiting motion upload', async () => {
+    vi.mocked(httpUpload).mockImplementationOnce(
+      (_file, _config, options) =>
+        new Promise((_resolve, reject) => {
+          options?.signal?.addEventListener('abort', () =>
+            reject(new DOMException('fixture cancellation', 'AbortError')),
+          )
+        }),
+    )
+    const wrapper = mount(TheUploader, {
+      props: {
+        fileStorageType: FILE_STORAGE_TYPE.LOCAL,
+        EnableCompressor: false,
+        maxFiles: 9,
+        allowedFileTypes: ['image/*', 'video/*'],
+      },
+    })
+    wrappers.push(wrapper)
+    const input = wrapper.get('input[type="file"]')
+    Object.defineProperty(input.element, 'files', {
+      value: [
+        new File(['x'], 'IMG_2.jpg', { type: 'image/jpeg' }),
+        new File(['v'], 'IMG_2.mov', { type: 'video/quicktime' }),
+      ],
+      configurable: true,
+    })
+    await input.trigger('change')
+    await flushTicks(25)
+    expect(wrapper.findAll('li')).toHaveLength(2)
+    expect(httpUpload).toHaveBeenCalledTimes(1)
+    await wrapper.findAll('li')[0]!.get('button[title="uploader.removeItem"]').trigger('click')
+    await flushTicks()
+    expect(wrapper.findAll('li')).toHaveLength(0)
+    expect(httpUpload).toHaveBeenCalledTimes(1)
+    expect(deleteFileById).not.toHaveBeenCalled()
   })
 })

@@ -527,7 +527,9 @@
     "shareCopyFailed": "Copy failed, please try again.",
     "shareMarkdownCopied": "Markdown copied to clipboard!",
     "metaWordCountValue": "{count} words",
-    "metaPrivate": "Private"
+    "metaPrivate": "Private",
+    "legacyLikes": "{count} legacy likes",
+    "legacyLikesHint": "Anonymous likes from before the upgrade, kept separately from new reactions."
   },
   "commentSection": {
     "disabled": "Commenting is disabled.",

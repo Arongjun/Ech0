@@ -249,19 +249,29 @@ const dropHintText = computed(() =>
     : t('uploader.dropHint', { max: maxFiles.value }),
 )
 
-const { items, isUploading, totalActive, addFiles, hydrate, retry, remove, moveItem, cancelAll } =
-  useUpload({
-    storageType: toRef(props, 'fileStorageType'),
-    enableCompressor: toRef(props, 'EnableCompressor'),
-    category: props.fileCategory,
-    allowedTypes: allowedTypes.value,
-    maxFiles: maxFiles.value,
-    maxFileSize: maxFileSize.value,
-    concurrency: 3,
-    onAllComplete: (results) => {
-      editorStore.handleUppyUploaded(results)
-    },
-  })
+const {
+  items,
+  isUploading,
+  totalActive,
+  addFiles,
+  hydrate,
+  retry,
+  remove,
+  removeMany,
+  moveItem,
+  cancelAll,
+} = useUpload({
+  storageType: toRef(props, 'fileStorageType'),
+  enableCompressor: toRef(props, 'EnableCompressor'),
+  category: props.fileCategory,
+  allowedTypes: allowedTypes.value,
+  maxFiles: maxFiles.value,
+  maxFileSize: maxFileSize.value,
+  concurrency: 3,
+  onAllComplete: (results) => {
+    editorStore.handleUppyUploaded(results)
+  },
+})
 
 watch(
   isUploading,
@@ -273,24 +283,40 @@ watch(
 
 async function deleteQueueItem(item: QueueItem) {
   const fileId = item.result?.id
-  const storageType = item.result?.storage_type
-  remove(item.id)
-  if (!fileId) return
-
+  const queuePairId = item.livePairId || item.result?.live_pair_id
+  const attached = editorStore.filesToAdd.find(
+    (file) =>
+      (fileId && (file.id === fileId || file.live_video_id === fileId)) ||
+      (queuePairId && file.live_pair_id === queuePairId),
+  )
+  const ids = new Set(
+    [fileId, item.result?.live_video_id, attached?.id, attached?.live_video_id].filter(
+      (id): id is string => !!id,
+    ),
+  )
+  const pairId = queuePairId || attached?.live_pair_id
+  const members = items.value.filter(
+    (entry) =>
+      entry.id === item.id ||
+      (entry.result?.id && ids.has(entry.result.id)) ||
+      (pairId && (entry.livePairId === pairId || entry.result?.live_pair_id === pairId)),
+  )
+  for (const member of members) {
+    if (member.result?.id) ids.add(member.result.id)
+  }
+  removeMany(members.map((member) => member.id))
+  // Removing either queue row removes the pair, just like the media preview.
+  // Otherwise a deleted MOV remains referenced by the still in the submit payload.
+  const storageType = attached?.storage_type || item.result?.storage_type
   if (storageType === FILE_STORAGE_TYPE.LOCAL || storageType === FILE_STORAGE_TYPE.OBJECT) {
-    try {
-      await deleteFileById(fileId)
-    } catch {
+    const deleted = await Promise.allSettled([...ids].map((id) => deleteFileById(id)))
+    if (deleted.some((result) => result.status === 'rejected')) {
       theToast.error(String(t('editor.removeImageRemoteFailed')))
     }
   }
-
-  const idx = editorStore.filesToAdd.findIndex((f) => f.id === fileId)
+  const idx = editorStore.filesToAdd.findIndex((file) => !!file.id && ids.has(file.id))
   if (idx >= 0) editorStore.removeFileAt(idx)
-
-  if (editorStore.isUpdateMode) {
-    await editorStore.handleAddOrUpdateEcho(true)
-  }
+  if (editorStore.isUpdateMode && ids.size) await editorStore.handleAddOrUpdateEcho(true)
 }
 
 function handleRemoveItem(item: QueueItem) {
@@ -315,15 +341,17 @@ function handleRemoveItem(item: QueueItem) {
 // disappeared; comparing against the current snapshot alone would drop uploads
 // that the store has not received yet.
 let attachedResultIds = new Set<string>(
-  editorStore.filesToAdd.map((f) => f.id).filter((id): id is string => !!id),
+  editorStore.filesToAdd.flatMap((f) => [f.id, f.live_video_id]).filter((id): id is string => !!id),
 )
 
 watch(
-  () => editorStore.filesToAdd.map((f) => f.id ?? '').join('|'),
+  () => editorStore.filesToAdd.flatMap((f) => [f.id ?? '', f.live_video_id ?? '']).join('|'),
   () => {
     hydrate(editorStore.filesToAdd)
     const present = new Set(
-      editorStore.filesToAdd.map((f) => f.id).filter((id): id is string => !!id),
+      editorStore.filesToAdd
+        .flatMap((f) => [f.id, f.live_video_id])
+        .filter((id): id is string => !!id),
     )
     for (const item of [...items.value]) {
       const resultId = item.result?.id
