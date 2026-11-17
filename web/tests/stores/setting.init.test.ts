@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2025-2026 lin-snow
 
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
@@ -21,6 +21,7 @@ const apiMocks = vi.hoisted(() => ({
 vi.mock('@/service/api', () => apiMocks)
 
 describe('settingStore.init', () => {
+  afterEach(() => document.getElementById('ech0-site-branding')?.remove())
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
@@ -51,6 +52,39 @@ describe('settingStore.init', () => {
       data: { enable: false, model: '', protocol: 'openai' },
     })
     apiMocks.fetchHelloEch0.mockResolvedValue({ code: 1, data: {} })
+  })
+
+  it('uses fresh SSR identity on a cold direct article load while metadata is slow, instead of stale cache or Ech0', async () => {
+    const identity = document.createElement('script')
+    identity.id = 'ech0-site-branding'
+    identity.type = 'application/json'
+    identity.textContent = JSON.stringify({
+      site_title: 'Fresh Site',
+      server_name: 'Fresh Author',
+      server_logo: '/images/fresh.png',
+    })
+    document.head.appendChild(identity)
+    localStorage.setItem(
+      'ech0:cached_system_setting',
+      JSON.stringify({ site_title: 'Stale Site', server_name: 'Ech0' }),
+    )
+    document.title = 'An article with | punctuation | Fresh Site'
+    let finish!: (value: unknown) => void
+    apiMocks.fetchGetSettings.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve
+        }),
+    )
+    const store = useSettingStore()
+    const pending = store.init()
+    expect(store.SystemSetting.site_title).toBe('Fresh Site')
+    expect(store.SystemSetting.server_name).toBe('Fresh Author')
+    expect(store.SystemSetting.server_logo).toBe('/images/fresh.png')
+    expect(document.title).toBe('An article with | punctuation | Fresh Site')
+    finish({ code: 1, data: { ...store.SystemSetting, server_name: 'Updated Author' } })
+    await pending
+    expect(store.SystemSetting.server_name).toBe('Updated Author')
   })
 
   it('匿名初始化时不请求 S3 设置', async () => {

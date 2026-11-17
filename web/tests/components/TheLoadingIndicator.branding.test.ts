@@ -18,7 +18,10 @@ beforeEach(() => {
   settings.server_name = 'rong A'
   settings.site_title = 'www.wuenrong.com'
 })
-afterEach(() => setActivePinia(undefined))
+afterEach(() => {
+  setActivePinia(undefined)
+  document.getElementById('ech0-site-branding')?.remove()
+})
 it('inherits the short brand and updates reactively without restoring the official wordmark', async () => {
   const wrapper = mount(TheLoadingIndicator, {
     global: { plugins: [createPinia()] },
@@ -49,5 +52,32 @@ it('has a neutral accessible fallback outside Pinia during errors or isolated mo
   const wrapper = mount(TheLoadingIndicator)
   expect(wordmark(wrapper)).toBe('Loading')
   expect(wrapper.text()).not.toContain('Ech0')
+  wrapper.unmount()
+})
+
+it.each(['', 'Ech0', ' Echo ', 'ech0'])(
+  'never renders the official wordmark while settings are unloaded/default (%s)',
+  (name) => {
+    settings.server_name = name
+    settings.site_title = name
+    const wrapper = mount(TheLoadingIndicator, { global: { plugins: [createPinia()] } })
+    expect(wordmark(wrapper)).toBe('Loading')
+    expect(wrapper.findAll('.loading-wordmark > span')).toHaveLength(7)
+    wrapper.unmount()
+  },
+)
+it('uses server identity during slow/failed metadata and preserves live reactive branding updates', async () => {
+  settings.server_name = 'Ech0'
+  settings.site_title = ''
+  const identity = document.createElement('script')
+  identity.id = 'ech0-site-branding'
+  identity.type = 'application/json'
+  identity.textContent = JSON.stringify({ site_title: 'Fresh Site', server_name: 'Fresh Author' })
+  document.head.appendChild(identity)
+  const wrapper = mount(TheLoadingIndicator, { global: { plugins: [createPinia()] } })
+  expect(wordmark(wrapper)).toBe('FreshAuthor')
+  settings.server_name = 'New Name'
+  await nextTick()
+  expect(wordmark(wrapper)).toBe('NewName')
   wrapper.unmount()
 })

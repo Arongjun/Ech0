@@ -6,6 +6,7 @@ package handler
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	echoModel "github.com/lin-snow/ech0/internal/model/echo"
 	"github.com/lin-snow/ech0/internal/visitor"
 	"net/http"
 	"os"
@@ -163,5 +164,44 @@ func TestLoaderBrandEscapesAndDoesNotLeakOfficialName(t *testing.T) {
 	}
 	if strings.Contains(brandLoaderIdentity(siteBranding{Title: defaultSiteTitle}), "Ech0") {
 		t.Fatal("official loader brand leaked")
+	}
+}
+
+func TestLoaderBootstrapSafeOnDirectArticleAndNoLogoSpinner(t *testing.T) {
+	setting := settingModel.SystemSetting{SiteTitle: `Arong </script><script>alert(1)</script>`, ServerName: "Own Author", ServerLogo: "/images/custom-logo.png"}
+	handler := NewWebHandler(visitor.NewTracker(), stubSettings{setting: setting}, stubEchoes{echo: &echoModel.Echo{ID: testEchoID, Content: "Specific article", Username: "Alice"}})
+	handler.shell = newSPAShell(readPublic(t, "../index.html"))
+	r := gin.New()
+	r.NoRoute(handler.Templates())
+	for _, path := range []string{"/", "/echo/" + testEchoID} {
+		rec := get(r, path)
+		if rec.Code != 200 {
+			t.Fatalf("%s status %d", path, rec.Code)
+		}
+		body := rec.Body.String()
+		bootstrap := brandBootstrapRe.FindString(body)
+		if bootstrap == "" || strings.Count(body, `id="ech0-site-branding"`) != 1 {
+			t.Fatalf("missing or duplicate bootstrap on %s", path)
+		}
+		raw := strings.TrimSuffix(strings.SplitN(bootstrap, ">", 2)[1], "</script>")
+		var identity map[string]string
+		if err := json.Unmarshal([]byte(raw), &identity); err != nil {
+			t.Fatal(err)
+		}
+		if identity["site_title"] != setting.SiteTitle || identity["server_name"] != setting.ServerName || identity["server_logo"] != setting.ServerLogo {
+			t.Fatalf("wrong bootstrap: %v", identity)
+		}
+		if strings.Contains(raw, "</script>") || len(identity) != 3 {
+			t.Fatal("unsafe bootstrap or private settings leaked")
+		}
+		if strings.Contains(body, `id="loader-logo"`) || strings.Contains(body, "smile-spin") {
+			t.Fatal("old logo/spinner is still present")
+		}
+		if path != "/" && !strings.Contains(body, "Specific article | Arong") {
+			t.Fatal("article title overwritten")
+		}
+	}
+	if !strings.Contains(brandLoaderIdentity(siteBranding{Title: "Ech0", Author: "Custom Author"}), `aria-label="Custom Author"`) {
+		t.Fatal("default title hid custom loading brand")
 	}
 }

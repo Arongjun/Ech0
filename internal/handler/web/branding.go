@@ -182,17 +182,18 @@ func brandIndexHTML(htmlStr string, b siteBranding) string {
 // brandLoaderIdentity follows the upstream letter-hop motion, without hard-coded
 // official text. Escape both the accessible name and each visual character.
 func brandLoaderIdentity(b siteBranding) string {
-	title := strings.TrimSpace(b.Title)
-	if title == "" || title == defaultSiteTitle || title == "Echo" {
-		title = "Loading"
+	title := "Loading"
+	for _, candidate := range []string{b.Title, b.Author} {
+		name := strings.TrimSpace(candidate)
+		switch strings.ToLower(name) {
+		case "", "ech0", "echo", "ech0 team", "echo team":
+			continue
+		}
+		title = name
+		break
 	}
 	var out strings.Builder
 	out.WriteString(`<div id="loader-identity" data-server-brand="true">`)
-	if b.LogoURL != "" {
-		out.WriteString(`<img id="loader-logo" alt="" src="` + html.EscapeString(b.LogoURL) + `" />`)
-	} else {
-		out.WriteString(`<img id="loader-logo" alt="" hidden />`)
-	}
 	out.WriteString(`<h1 class="loader-brand" aria-label="` + html.EscapeString(title) + `">`)
 	for index, letter := range []rune(title) {
 		out.WriteString(fmt.Sprintf(`<span aria-hidden="true" style="--letter-index:%d">%s</span>`, index%8, html.EscapeString(string(letter))))
@@ -202,3 +203,13 @@ func brandLoaderIdentity(b siteBranding) string {
 }
 
 var loaderIdentityRe = regexp.MustCompile(`(?s)<div id="loader-identity"[^>]*>.*?</div>`)
+
+// HTML-safe JSON carries only public branding, never tokens or private settings.
+func brandBootstrapJSON(b siteBranding) string {
+	raw, _ := json.Marshal(map[string]string{
+		"site_title": b.Title, "server_name": b.Author, "server_logo": b.LogoURL,
+	})
+	return `<script id="ech0-site-branding" type="application/json">` + string(raw) + `</script>`
+}
+
+var brandBootstrapRe = regexp.MustCompile(`(?s)<script id="ech0-site-branding" type="application/json">.*?</script>`)

@@ -31,7 +31,9 @@ function runGuard() {
 
 describe('branded startup lifecycle', () => {
   it('adopts upstream letter-hop motion, dark/light and reduced-motion rules', () => {
-    expect(source).toContain('animation: letter-hop 2s')
+    expect(document.querySelectorAll('.loader-brand > span')).toHaveLength(7)
+    expect(document.querySelector('.loader-brand')!.getAttribute('aria-label')).toBe('Loading')
+    expect(document.getElementById('loader-logo')).toBeNull()
     expect(source).toContain('prefers-reduced-motion: reduce')
     expect(source).toContain('color-scheme: dark')
     expect(source).not.toContain('smile-spin')
@@ -74,7 +76,7 @@ describe('branded startup lifecycle', () => {
     expect(brand.textContent).toBe('Arong <img onerror=alert(1)>')
     expect(brand.querySelector('img')).toBeNull()
     expect(brand.querySelectorAll('span')).toHaveLength(Array.from(brand.textContent!).length)
-    expect(document.getElementById('loader-logo')!.getAttribute('src')).toBe('/images/custom.png')
+    expect(document.querySelector('#loader-identity img')).toBeNull()
   })
   it('does not override fresh server branding with stale cache', () => {
     document.getElementById('loader-identity')!.dataset.serverBrand = 'true'

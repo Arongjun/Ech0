@@ -40,7 +40,7 @@
     <meta name="twitter:image" content="/og-cover.jpg" />
     <meta name="twitter:image:alt" content="Ech0" />
 
-    <title>Ech0</title>
+    <title>Loading</title>
 
     <script id="website-jsonld" type="application/ld+json">
       {
@@ -58,6 +58,10 @@
       }
     </script>
     <!--ECH0_SEO_END-->
+
+    <script id="ech0-site-branding" type="application/json">
+      {}
+    </script>
 
     <link rel="alternate" type="application/atom+xml" title="Ech0 Atom Feed" href="/rss" />
 
@@ -98,21 +102,13 @@
       ;(function () {
         try {
           var item = localStorage.getItem('ech0:cached_system_setting')
-          if (item && (document.title === 'Ech0' || document.title === 'Echo')) {
+          if (
+            item &&
+            (document.title === 'Ech0' || document.title === 'Echo' || document.title === 'Loading')
+          ) {
             var data = JSON.parse(item)
-            if (
-              data &&
-              data.site_title &&
-              data.site_title !== 'Ech0' &&
-              data.site_title !== 'Echo'
-            ) {
-              var p = window.location.pathname || ''
-              if (p.indexOf('/echo/') === 0) {
-                document.title = '\u52a8\u6001\u8be6\u60c5 | ' + data.site_title
-              } else {
-                document.title = data.site_title
-              }
-            }
+            var title = data && typeof data.site_title === 'string' ? data.site_title.trim() : ''
+            if (title && !/^(?:ech0|echo)(?: team)?$/i.test(title)) document.title = title
           }
         } catch (e) {}
       })()
@@ -171,17 +167,6 @@
         justify-items: center;
         gap: 24px;
       }
-      #loader-logo {
-        width: 76px;
-        height: 76px;
-        padding: 8px;
-        object-fit: contain;
-        border-radius: 24px;
-        background: var(--loader-glass);
-        box-shadow: 0 12px 36px rgba(30, 54, 90, 0.13);
-        backdrop-filter: blur(18px) saturate(1.3);
-      }
-      #loader-logo[hidden],
       #loader-retry[hidden] {
         display: none;
       }
@@ -274,8 +259,15 @@
     </div>
     <div id="app-loader" role="status" aria-live="polite" aria-busy="true">
       <div id="loader-identity" data-server-brand="false">
-        <img id="loader-logo" alt="" hidden />
-        <h1 class="loader-brand" aria-label="Loading"><span aria-hidden="true">Loading</span></h1>
+        <h1 class="loader-brand" aria-label="Loading">
+          <span aria-hidden="true" style="--letter-index: 0">L</span
+          ><span aria-hidden="true" style="--letter-index: 1">o</span
+          ><span aria-hidden="true" style="--letter-index: 2">a</span
+          ><span aria-hidden="true" style="--letter-index: 3">d</span
+          ><span aria-hidden="true" style="--letter-index: 4">i</span
+          ><span aria-hidden="true" style="--letter-index: 5">n</span
+          ><span aria-hidden="true" style="--letter-index: 6">g</span>
+        </h1>
       </div>
       <p id="loader-status">静候灵感落笔</p>
       <a id="loader-retry" href="" hidden>重新加载 / Reload</a>
@@ -297,14 +289,22 @@
       ;(function () {
         var loader = document.getElementById('app-loader')
         var identity = document.getElementById('loader-identity')
-        var logo = document.getElementById('loader-logo')
         if (!loader || !identity) return
         try {
           if (identity.dataset.serverBrand !== 'true') {
             var raw = localStorage.getItem('ech0:cached_system_setting')
             var setting = raw ? JSON.parse(raw) : null
-            var title = setting && setting.site_title
-            if (typeof title === 'string' && title.trim() && title !== 'Ech0' && title !== 'Echo') {
+            var title = [setting && setting.site_title, setting && setting.server_name].find(
+              function (value) {
+                return (
+                  typeof value === 'string' &&
+                  value.trim() &&
+                  !/^(?:ech0|echo)(?: team)?$/i.test(value.trim())
+                )
+              },
+            )
+            if (title) {
+              title = title.trim()
               var brand = identity.querySelector('.loader-brand')
               brand.textContent = ''
               brand.setAttribute('aria-label', title)
@@ -315,15 +315,6 @@
                 span.style.setProperty('--letter-index', String(index % 8))
                 brand.appendChild(span)
               })
-              var src = setting.server_logo
-              if (
-                typeof src === 'string' &&
-                /^(https?:\/\/|\/(?!\/))/.test(src) &&
-                !/^\/(?:r?Ech0|favicon)(?:\.|\/)/i.test(src)
-              ) {
-                logo.src = src
-                logo.hidden = false
-              }
             }
           }
         } catch (e) {}
@@ -337,7 +328,6 @@
           document.getElementById('loader-retry').hidden = false
         }
         function resourceError(event) {
-          if (event.target === logo) logo.hidden = true
           if (event.target && event.target.tagName === 'SCRIPT' && event.target.type === 'module')
             failed()
         }

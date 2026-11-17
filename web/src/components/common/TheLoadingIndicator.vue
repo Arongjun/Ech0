@@ -21,6 +21,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { getActivePinia } from 'pinia'
+import { loadingBrandName } from '@/utils/loadingBrand'
 import { useSettingStore } from '@/stores/setting'
 
 withDefaults(
@@ -42,13 +43,7 @@ withDefaults(
 // Small inline loaders use the instance's configured short name first. Never
 // reintroduce the official wordmark on a custom-branded installation.
 const settingStore = getActivePinia() ? useSettingStore() : undefined
-const letters = computed(() => {
-  const name =
-    [settingStore?.SystemSetting.server_name, settingStore?.SystemSetting.site_title]
-      .find((value) => value?.trim() && !['Ech0', 'Echo'].includes(value.trim()))
-      ?.trim() || 'Loading'
-  return Array.from(name)
-})
+const letters = computed(() => Array.from(loadingBrandName(settingStore?.SystemSetting)))
 </script>
 
 <style scoped>

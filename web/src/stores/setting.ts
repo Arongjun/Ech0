@@ -19,6 +19,7 @@ import {
 import type { ExportFormat, ExportStatusPayload } from '@/service/api'
 import { S3Provider, OAuth2Provider, AgentProtocol } from '@/enums/enums'
 import { useUserStore } from './user'
+import { readServerLoadingIdentity } from '@/utils/loadingBrand'
 import { localStg } from '@/utils/storage'
 
 export const CACHED_SYSTEM_SETTING_KEY = 'ech0:cached_system_setting'
@@ -29,6 +30,7 @@ type SnapshotUIStatus = 'idle' | 'pending' | 'running' | 'success' | 'failed' | 
 export const useSettingStore = defineStore('settingStore', () => {
   const userStore = useUserStore()
 
+  const serverIdentity = readServerLoadingIdentity()
   const cachedSetting = localStg.getItem<App.Api.Setting.SystemSetting>(CACHED_SYSTEM_SETTING_KEY)
   const docTitle = typeof document !== 'undefined' ? document.title.trim() : ''
   const hasValidDocTitle =
@@ -40,6 +42,7 @@ export const useSettingStore = defineStore('settingStore', () => {
   }
 
   const initialSiteTitle =
+    serverIdentity.site_title ||
     (cachedSetting?.site_title &&
     cachedSetting.site_title !== 'Ech0' &&
     cachedSetting.site_title !== 'Echo'
@@ -50,9 +53,10 @@ export const useSettingStore = defineStore('settingStore', () => {
 
   const SystemSetting = ref<App.Api.Setting.SystemSetting>({
     site_title: initialSiteTitle,
-    server_logo: cachedSetting?.server_logo || '/Ech0.svg',
+    server_logo: serverIdentity.server_logo || cachedSetting?.server_logo || '/Ech0.svg',
     server_logo_file_id: cachedSetting?.server_logo_file_id || '',
-    server_name: cachedSetting?.server_name || import.meta.env.VITE_APP_NAME,
+    server_name:
+      serverIdentity.server_name || cachedSetting?.server_name || import.meta.env.VITE_APP_NAME,
     server_url: cachedSetting?.server_url || '',
     allow_register: cachedSetting?.allow_register ?? true,
     default_locale: cachedSetting?.default_locale || 'zh-CN',

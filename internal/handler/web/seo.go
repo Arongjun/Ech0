@@ -330,6 +330,7 @@ func (webHandler *WebHandler) servePage(
 	}
 	body := webHandler.shell.render(meta.headHTML(), meta.NoScript, meta.Lang)
 	body = loaderIdentityRe.ReplaceAllLiteral(body, []byte(brandLoaderIdentity(brand)))
+	body = brandBootstrapRe.ReplaceAllLiteral(body, []byte(brandBootstrapJSON(brand)))
 	if brand.Title != defaultSiteTitle {
 		// Preserve route-specific SEO while branding the loader and install surfaces.
 		doc := string(body)
