@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { i18n } from '@/locales'
 import { DEFAULT_SITE_TITLE } from '@/constants/site'
+import { seoPlainText, seoTruncate } from '@/utils/seo'
 import { seoOverride } from '@/composables/useSeoOverride'
 
 type SeoSystemSetting = {
@@ -15,6 +16,7 @@ type SeoSystemSetting = {
   server_logo?: string
   home_signature_text?: string
   home_welcome_text?: string
+  privacy_policy?: string
   footer_content?: string
 }
 
@@ -120,7 +122,13 @@ export const useSeoHead = (systemSetting: Ref<SeoSystemSetting>) => {
     }
 
     const siteTitle = (systemSetting.value.site_title || DEFAULT_SITE_TITLE).trim()
-    const pageTitle = resolvePageTitle(siteTitle, activeOverride?.title ?? route.meta.title)
+    const privacyPage = route.name === 'privacy'
+    const policy = systemSetting.value.privacy_policy?.trim() || ''
+    const unconfiguredPrivacy = privacyPage && !policy
+    const pageTitle = resolvePageTitle(
+      siteTitle,
+      unconfiguredPrivacy ? '404' : (activeOverride?.title ?? route.meta.title),
+    )
     const routeDescription =
       typeof route.meta.description === 'string' ? route.meta.description.trim() : ''
     const branded = siteTitle !== DEFAULT_SITE_TITLE && siteTitle !== 'Echo'
@@ -135,10 +143,14 @@ export const useSeoHead = (systemSetting: Ref<SeoSystemSetting>) => {
       : DEFAULT_SEO_DESCRIPTION
     const description =
       activeOverride?.description ||
-      (route.name === 'home' ? brandingDescription : routeDescription || brandingDescription)
+      (privacyPage && policy
+        ? seoTruncate(seoPlainText(policy).replace(/\n/g, ' '), 160) || routeDescription
+        : route.name === 'home'
+          ? brandingDescription
+          : routeDescription || brandingDescription)
     const baseUrl = resolveSiteBaseUrl()
     const canonicalUrl = new URL(route.path || '/', `${baseUrl}/`).toString()
-    const noIndex = route.meta.noindex === true
+    const noIndex = route.meta.noindex === true || unconfiguredPrivacy
     const ogType = activeOverride?.type ?? 'website'
     const logo = systemSetting.value.server_logo?.trim()
     const brandedLogo = branded && logo && !['/Ech0.svg', '/Ech0.png'].includes(logo) ? logo : ''
@@ -269,6 +281,7 @@ export const useSeoHead = (systemSetting: Ref<SeoSystemSetting>) => {
       systemSetting.value.home_signature_text,
       systemSetting.value.home_welcome_text,
       systemSetting.value.footer_content,
+      systemSetting.value.privacy_policy,
     ],
     () => {
       updateSeoMeta()

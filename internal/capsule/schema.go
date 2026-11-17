@@ -38,6 +38,8 @@ type Site struct {
 	MetingAPI         string `yaml:"meting_api,omitempty"`
 	CustomCSS         string `yaml:"custom_css,omitempty"`
 	CustomJS          string `yaml:"custom_js,omitempty"`
+	PrivacyPolicy     string `yaml:"privacy_policy,omitempty"`
+	ShowPrivacyFooter bool   `yaml:"show_privacy_footer,omitempty"`
 }
 
 type Owner struct {

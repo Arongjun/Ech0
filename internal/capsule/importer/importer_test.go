@@ -505,3 +505,40 @@ func nonZero(in map[string]int64) map[string]int64 {
 	}
 	return out
 }
+
+// Privacy is public content, not visitor PII; it must travel with capsule site
+// settings without overwriting the receiver's own brand or policy on replay.
+func TestRun_PrivacyAndBrandingSurviveWithLegacyLikes(t *testing.T) {
+	f := newFixture(t)
+	manifest := fullManifest()
+	manifest.Site.PrivacyPolicy = "# Privacy\n\nFixture only."
+	manifest.Site.ShowPrivacyFooter = true
+	manifest.Site.HomeWelcomeText = "欢迎"
+	manifest.Site.HomeSignatureText = "本站签名"
+	manifest.Site.HomeSignatureURL = "https://example.com/me"
+	dir := writeCapsule(t, manifest, fullDocs(), fullComments(), map[string][]byte{"pic.png": pngBytes})
+	for i := 0; i < 2; i++ {
+		_, err := Run(context.Background(), f.deps, loadCapsule(t, dir), Options{})
+		require.NoError(t, err)
+		sys, err := coreSetting.System.Get(context.Background(), f.deps.KV)
+		require.NoError(t, err)
+		require.Equal(t, "Existing Title", sys.SiteTitle)
+		require.Equal(t, manifest.Site.PrivacyPolicy, sys.PrivacyPolicy)
+		require.True(t, sys.ShowPrivacyFooter)
+		require.Equal(t, manifest.Site.HomeWelcomeText, sys.HomeWelcomeText)
+		require.Equal(t, manifest.Site.HomeSignatureText, sys.HomeSignatureText)
+		require.Equal(t, manifest.Site.HomeSignatureURL, sys.HomeSignatureURL)
+		var row echoModel.Echo
+		require.NoError(t, f.db.First(&row, "id = ?", echoIDPublic).Error)
+		require.Equal(t, 42, row.LegacyLikeCount)
+	}
+	sys, err := coreSetting.System.Get(context.Background(), f.deps.KV)
+	require.NoError(t, err)
+	sys.PrivacyPolicy = "Receiver's own policy"
+	require.NoError(t, coreSetting.System.Set(context.Background(), f.deps.KV, sys))
+	_, err = Run(context.Background(), f.deps, loadCapsule(t, dir), Options{})
+	require.NoError(t, err)
+	after, err := coreSetting.System.Get(context.Background(), f.deps.KV)
+	require.NoError(t, err)
+	require.Equal(t, sys.PrivacyPolicy, after.PrivacyPolicy)
+}

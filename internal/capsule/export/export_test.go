@@ -36,18 +36,23 @@ const (
 )
 
 var testSite = settingModel.SystemSetting{
-	SiteTitle:     "Ech0 测试站",
-	ServerLogo:    "https://example.com/logo.png",
-	ServerName:    "linsnow",
-	ServerURL:     "https://example.com",
-	AllowRegister: true,
-	DefaultLocale: "zh-CN",
-	ICPNumber:     "京ICP备00000000号",
-	FooterContent: "footer",
-	FooterLink:    "https://example.com/about",
-	MetingAPI:     "https://meting.example.com/api",
-	CustomCSS:     "body{}",
-	CustomJS:      "console.log(1)",
+	PrivacyPolicy:     "# Privacy\n\nLocal test policy.",
+	ShowPrivacyFooter: true,
+	HomeWelcomeText:   "欢迎来到测试站",
+	HomeSignatureText: "自定义签名",
+	HomeSignatureURL:  "https://example.com/signature",
+	SiteTitle:         "Ech0 测试站",
+	ServerLogo:        "https://example.com/logo.png",
+	ServerName:        "linsnow",
+	ServerURL:         "https://example.com",
+	AllowRegister:     true,
+	DefaultLocale:     "zh-CN",
+	ICPNumber:         "京ICP备00000000号",
+	FooterContent:     "footer",
+	FooterLink:        "https://example.com/about",
+	MetingAPI:         "https://meting.example.com/api",
+	CustomCSS:         "body{}",
+	CustomJS:          "console.log(1)",
 }
 
 func newFixture(t *testing.T) (Deps, string) {
@@ -191,6 +196,8 @@ func TestRun_ManifestRoundTrips(t *testing.T) {
 	stored, err := coreSetting.System.Get(context.Background(), deps.KV)
 	require.NoError(t, err)
 	assert.Equal(t, capsule.Site{
+		PrivacyPolicy:     stored.PrivacyPolicy,
+		ShowPrivacyFooter: stored.ShowPrivacyFooter,
 		SiteTitle:         stored.SiteTitle,
 		ServerLogo:        stored.ServerLogo,
 		ServerName:        stored.ServerName,

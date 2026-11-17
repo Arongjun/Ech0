@@ -17,6 +17,7 @@
 [![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-6E56CF)](https://deepwiki.com/lin-snow/Ech0)
 [![Docker Pulls](https://img.shields.io/docker/pulls/sn0wl1n/ech0?logo=docker&logoColor=white&labelColor=%20%235CADF6&color=%20%232496ED)](https://hub.docker.com/r/sn0wl1n/ech0)
 [![Docker Image Size](https://img.shields.io/docker/image-size/sn0wl1n/ech0/latest?logo=docker&logoColor=white&labelColor=%20%235CADF6&color=%20%231570EF)](https://hub.docker.com/r/sn0wl1n/ech0)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/ech0)](https://artifacthub.io/packages/search?repo=ech0)
 [![Stars](https://img.shields.io/github/stars/lin-snow/Ech0?logo=github&logoColor=white&labelColor=%20%23FDB022&color=%20%23DC6803)](https://github.com/lin-snow/Ech0/stargazers)
 [![Forks](https://img.shields.io/github/forks/lin-snow/Ech0?logo=github&logoColor=white&labelColor=%20%232ED3B7&color=%20%2315B79E)](https://github.com/lin-snow/Ech0/network/members)
 [![Discussions](https://img.shields.io/github/discussions/lin-snow/Ech0?logo=github&logoColor=white&labelColor=%20%23B692F6&color=%20%239E77ED)](https://github.com/lin-snow/Ech0/discussions)
@@ -168,6 +169,8 @@ Alternativ `ech0-cli-<os>-<arch>.tar.gz` von den [Releases](https://github.com/l
 ---
 
 ## Deployment & Aktualisierung
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/ech0)
 
 Ausführliche Anleitungen für **Docker Compose**, **Skript-Installation**, **Kubernetes (Helm)** sowie das **Upgrade** einer bestehenden Instanz findest du in **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
 

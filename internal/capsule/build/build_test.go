@@ -47,9 +47,14 @@ func writeCapsule(t *testing.T) string {
 		Generator:     "ech0-test",
 		ExportedAt:    capsule.FormatUnix(newCreated.Unix()),
 		Site: capsule.Site{
-			SiteTitle:  "Test Site",
-			ServerName: "tester",
-			ServerLogo: "/api/files/images/logo.png",
+			SiteTitle:         "Test Site",
+			PrivacyPolicy:     "# Privacy\n\nA fixture, not a real policy.",
+			ShowPrivacyFooter: true,
+			HomeWelcomeText:   "你好",
+			HomeSignatureText: "独立站点",
+			HomeSignatureURL:  "https://example.com/me",
+			ServerName:        "tester",
+			ServerLogo:        "/api/files/images/logo.png",
 		},
 		Owner:    capsule.Owner{Username: "tester"},
 		Connects: []capsule.Connect{{URL: "https://peer.example.com"}},
@@ -246,6 +251,11 @@ func TestRunBakesDataset(t *testing.T) {
 
 	assert.False(t, ds.Settings.AllowRegister)
 	assert.Equal(t, "Test Site", ds.Settings.SiteTitle)
+	assert.Equal(t, "# Privacy\n\nA fixture, not a real policy.", ds.Settings.PrivacyPolicy)
+	assert.True(t, ds.Settings.ShowPrivacyFooter)
+	assert.Equal(t, "你好", ds.Settings.HomeWelcomeText)
+	assert.Equal(t, "独立站点", ds.Settings.HomeSignatureText)
+	assert.Equal(t, "https://example.com/me", ds.Settings.HomeSignatureURL)
 	assert.Equal(t, "Test Site", ds.Hello.Hello)
 	assert.NotEmpty(t, ds.Hello.Version)
 	assert.False(t, ds.CommentForm.EnableComment)

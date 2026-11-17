@@ -34,6 +34,12 @@ type SystemSetting struct {
 	CustomCSS             string `json:"custom_css"`
 	CustomJS              string `json:"custom_js"`
 	DisableAgentDiscovery bool   `json:"disable_agent_discovery"`
+	// PrivacyPolicy is Markdown served on the public /privacy page. Empty means
+	// the page is not configured and answers 404.
+	PrivacyPolicy string `json:"privacy_policy"`
+	// ShowPrivacyFooter only controls the footer link; the page itself stays
+	// reachable whenever PrivacyPolicy is non-empty.
+	ShowPrivacyFooter bool `json:"show_privacy_footer"`
 }
 
 type S3Setting struct {

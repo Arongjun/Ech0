@@ -2451,12 +2451,16 @@ components:
           type: string
         meting_api:
           type: string
+        privacy_policy:
+          type: string
         server_logo:
           type: string
         server_name:
           type: string
         server_url:
           type: string
+        show_privacy_footer:
+          type: boolean
         site_title:
           type: string
       type: object
@@ -2487,6 +2491,8 @@ components:
           type: string
         meting_api:
           type: string
+        privacy_policy:
+          type: string
         server_logo:
           type: string
         server_logo_file_id:
@@ -2495,6 +2501,8 @@ components:
           type: string
         server_url:
           type: string
+        show_privacy_footer:
+          type: boolean
         site_title:
           type: string
       type: object

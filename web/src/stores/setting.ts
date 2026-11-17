@@ -66,6 +66,8 @@ export const useSettingStore = defineStore('settingStore', () => {
     custom_css: cachedSetting?.custom_css || '',
     custom_js: cachedSetting?.custom_js || '',
     disable_agent_discovery: cachedSetting?.disable_agent_discovery ?? false,
+    privacy_policy: cachedSetting?.privacy_policy || '',
+    show_privacy_footer: cachedSetting?.show_privacy_footer ?? false,
   })
   const S3Setting = ref<App.Api.Setting.S3Setting>({
     enable: false,
