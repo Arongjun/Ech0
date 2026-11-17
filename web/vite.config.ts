@@ -51,6 +51,8 @@ export default defineConfig(({ command }) => ({
     },
   },
   test: {
+    // Resolve this public URL as an asset in component tests, not a root filesystem module.
+    alias: { '/Ech0.svg': fileURLToPath(new URL('./public/Ech0.svg', import.meta.url)) },
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./tests/setup.ts'],

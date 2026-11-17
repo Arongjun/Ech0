@@ -19,7 +19,14 @@
           <h2
             class="text-[var(--color-text-primary)] font-bold overflow-hidden whitespace-nowrap truncate"
           >
-            <a :href="echo.server_url" target="_blank">{{ echo.server_name }}</a>
+            <a
+              v-if="!props.requireAuthorLogin || userStore.isLogin"
+              :href="echo.server_url"
+              target="_blank"
+              rel="noopener noreferrer"
+              >{{ echo.server_name }}</a
+            >
+            <span v-else>{{ echo.server_name }}</span>
           </h2>
 
           <div class="flex-none">
@@ -84,6 +91,7 @@
 </template>
 
 <script setup lang="ts">
+import { useUserStore } from '@/stores'
 import Verified from '@/components/icons/verified.vue'
 import TheEchoReactions from '@/components/advanced/echo/cards/TheEchoReactions.vue'
 import { TheMdPreview } from '@/components/advanced/md'
@@ -101,9 +109,15 @@ const TheExtensionRenderer = defineAsyncComponent(
 
 type Echo = App.Api.Hub.Echo
 
-const props = defineProps<{
-  echo: Echo
-}>()
+const props = withDefaults(
+  defineProps<{
+    echo: Echo
+    // Only the global square gates author websites; peer cards keep their behavior.
+    requireAuthorLogin?: boolean
+  }>(),
+  { requireAuthorLogin: false },
+)
+const userStore = useUserStore()
 const { t } = useI18n()
 const { toggleTimeDisplay, formatDisplayTime } = useTimeDisplay()
 

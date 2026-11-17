@@ -66,7 +66,7 @@
             :data-index="index"
           >
             <div class="hub-item-wrap w-full flex justify-center items-center mb-3">
-              <TheHubEcho :echo="item" />
+              <TheHubEcho :echo="item" :require-author-login="worldMode === 'global'" />
             </div>
           </DynamicScrollerItem>
         </DynamicScroller>
@@ -78,7 +78,7 @@
           :key="item.virtual_key"
           class="hub-item-wrap w-full flex justify-center items-center mb-3"
         >
-          <TheHubEcho :echo="item" />
+          <TheHubEcho :echo="item" :require-author-login="worldMode === 'global'" />
         </div>
       </div>
 
