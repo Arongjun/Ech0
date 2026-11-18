@@ -23,13 +23,14 @@ type RSSDocument struct {
 }
 
 type rssPage struct {
-	Title      string
-	Logo       string
-	Home       string
-	FeedURL    string
-	Count      int
-	Updated    string
-	UpdatedISO string
+	Title       string
+	Description string
+	Logo        string
+	Home        string
+	FeedURL     string
+	Count       int
+	Updated     string
+	UpdatedISO  string
 }
 
 var rssPageTemplate = htmltemplate.Must(htmltemplate.New("rss-page").Parse(rssPageSource))
@@ -44,189 +45,73 @@ func renderRSSPage(page rssPage) (string, error) {
 
 const rssPageSource = `<!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="robots" content="noindex,follow">
-    <title>{{.Title}} · RSS</title>
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="alternate" type="application/atom+xml" href="{{.FeedURL}}" title="{{.Title}}">
-    <style>
-      :root {
-        --bg-canvas: #f4f1ec;
-        --bg-surface: #fff;
-        --bg-muted: #fdf9f4;
-        --text-primary: #33251d;
-        --text-secondary: #5b4f46;
-        --text-muted: #8e847d;
-        --border-subtle: #e4dfdb;
-        --accent: #b84200;
-        --accent-soft: #f4e3cd;
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,follow">
+  <meta name="description" content="{{.Description}}">
+  <meta name="color-scheme" content="light dark">
+  <title>{{.Title}} · RSS</title>
+  {{if .Logo}}<link rel="icon" href="{{.Logo}}">{{else}}<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%230a84ff' d='M4 4v3a13 13 0 0 1 13 13h3A16 16 0 0 0 4 4m0 6v3a7 7 0 0 1 7 7h3A10 10 0 0 0 4 10m0 7v3h3v-3z'/%3E%3C/svg%3E">{{end}}
+  <link rel="alternate" type="application/atom+xml" href="{{.FeedURL}}" title="{{.Title}}">
+  <script>
+    // Match the app's JSON-string or legacy plain-string themeMode setting.
+    try {
+      var mode = localStorage.getItem('themeMode');
+      try { mode = JSON.parse(mode); } catch (_) {}
+      if (mode === 'dark' || mode === 'light' || mode === 'sunny') {
+        document.documentElement.style.colorScheme = mode === 'dark' ? 'dark' : 'light';
       }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg-canvas: #1a1816;
-          --bg-surface: #201d1b;
-          --bg-muted: #292623;
-          --text-primary: #f0e9e0;
-          --text-secondary: #cfcac4;
-          --text-muted: #a29e99;
-          --border-subtle: #3e3c3a;
-          --accent: #e7b063;
-          --accent-soft: #493e30;
-        }
-      }
-      * { box-sizing: border-box; }
-      html, body {
-        margin: 0;
-        padding: 0;
-        background: var(--bg-canvas);
-        color: var(--text-primary);
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
-                     "Hiragino Sans GB", "Microsoft YaHei", Roboto, sans-serif;
-        font-size: 16px;
-        line-height: 1.65;
-        -webkit-font-smoothing: antialiased;
-      }
-      ::selection { background: var(--accent-soft); color: var(--text-primary); }
-      a { color: var(--accent); text-decoration: none; }
-      a:hover { text-decoration: underline; }
-      .wrap { max-width: 560px; margin: 0 auto; padding: 28px 16px 80px; }
-      .masthead {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid var(--border-subtle);
-        margin-bottom: 24px;
-      }
-      .masthead-brand {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        min-width: 0;
-      }
-      .logo {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid var(--bg-surface);
-        box-shadow:
-          0 0 0 1px var(--border-subtle),
-          0 1px 2px rgb(0 0 0 / 6%);
-        flex-shrink: 0;
-      }
-      .masthead-brand h1 {
-        margin: 0;
-        font-size: 20px;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .masthead-brand h1 .rss-suffix {
-        font-weight: 500;
-        color: var(--text-muted);
-        margin-left: 6px;
-      }
-      .feed-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 12px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 600;
-        letter-spacing: 0.06em;
-        background: var(--accent-soft);
-        color: var(--accent);
-        flex-shrink: 0;
-      }
-      .hint {
-        background: var(--bg-muted);
-        border: 1px solid var(--border-subtle);
-        border-radius: 12px;
-        padding: 14px 16px;
-        font-size: 13.5px;
-        color: var(--text-secondary);
-        margin-bottom: 20px;
-        display: flex;
-        gap: 12px;
-        align-items: flex-start;
-      }
-      .hint svg { flex-shrink: 0; margin-top: 2px; color: var(--accent); }
-      .feed-url { display: block; margin-top: 6px; }
-      .hint code {
-        background: var(--bg-surface);
-        border: 1px solid var(--border-subtle);
-        padding: 1px 6px;
-        border-radius: 4px;
-        font-size: 12.5px;
-        color: var(--text-primary);
-        word-break: break-all;
-        -webkit-user-select: all;
-                user-select: all;
-      }
-      .meta {
-        margin: 0 0 32px;
-        font-size: 13.5px;
-        color: var(--text-muted);
-        font-variant-numeric: tabular-nums;
-      }
-      .meta time { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; }
-      .site-footer {
-        margin-top: 40px;
-        text-align: center;
-        font-size: 12.5px;
-        color: var(--text-muted);
-      }
-      .site-footer a { color: var(--text-secondary); }
-      .site-footer .sep { margin: 0 10px; opacity: 0.4; }
-      @media (max-width: 520px) {
-        .wrap { padding: 20px 14px 60px; }
-        .masthead-brand h1 { font-size: 19px; }
-      }
-    </style>
-  </head>
-  <body>
-    <main class="wrap">
+    } catch (_) {}
+  </script>
+  <style>
+    :root { color-scheme: light dark; --ink:#1d1d1f; --muted:#55565b; --canvas:#f3f7fb; --glass:rgb(255 255 255 / 62%); --solid:rgb(255 255 255 / 78%); --line:rgb(55 48 42 / 11%); --blue:#066dcc; --shadow:inset 0 1px 0 rgb(255 255 255 / 82%),0 12px 36px rgb(40 48 62 / 8%); }
+    @media (prefers-color-scheme:dark) {
+      :root:not([style*="color-scheme: light"]) { --ink:#f5f5f7; --muted:#c5c8d0; --canvas:#151b25; --glass:rgb(37 46 63 / 72%); --solid:rgb(48 58 76 / 82%); --line:rgb(255 255 255 / 12%); --blue:#80bdff; --shadow:inset 0 1px 0 rgb(255 255 255 / 9%),0 12px 36px rgb(0 0 0 / 18%); }
+    }
+    :root[style*="color-scheme: dark"] { --ink:#f5f5f7; --muted:#c5c8d0; --canvas:#151b25; --glass:rgb(37 46 63 / 72%); --solid:rgb(48 58 76 / 82%); --line:rgb(255 255 255 / 12%); --blue:#80bdff; --shadow:inset 0 1px 0 rgb(255 255 255 / 9%),0 12px 36px rgb(0 0 0 / 18%); }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; min-height:100svh; color:var(--ink); background:radial-gradient(ellipse at 95% 0,rgb(10 132 255 / 14%),transparent 48%),radial-gradient(ellipse at 0 90%,rgb(114 168 255 / 9%),transparent 50%),var(--canvas); font:16px/1.7 -apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",sans-serif; -webkit-font-smoothing:antialiased; }
+    a { color:var(--blue); text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    a:focus-visible,code:focus-visible { outline:3px solid var(--blue); outline-offset:5px; }
+    .wrap { width:min(100%,760px); margin:0 auto; padding:clamp(24px,8vh,88px) 20px 40px; }
+    .glass { padding:clamp(24px,5vw,48px); border:1px solid var(--line); border-radius:30px; background:var(--glass); box-shadow:var(--shadow); -webkit-backdrop-filter:blur(24px) saturate(150%); backdrop-filter:blur(24px) saturate(150%); }
+    .masthead { display:flex; align-items:center; gap:16px; }
+    .logo,.brand-icon { width:64px; height:64px; flex-shrink:0; border-radius:20px; background:var(--solid); border:1px solid var(--line); object-fit:cover; }
+    .brand-icon { display:grid; place-items:center; color:var(--blue); }
+    h1 { margin:8px 0 0; font-size:clamp(23px,4.5vw,34px); line-height:1.25; letter-spacing:-.025em; overflow-wrap:anywhere; }
+    .feed-badge { display:inline-block; color:var(--blue); font-size:12px; letter-spacing:.06em; font-weight:600; }
+    .description { color:var(--muted); margin:22px 0 0; overflow-wrap:anywhere; }
+    .hint { margin-top:28px; padding:22px; border:1px solid var(--line); border-radius:20px; background:var(--solid); }
+    h2 { font-size:16px; margin:0 0 8px; }
+    .hint p { margin:0; color:var(--muted); font-size:14px; }
+    .feed-url { display:block; padding:14px 16px; margin-top:16px; border:1px solid var(--line); border-radius:12px; background:var(--glass); font:13px/1.7 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; overflow-wrap:anywhere; white-space:normal; -webkit-user-select:all; user-select:all; }
+    .meta { color:var(--muted); font-size:13px; margin:20px 0 0; font-variant-numeric:tabular-nums; }
+    .site-footer { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-top:28px; padding-top:22px; border-top:1px solid var(--line); color:var(--muted); font-size:13px; }
+    .site-footer span { overflow-wrap:anywhere; }
+    .home-link { display:inline-flex; align-items:center; min-height:44px; flex-shrink:0; }
+    @media (max-width:420px) { .wrap { padding:24px 14px; } .glass { padding:24px 20px; border-radius:24px; } .logo,.brand-icon { width:48px; height:48px; border-radius:15px; } .hint { padding:18px 16px; } .site-footer { flex-wrap:wrap; gap:4px 16px; } }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="glass" aria-labelledby="feed-title">
       <header class="masthead">
-        <div class="masthead-brand">
-          <img class="logo" alt="" src="{{if .Logo}}{{.Logo}}{{else}}/favicon.svg{{end}}">
-          <h1>
-            {{.Title}}
-            <span class="rss-suffix">RSS</span>
-          </h1>
-        </div>
-        <span class="feed-badge">Feed</span>
+        {{if .Logo}}<img class="logo" alt="" src="{{.Logo}}" width="64" height="64">{{else}}<span class="brand-icon" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg></span>{{end}}
+        <div><span class="feed-badge">RSS 订阅</span><h1 id="feed-title">{{.Title}}</h1></div>
       </header>
-
-      <div class="hint">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 11a9 9 0 0 1 9 9"/>
-          <path d="M4 4a16 16 0 0 1 16 16"/>
-          <circle cx="5" cy="19" r="1.5" fill="currentColor" stroke="none"/>
-        </svg>
-        <div>
-          This is an RSS feed. Copy this page's URL into your favorite reader (Feedly, Inoreader, Reeder…) to subscribe.
-          <span class="feed-url"><code>{{.FeedURL}}</code></span>
-        </div>
-      </div>
-
-      <p class="meta">
-        {{if .Count}}共 {{.Count}} 条动态{{if .Updated}} · 最近更新 <time datetime="{{.UpdatedISO}}">{{.Updated}}</time>{{end}}{{else}}暂无内容{{end}}
-      </p>
-
-      <footer class="site-footer">
-        <a href="{{.Home}}" target="_blank" rel="noopener">访问站点 →</a>
-        <span class="sep">|</span>
-        Powered by Ech0
-      </footer>
-    </main>
-  </body>
+      {{if .Description}}<p class="description">{{.Description}}</p>{{end}}
+      <section class="hint" aria-labelledby="subscribe-title">
+        <h2 id="subscribe-title">在阅读器里，继续相遇</h2>
+        <p>将下方地址添加到你常用的 RSS 阅读器（如 Feedly、Inoreader 或 Reeder），即可订阅最新公开动态。</p>
+        <code class="feed-url" tabindex="0" aria-label="RSS 订阅地址">{{.FeedURL}}</code>
+      </section>
+      <p class="meta">{{if .Count}}共 {{.Count}} 条动态{{if .Updated}} · 最近更新 <time datetime="{{.UpdatedISO}}">{{.Updated}}</time>{{end}}{{else}}暂无内容{{end}}</p>
+      <footer class="site-footer"><span>{{.Title}} · 公开动态</span><a class="home-link" href="{{.Home}}">访问站点 <span aria-hidden="true">↗</span></a></footer>
+    </section>
+  </main>
+</body>
 </html>
 `

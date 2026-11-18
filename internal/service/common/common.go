@@ -102,12 +102,6 @@ func rssCacheKey(schema, host, title, description string) string {
 }
 
 func (s *CommonService) GenerateRSS(ctx *gin.Context) (RSSDocument, error) {
-	schema := "http"
-	if ctx.Request.TLS != nil {
-		schema = "https"
-	}
-	host := ctx.Request.Host
-
 	system, err := coreSetting.System.Get(ctx.Request.Context(), s.durableKV)
 	if err != nil {
 		return RSSDocument{}, err
@@ -120,7 +114,31 @@ func (s *CommonService) GenerateRSS(ctx *gin.Context) (RSSDocument, error) {
 	if description == "" {
 		description = title
 	}
-	cacheKey := rssCacheKey(schema, host, title, description)
+	baseURL, err := rssPublicOrigin(ctx.Request, system.ServerURL)
+	if err != nil {
+		return RSSDocument{}, err
+	}
+	legacyOrigin, err := rssPublicOrigin(ctx.Request, "")
+	if err != nil {
+		return RSSDocument{}, err
+	}
+	logo := rssLogoURL(system.ServerLogo, baseURL)
+	pageTitle := rssCustomText(title)
+	if pageTitle == "" {
+		pageTitle = rssCustomText(system.ServerName)
+	}
+	if pageTitle == "" {
+		pageTitle = "动态订阅"
+	}
+	pageDescription := ""
+	for _, candidate := range []string{system.HomeSignatureText, system.HomeWelcomeText, system.ServerName} {
+		if pageDescription = rssCustomText(candidate); pageDescription != "" {
+			break
+		}
+	}
+	// Logo/description-only changes must also invalidate the browser representation.
+	cacheKey := rssCacheKey(baseURL.Scheme, baseURL.Host, title,
+		description+"\x00"+logo+"\x00"+pageTitle+"\x00"+pageDescription+"\x00"+legacyOrigin.String())
 
 	return s.cache.ReadThrough(
 		cacheKey,
@@ -131,14 +149,10 @@ func (s *CommonService) GenerateRSS(ctx *gin.Context) (RSSDocument, error) {
 				return RSSDocument{}, err
 			}
 
-			home := fmt.Sprintf("%s://%s/", schema, host)
-			logo := fmt.Sprintf("%s://%s/Ech0.svg", schema, host)
-			baseURL := &url.URL{Scheme: schema, Host: host}
+			home := baseURL.String() + "/"
 			page := rssPage{
-				Title:   title,
-				Logo:    logo,
-				Home:    home,
-				FeedURL: fmt.Sprintf("%s://%s/rss", schema, host),
+				Title: pageTitle, Description: pageDescription,
+				Logo: logo, Home: home, FeedURL: baseURL.String() + "/rss",
 			}
 
 			feed := &feeds.Feed{
@@ -201,9 +215,10 @@ func (s *CommonService) GenerateRSS(ctx *gin.Context) (RSSDocument, error) {
 
 				renderedContent = absolutizeFeedHTML(renderedContent, baseURL)
 
-				entryLink := fmt.Sprintf("%s://%s/echo/%s", schema, host, msg.ID)
+				entryLink := baseURL.String() + "/echo/" + url.PathEscape(msg.ID)
 				feed.Items = append(feed.Items, &feeds.Item{
 					Title:   title,
+					Id:      fmt.Sprintf("tag:%s,%s:/echo/%s", legacyOrigin.Host, createdAt.Format("2006-01-02"), msg.ID),
 					Link:    &feeds.Link{Href: entryLink},
 					Content: string(renderedContent),
 					Author:  &feeds.Author{Name: msg.Username},
@@ -218,7 +233,7 @@ func (s *CommonService) GenerateRSS(ctx *gin.Context) (RSSDocument, error) {
 				page.UpdatedISO = latest.Format(time.RFC3339)
 			}
 
-			atom, err := feed.ToAtom()
+			atom, err := rssAtomWithStableIdentity(feed, legacyOrigin.String()+"/")
 			if err != nil {
 				return RSSDocument{}, err
 			}

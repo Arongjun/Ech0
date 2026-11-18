@@ -5,6 +5,8 @@ package service_test
 
 import (
 	"context"
+	"crypto/tls"
+	"encoding/xml"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -85,7 +87,7 @@ func TestGenerateRSS_NormalFeed(t *testing.T) {
 	assert.Contains(t, atom, "alice")
 	assert.Contains(t, atom, "http://example.com/echo/echo-1")
 
-	assert.Contains(t, doc.HTML, "<title>Ech0 · RSS</title>")
+	assert.Contains(t, doc.HTML, "<title>动态订阅 · RSS</title>")
 	assert.Contains(t, doc.HTML, `rel="alternate" type="application/atom+xml" href="http://example.com/rss"`)
 	assert.Contains(t, doc.HTML, "共 1 条动态")
 	assert.Contains(t, doc.HTML, `datetime="2025-01-02T03:04:05Z"`)
@@ -346,4 +348,129 @@ func TestGenerateRSS_RenameMissesCache(t *testing.T) {
 	assert.NotContains(t, after.Atom, "<title>Old Name</title>")
 	assert.Contains(t, after.HTML, "New Name")
 	assert.NotContains(t, after.HTML, "Old Name")
+}
+
+func TestGenerateRSS_PublicHTTPSBrandAndStableAtomIdentity(t *testing.T) {
+	repo := commonmock.NewMockCommonRepository(t)
+	svc := newRSSService(t, repo, settingModel.SystemSetting{
+		SiteTitle: "Own <Site>", ServerName: "Own Author", ServerURL: "https://public.example/",
+		ServerLogo: "/api/files/logo.png?v=1&size=64", HomeSignatureText: "自己记录的瞬间 <hello>",
+	})
+	created := time.Date(2026, 10, 14, 8, 0, 0, 0, time.UTC)
+	repo.EXPECT().GetAllEchos(mock.Anything, false).Return([]echoModel.Echo{{ID: "post-1", Username: "owner", CreatedAt: created.Unix(), Content: "![image](/images/legacy.jpg)"}}, nil).Once()
+	repo.EXPECT().TrackRSSCacheKey(matchesRSSCacheKey("rss:https:public.example")).Return().Once()
+	ctx := newRSSContext(t, "internal:6277")
+	ctx.Request.Header.Set("X-Forwarded-Proto", "http")
+	ctx.Request.Header.Set("X-Forwarded-Host", "evil.example")
+	doc, err := svc.GenerateRSS(ctx)
+	require.NoError(t, err)
+	assert.Contains(t, doc.HTML, "Own &lt;Site&gt;")
+	assert.Contains(t, doc.HTML, "自己记录的瞬间 &lt;hello&gt;")
+	assert.Contains(t, doc.HTML, `href="https://public.example/rss"`)
+	assert.Contains(t, doc.HTML, `href="https://public.example/api/files/logo.png?v=1&amp;size=64"`)
+	assert.Contains(t, doc.HTML, "将下方地址添加到你常用的 RSS 阅读器")
+	assert.Contains(t, doc.HTML, "backdrop-filter:blur(24px)")
+	assert.Contains(t, doc.HTML, "prefers-reduced-motion:reduce")
+	assert.Contains(t, doc.HTML, "prefers-color-scheme:dark")
+	assert.NotContains(t, doc.HTML, "Ech0")
+	assert.NotContains(t, doc.HTML, "evil.example")
+	assert.NotContains(t, doc.HTML, "internal:6277")
+	assert.NotContains(t, doc.HTML, "/images/legacy.jpg", "landing page must not duplicate entry bodies")
+	var atom struct {
+		XMLName xml.Name
+		ID      string `xml:"id"`
+		Link    struct {
+			Href string `xml:"href,attr"`
+		} `xml:"link"`
+		Entries []struct {
+			ID      string `xml:"id"`
+			Updated string `xml:"updated"`
+			Content string `xml:"content"`
+			Link    struct {
+				Href string `xml:"href,attr"`
+			} `xml:"link"`
+		} `xml:"entry"`
+	}
+	require.NoError(t, xml.Unmarshal([]byte(doc.Atom), &atom))
+	assert.Equal(t, "http://www.w3.org/2005/Atom", atom.XMLName.Space)
+	assert.Equal(t, "http://internal:6277/", atom.ID, "historical feed identity is not a navigable subscription URL")
+	assert.Equal(t, "https://public.example/", atom.Link.Href)
+	require.Len(t, atom.Entries, 1)
+	assert.Equal(t, "tag:internal:6277,2026-10-14:/echo/post-1", atom.Entries[0].ID)
+	assert.Equal(t, "2026-10-14T08:00:00Z", atom.Entries[0].Updated)
+	assert.Equal(t, "https://public.example/echo/post-1", atom.Entries[0].Link.Href)
+	assert.Contains(t, atom.Entries[0].Content, "https://public.example/images/legacy.jpg")
+}
+
+func TestGenerateRSS_SafeOriginAndLogoFallbacks(t *testing.T) {
+	for _, tc := range []struct {
+		name, configured, logo, origin string
+		tls                            bool
+	}{
+		{"local HTTP ignores spoofed proxy headers", "", "javascript:alert(1)", "http://localhost:6277", false},
+		{"direct TLS", "", "//evil.example/logo.png", "https://localhost:6277", true},
+		{"intentional public HTTP", "http://public.example", "/Ech0.svg", "http://public.example", false},
+		{"unsafe canonical", "javascript:alert(2)", "data:image/svg+xml,bad", "http://localhost:6277", false},
+		{"userinfo canonical", "https://user:pass@evil.example", "   ", "http://localhost:6277", false},
+		{"canonical path is not an origin", "https://public.example/other", "", "http://localhost:6277", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			repo := commonmock.NewMockCommonRepository(t)
+			svc := newRSSService(t, repo, settingModel.SystemSetting{ServerURL: tc.configured, ServerLogo: tc.logo, ServerName: " eCh0 Team ", SiteTitle: "Ech0", HomeSignatureText: "Powered by Ech0"})
+			repo.EXPECT().GetAllEchos(mock.Anything, false).Return(nil, nil).Once()
+			repo.EXPECT().TrackRSSCacheKey(mock.Anything).Return().Once()
+			ctx := newRSSContext(t, "localhost:6277")
+			if tc.tls {
+				ctx.Request.TLS = &tls.ConnectionState{}
+			}
+			ctx.Request.Header.Set("X-Forwarded-Host", "evil.example")
+			ctx.Request.Header.Set("X-Forwarded-Proto", "https")
+			doc, err := svc.GenerateRSS(ctx)
+			require.NoError(t, err)
+			assert.Contains(t, doc.HTML, `href="`+tc.origin+`/rss"`)
+			for _, bad := range []string{"Ech0", "eCh0 Team", "javascript:", "evil.example", "#ZgotmplZ", "class=\"logo\""} {
+				assert.NotContains(t, doc.HTML, bad)
+			}
+			assert.Contains(t, doc.HTML, "动态订阅")
+		})
+	}
+}
+
+func TestGenerateRSS_EscapesBrandText(t *testing.T) {
+	repo := commonmock.NewMockCommonRepository(t)
+	svc := newRSSService(t, repo, settingModel.SystemSetting{SiteTitle: `<script>alert(1)</script>`, HomeSignatureText: `"><img src=x onerror=alert(2)>`, ServerLogo: `https://images.example/logo.png?x=" onerror="alert(3)`})
+	repo.EXPECT().GetAllEchos(mock.Anything, false).Return(nil, nil).Once()
+	repo.EXPECT().TrackRSSCacheKey(mock.Anything).Return().Once()
+	doc, err := svc.GenerateRSS(newRSSContext(t, "example.com"))
+	require.NoError(t, err)
+	assert.NotContains(t, doc.HTML, "<script>alert(1)</script>")
+	assert.NotContains(t, doc.HTML, `<img src=x onerror=alert(2)>`)
+	assert.NotContains(t, doc.HTML, ` onerror="alert(3)`)
+	assert.Contains(t, doc.HTML, "&lt;script&gt;")
+}
+
+func TestGenerateRSS_LogoAndDescriptionChangesMissCache(t *testing.T) {
+	repo := commonmock.NewMockCommonRepository(t)
+	kv := kvstore.NewMemory()
+	setting := settingModel.SystemSetting{SiteTitle: "Own Site", ServerLogo: "/one.png", HomeSignatureText: "One signature"}
+	require.NoError(t, coreSetting.System.Set(context.Background(), kv, setting))
+	svc := commonService.NewCommonService(repo, helpers.NewTestCache(), kv)
+	repo.EXPECT().GetAllEchos(mock.Anything, false).Return(nil, nil).Times(3)
+	repo.EXPECT().TrackRSSCacheKey(mock.Anything).Return().Times(3)
+	ctx := newRSSContext(t, "example.com")
+	first, err := svc.GenerateRSS(ctx)
+	require.NoError(t, err)
+	require.Contains(t, first.HTML, "/one.png")
+	setting.ServerLogo = "/two.png"
+	require.NoError(t, coreSetting.System.Set(context.Background(), kv, setting))
+	second, err := svc.GenerateRSS(ctx)
+	require.NoError(t, err)
+	assert.Contains(t, second.HTML, "/two.png")
+	assert.NotContains(t, second.HTML, "/one.png")
+	setting.HomeSignatureText = "Two signature"
+	require.NoError(t, coreSetting.System.Set(context.Background(), kv, setting))
+	third, err := svc.GenerateRSS(ctx)
+	require.NoError(t, err)
+	assert.Contains(t, third.HTML, "Two signature")
+	assert.NotContains(t, third.HTML, "One signature")
 }

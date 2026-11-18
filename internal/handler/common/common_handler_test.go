@@ -317,3 +317,39 @@ func TestGetRss(t *testing.T) {
 		assert.Equal(t, commonModel.DEFAULT_FAILED_CODE, res.Code)
 	})
 }
+
+func TestGetRss_ReaderNegotiation(t *testing.T) {
+	for _, tc := range []struct {
+		accept string
+		html   bool
+	}{
+		{"", false}, {"*/*", false}, {"application/rss+xml", false},
+		{"text/html;q=0, application/atom+xml", false},
+		{"text/html;q=0.5,application/atom+xml", false},
+		{"text/html,application/atom+xml", false},
+		{"text/html;q=bogus", false}, {"text/html;q=NaN", false},
+		{"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", true},
+		{"text/html,application/atom+xml;q=0.2", true},
+	} {
+		t.Run(tc.accept, func(t *testing.T) {
+			svc := commonmock.NewMockService(t)
+			svc.EXPECT().GenerateRSS(mock.Anything).Return(commonService.RSSDocument{Atom: "<feed/>", HTML: "<html/>"}, nil).Once()
+			h := commonHandler.NewCommonHandler(svc, emptySettings())
+			r := gin.New()
+			r.GET("/rss", h.GetRss)
+			req := httptest.NewRequest(http.MethodGet, "/rss", nil)
+			req.Header.Set("Accept", tc.accept)
+			rec := httptest.NewRecorder()
+			r.ServeHTTP(rec, req)
+			assert.Equal(t, "Accept", rec.Header().Get("Vary"))
+			assert.Equal(t, http.StatusOK, rec.Code)
+			if tc.html {
+				assert.Equal(t, "text/html; charset=utf-8", rec.Header().Get("Content-Type"))
+				assert.Equal(t, "<html/>", rec.Body.String())
+			} else {
+				assert.Equal(t, "application/atom+xml; charset=utf-8", rec.Header().Get("Content-Type"))
+				assert.Equal(t, "<feed/>", rec.Body.String())
+			}
+		})
+	}
+}

@@ -95,7 +95,7 @@ func (commonHandler *CommonHandler) GetRss(ctx *gin.Context) {
 	// The same URL yields two representations, so caches must key on Accept.
 	ctx.Header("Vary", "Accept")
 
-	if strings.Contains(ctx.GetHeader("Accept"), "text/html") {
+	if rssWantsHTML(ctx.GetHeader("Accept")) {
 		ctx.Data(http.StatusOK, "text/html; charset=utf-8", []byte(doc.HTML))
 		return
 	}
